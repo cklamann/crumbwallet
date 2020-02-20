@@ -1,0 +1,58 @@
+version: "3"
+services:
+  #Node Service
+  node:
+    image: node:10.16.0-jessie
+    container_name: node
+    restart: unless-stopped
+    tty: true
+    environment:
+      SERVICE_NAME: node
+      SERVICE_TAGS: dev
+      #these are read out of global .env
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      APP_PORT: ${APP_PORT}
+      APP_HOST: ${APP_HOST}
+    working_dir: /usr/app
+    ports:
+      - "3009:${APP_PORT}"
+      - "4000:4000" #graphiql(?)
+    volumes:
+      - ./app:/usr/app
+    entrypoint: ./on-start.sh
+    networks:
+      - app-network
+
+  #Mongo Service
+  mongo:
+    image: mongo:latest
+    container_name: mongo
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "27017:27017"
+    expose: ["27017"]
+    command: mongod --bind_ip_all
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: secret
+      MONGO_INITDB_DATABASE: admin
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      SERVICE_TAGS: dev
+      SERVICE_NAME: mongo
+    volumes:
+      - ./mongo-init.sh:/docker-entrypoint-initdb.d/mongo-init.sh:ro
+    networks:
+      - app-network
+
+#Docker Networks
+networks:
+  app-network:
+    driver: bridge
+
+#Volumes
+volumes:
+  dbdata:
+    driver: local
