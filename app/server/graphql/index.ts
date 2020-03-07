@@ -6,73 +6,30 @@ import {
     GraphQLList,
     GraphQLString,
     GraphQLNonNull,
+    GraphQLSkipDirective,
 } from 'graphql';
-import Posts, { Post, Draft } from '../models/Posts';
-import { makePost } from '../models/factories/PostFactory';
-import { createUser } from '../models/factories/UserFactory';
-import Users, { IUser } from '../models/Users';
+import Decks, { Deck } from '../models/Decks';
+import Tries, { Try } from '../models/Tries';
+import Cards, { Card } from '../models/Cards';
+import { IUser } from '../models/Users';
 import { encrypt } from '../util/encryption';
 import { logger } from '../server';
 
-//todo: use context.user to verify routes / bail
 const queryType = new GraphQLObjectType<any, { user: IUser }, any>({
     name: 'RootQuery',
     fields: () => ({
-        post: {
-            type: postType,
+        deck: {
+            type: deckType,
             args: {
                 id: {
                     type: GraphQLString,
                 },
             },
-            resolve: async (_source, args, context, info) => Posts.findById(args.id),
+            resolve: async (_source, args, context, info) => Decks.findById(args.id),
         },
-        posts: {
-            type: new GraphQLList(postType),
-            resolve: async (_source, args, context, info) => Posts.find({}),
-        },
-        user: {
-            type: userType,
-            args: {
-                id: {
-                    description: 'id of the user',
-                    type: GraphQLString,
-                },
-                username: {
-                    description: 'handle of the user',
-                    type: GraphQLString,
-                },
-                password: {
-                    description: 'password of the user',
-                    type: GraphQLString,
-                },
-                isAdmin: {
-                    description: 'is this an admin user',
-                    type: GraphQLBoolean,
-                },
-            },
-            resolve: async (_source, { id, username, password }) => {
-                if (id) {
-                    return Users.findById(id);
-                }
-                //login
-                if (username && password) {
-                    const user = await Users.findOne({ username, password: encrypt(password) }).exec();
-                    if (!user) {
-                        return false;
-                    }
-                    if (!user.token) {
-                        await user.update({
-                            token: encrypt(
-                                Math.random()
-                                    .toString(36)
-                                    .slice(2)
-                            ),
-                        });
-                    }
-                    return Users.findOne({ username, password: encrypt(password) });
-                }
-            },
+        decks: {
+            type: new GraphQLList(deckType),
+            resolve: async (_source, args, context, info) => Decks.find({}),
         },
     }),
 });
@@ -80,105 +37,120 @@ const queryType = new GraphQLObjectType<any, { user: IUser }, any>({
 const mutationType = new GraphQLObjectType({
     name: 'RootMutation',
     fields: () => ({
-        createPost: {
-            type: postType,
+        createDeck: {
+            type: deckType,
             args: {
                 input: {
-                    type: GraphQLNonNull(postInputType),
+                    type: GraphQLNonNull(deckInputType),
                 },
             },
             resolve: async (_source, { input }) => {
-                const user = await Users.findById(input.userId),
-                    post = makePost({ title: input.title, user });
-                post.drafts = [
-                    {
-                        content: input.content,
-                        active: true,
-                        created: new Date(),
-                        updated: new Date(),
-                    },
-                ];
-                return Posts.create(post);
+                input.cards = [];
+                return Decks.create(input);
             },
         },
-        createUser: {
-            type: userType,
+        addCard: {
+            type: deckType,
             args: {
                 input: {
-                    type: GraphQLNonNull(userInputType),
+                    type: GraphQLNonNull(newCardInputType),
                 },
             },
             resolve: async (_source, { input }) => {
-                logger.info('fetching');
-                logger.info(input);
-                const user = await createUser(input);
-                logger.info(user);
-                return user;
+                const { deckId, ...fields } = input,
+                    deck = await Decks.findById(deckId);
+                return deck.addCard(fields);
             },
         },
     }),
 });
 
-const postInputType = new GraphQLInputObjectType({
-    name: 'PostInput',
-    fields: () => ({
-        title: {
-            type: GraphQLNonNull(GraphQLString),
-            description: 'The title of the post.',
-        },
-        userId: {
-            type: GraphQLNonNull(GraphQLString),
-            description: "The author's id.",
-        },
-        content: {
-            type: GraphQLNonNull(GraphQLString),
-            description: 'The HTML.',
-        },
-    }),
-});
-
-const userInputType = new GraphQLInputObjectType({
-    name: 'UserInput',
+const deckInputType = new GraphQLInputObjectType({
+    name: 'DeckInput',
     fields: () => ({
         name: {
             type: GraphQLNonNull(GraphQLString),
-            description: "The user's name.",
+            description: 'The name of the deck.',
         },
-        username: {
-            type: GraphQLNonNull(GraphQLString),
-            description: "The user's login.",
-        },
-        password: {
-            type: GraphQLNonNull(GraphQLString),
-            description: "The users's password",
-        },
-        isAdmin: {
-            type: GraphQLNonNull(GraphQLBoolean),
-            description: 'is the user an admin',
+        categories: {
+            type: GraphQLList(GraphQLString),
+            description: 'The list of deck categories.',
         },
     }),
 });
 
-const postType = new GraphQLObjectType<Post>({
-    name: 'Post',
-    description: 'A post.',
+const newCardInputType = new GraphQLInputObjectType({
+    name: 'CardInput',
+    fields: () => ({
+        deckId: {
+            type: GraphQLNonNull(GraphQLString),
+            description: 'The _id of the containing deck',
+        },
+        prompt: {
+            type: GraphQLNonNull(GraphQLString),
+            description: 'The HTML Prompt.',
+        },
+        amswer: {
+            type: GraphQLNonNull(GraphQLString),
+            description: 'The HTML answer.',
+        },
+    }),
+});
+
+const deckType = new GraphQLObjectType<Deck>({
+    name: 'Deck',
+    description: 'A deck.',
     fields: () => ({
         _id: {
             type: GraphQLString,
-            description: 'The id of the post.',
+            description: 'The id of the deck.',
         },
-        title: {
+        name: {
             type: GraphQLString,
-            description: 'The title of the post.',
+            description: 'The name of the deck.',
         },
-        user: {
-            type: userType,
-            description: 'The owner of the post.',
-            resolve: user => Users.findById(user._id),
+        cards: {
+            type: new GraphQLList(cardType),
+            description: 'list of cards.',
         },
-        drafts: {
-            type: new GraphQLList(draftType),
-            description: 'list of drafts.',
+        categories: {
+            type: new GraphQLList(GraphQLString),
+            description: 'list of categories.',
+        },
+        created: {
+            type: GraphQLString,
+            description: 'when the deck was created',
+        },
+        updated: {
+            type: GraphQLString,
+            description: 'When the deck was updated',
+        },
+        published: {
+            type: GraphQLString,
+            description: 'When the deck was published',
+        },
+    }),
+});
+
+const cardType = new GraphQLObjectType<Card>({
+    name: 'Card',
+    description: 'A card.',
+    fields: () => ({
+        _id: {
+            type: GraphQLString,
+            description: 'The id of the card.',
+        },
+        prompt: {
+            type: GraphQLString,
+            description: 'The HTML Prompt.',
+        },
+        answer: {
+            type: GraphQLString,
+            description: 'The HTML answer.',
+        },
+        tries: {
+            type: new GraphQLList(tryType),
+            description: 'list of tries',
         },
         created: {
             type: GraphQLString,
@@ -188,25 +160,20 @@ const postType = new GraphQLObjectType<Post>({
             type: GraphQLString,
             description: 'When the post was updated',
         },
-        published: {
-            type: GraphQLString,
-            description: 'When the post was published',
-        },
     }),
 });
 
-const draftType = new GraphQLObjectType<Draft>({
-    name: 'Draft',
-    description: 'A draft.',
+const tryType = new GraphQLObjectType<Try>({
+    name: 'try',
+    description: 'A try.',
     fields: () => ({
-        content: {
+        _id: {
             type: GraphQLString,
-            description: 'The HTML.',
-            resolve: user => Users.findById(user._id),
+            description: 'The id of the try.',
         },
-        active: {
+        correct: {
             type: GraphQLBoolean,
-            description: 'Is the draft the active draft.',
+            description: 'Was the try correct?',
         },
         created: {
             type: GraphQLString,
@@ -253,6 +220,6 @@ const userType = new GraphQLObjectType<IUser>({
 export const Schema = new GraphQLSchema({
     query: queryType,
     //dunno if i need all these
-    types: [postType, userType, draftType, userInputType, postInputType],
+    types: [deckType, userType, tryType, cardType, userInputType, postInputType],
     mutation: mutationType,
 });

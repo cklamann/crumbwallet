@@ -1,4 +1,5 @@
 #!bash
+echo "creating admin user"
 "${mongo[@]}" app <<-EOJS
 	    db.createUser({
         user: "${DB_USER}",

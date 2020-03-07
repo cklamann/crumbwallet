@@ -4,15 +4,6 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const Dotenv = require('dotenv');
 const webpack = require('webpack');
 
-console.log(
-    Object.entries(process.env)
-        .map(([k, v]) => ({ [k]: JSON.stringify(v) }))
-        .reduce((a, c) => {
-            a[`process.env.${Object.keys(c)[0]}`] = Object.values(c)[0];
-            return a;
-        }, {})
-);
-
 module.exports = {
     mode: 'development',
     entry: './src/index.tsx',

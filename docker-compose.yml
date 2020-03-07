@@ -3,7 +3,7 @@ services:
   #Node Service
   node:
     image: node:10.16.0-jessie
-    container_name: node
+    container_name: flashcard-node
     restart: unless-stopped
     tty: true
     environment:
@@ -16,8 +16,7 @@ services:
       APP_HOST: ${APP_HOST}
     working_dir: /usr/app
     ports:
-      - "3009:${APP_PORT}"
-      - "4000:4000" #graphiql(?)
+      - "3011:${APP_PORT}"
     volumes:
       - ./app:/usr/app
     entrypoint: ./on-start.sh
@@ -27,11 +26,11 @@ services:
   #Mongo Service
   mongo:
     image: mongo:latest
-    container_name: mongo
+    container_name: flashcard-mongo
     restart: unless-stopped
     tty: true
     ports:
-      - "27017:27017"
+      - "27018:27017"
     expose: ["27017"]
     command: mongod --bind_ip_all
     environment:
