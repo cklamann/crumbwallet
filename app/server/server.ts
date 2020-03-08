@@ -19,8 +19,8 @@ export const logger = pino(pino.destination('./node.log')),
     logErrors: ErrorRequestHandler = (err, req, res, next) => {
         logger.error(err);
         next(err);
-	};
-	
+    };
+
 // Constants
 const CLIENT_BUILD_PATH = path.resolve('./../client/dist'),
     DB_USER = process.env.DB_USER,
@@ -42,21 +42,24 @@ mongoose.connect(`mongodb://${DB_USER}:${DB_PASSWORD}@mongo:27017/app`, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
 });
+
 mongoose.set('debug', true);
 
 const db = mongoose.connection;
 
 db.once('open', function() {
-	User.countDocuments().then(c => {
-		if (c === 0 && process.env.NODE_ENV !== 'production') {
-			return Users.create({
-				name: 'admin',
-				username: process.env.DB_USER,
-				password: process.env.DB_PASSWORD,
-			});
-		}
-	console.log('connected to mongo!');
-    logger.info('log initiated!');
+    User.countDocuments().then(c => {
+        if (c === 0 && process.env.NODE_ENV !== 'production') {
+            return Users.create({
+                name: 'admin',
+                isAdmin: true,
+                username: process.env.DB_USER,
+                password: process.env.DB_PASSWORD,
+            });
+        }
+        console.log('connected to mongo!');
+        logger.info('log initiated!');
+    });
 });
 
 db.on('error', console.error.bind(console, 'connection error:'));
@@ -115,13 +118,13 @@ app.get('/verifyLoggedIn', passport.authenticate('bearer', { session: false }), 
 app.use(
     '/graphql',
     graphqlHTTP(async req => {
-        const auth = req.headers.authorization ? req.headers.authorization : null,
+        /* const auth = req.headers.authorization ? req.headers.authorization : null,
             token = auth ? req.headers.authorization.replace('Bearer ', '') : null,
-            user = token ? await Users.findOne({ token: decrypt(token) }) : null;
+            user = token ? await Users.findOne({ token: decrypt(token) }) : null; */
         return {
             schema: Schema,
             graphiql: true,
-            context: { user },
+            // context: { user },
         };
     })
 );

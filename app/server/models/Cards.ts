@@ -5,6 +5,7 @@ export interface Card {
     _id?: any;
     prompt: string;
     answer: string;
+    details: string;
     tries: Try[];
     created: Date;
     updated: Date;
@@ -24,9 +25,16 @@ export const cardSchema = new mongoose.Schema<CardDoc>({
         type: 'string',
         required: true,
     },
+    details: {
+        type: 'string',
+    },
     tries: {
         type: 'array',
         of: trySchema,
+    },
+    options: {
+        type: 'array',
+        of: 'string',
     },
     created: {
         type: 'date',
@@ -41,6 +49,9 @@ export const cardSchema = new mongoose.Schema<CardDoc>({
 cardSchema.methods.addTry = function(t: Try) {
     if (!t.created) {
         t.created = new Date();
+    }
+    if (!t._id) {
+        t._id = mongoose.Types.ObjectId();
     }
     this.tries.push(t);
     return this.save();

@@ -12,7 +12,7 @@ export interface TryDoc extends mongoose.Document, Try {
 }
 
 export const trySchema = new mongoose.Schema<TryDoc>({
-    coorect: {
+    correct: {
         type: 'boolean',
         required: true,
     },

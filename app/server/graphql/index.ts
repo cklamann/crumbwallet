@@ -6,14 +6,12 @@ import {
     GraphQLList,
     GraphQLString,
     GraphQLNonNull,
-    GraphQLSkipDirective,
 } from 'graphql';
+import mongoose from 'mongoose';
 import Decks, { Deck } from '../models/Decks';
-import Tries, { Try } from '../models/Tries';
-import Cards, { Card } from '../models/Cards';
+import { Try } from '../models/Tries';
+import { Card } from '../models/Cards';
 import { IUser } from '../models/Users';
-import { encrypt } from '../util/encryption';
-import { logger } from '../server';
 
 const queryType = new GraphQLObjectType<any, { user: IUser }, any>({
     name: 'RootQuery',
@@ -41,12 +39,24 @@ const mutationType = new GraphQLObjectType({
             type: deckType,
             args: {
                 input: {
-                    type: GraphQLNonNull(deckInputType),
+                    type: GraphQLNonNull(newDeckInputType),
                 },
             },
             resolve: async (_source, { input }) => {
                 input.cards = [];
-                return Decks.create(input);
+                return Decks.create({ ...input, created: new Date() });
+            },
+        },
+        updateDeck: {
+            type: deckType,
+            args: {
+                input: {
+                    type: GraphQLNonNull(updateDeckInputType),
+                },
+            },
+            resolve: async (_source, { input }) => {
+                const { _id, ...fields } = input;
+                return Decks.findByIdAndUpdate(_id, fields, { new: true });
             },
         },
         addCard: {
@@ -62,11 +72,45 @@ const mutationType = new GraphQLObjectType({
                 return deck.addCard(fields);
             },
         },
+        deleteCard: {
+            type: deckType,
+            args: {
+                _id: {
+                    type: GraphQLNonNull(GraphQLString),
+                },
+            },
+            resolve: async (_source, { _id }) => {
+                const deck = await Decks.findOne({ 'cards._id': mongoose.Types.ObjectId(_id) });
+                deck.cards = deck.cards.filter(c => c._id != _id);
+                return deck.save();
+            },
+        },
+        updateCard: {
+            type: deckType,
+            args: {
+                input: {
+                    type: GraphQLNonNull(updateCardInputType),
+                },
+            },
+            resolve: async (_source, { input }) => {
+                const { cardId, ...fields } = input,
+                    deck = await Decks.findOne({ 'cards._id': mongoose.Types.ObjectId(cardId) });
+                deck.cards = deck.cards.map(c => {
+                    return c._id == cardId
+                        ? {
+                              c,
+                              ...fields,
+                          }
+                        : c;
+                });
+                return deck.save();
+            },
+        },
     }),
 });
 
-const deckInputType = new GraphQLInputObjectType({
-    name: 'DeckInput',
+const newDeckInputType = new GraphQLInputObjectType({
+    name: 'NewDeckInput',
     fields: () => ({
         name: {
             type: GraphQLNonNull(GraphQLString),
@@ -79,8 +123,30 @@ const deckInputType = new GraphQLInputObjectType({
     }),
 });
 
+const updateDeckInputType = new GraphQLInputObjectType({
+    name: 'UpdateDeckInput',
+    fields: () => ({
+        _id: {
+            type: GraphQLNonNull(GraphQLString),
+            description: 'The deck id',
+        },
+        name: {
+            type: GraphQLString,
+            description: 'The name of the deck.',
+        },
+        categories: {
+            type: GraphQLList(GraphQLString),
+            description: 'The list of deck categories.',
+        },
+        details: {
+            type: GraphQLString,
+            description: 'The HTML details.',
+        },
+    }),
+});
+
 const newCardInputType = new GraphQLInputObjectType({
-    name: 'CardInput',
+    name: 'newCardInput',
     fields: () => ({
         deckId: {
             type: GraphQLNonNull(GraphQLString),
@@ -90,9 +156,43 @@ const newCardInputType = new GraphQLInputObjectType({
             type: GraphQLNonNull(GraphQLString),
             description: 'The HTML Prompt.',
         },
-        amswer: {
+        answer: {
             type: GraphQLNonNull(GraphQLString),
+            description: 'The plain text answer.',
+        },
+        details: {
+            type: GraphQLString,
+            description: 'The HTML details.',
+        },
+        options: {
+            type: GraphQLList(GraphQLString),
+            description: 'Plain text multiple choice answers',
+        },
+    }),
+});
+
+const updateCardInputType = new GraphQLInputObjectType({
+    name: 'updateCardInput',
+    fields: () => ({
+        cardId: {
+            type: GraphQLNonNull(GraphQLString),
+            description: 'The _id of the card',
+        },
+        prompt: {
+            type: GraphQLString,
+            description: 'The HTML Prompt.',
+        },
+        answer: {
+            type: GraphQLString,
             description: 'The HTML answer.',
+        },
+        details: {
+            type: GraphQLString,
+            description: 'The HTML details.',
+        },
+        options: {
+            type: GraphQLList(GraphQLString),
+            description: 'Plain text multiple choice answers',
         },
     }),
 });
@@ -137,16 +237,24 @@ const cardType = new GraphQLObjectType<Card>({
     description: 'A card.',
     fields: () => ({
         _id: {
-            type: GraphQLString,
+            type: GraphQLNonNull(GraphQLString),
             description: 'The id of the card.',
         },
         prompt: {
-            type: GraphQLString,
+            type: GraphQLNonNull(GraphQLString),
             description: 'The HTML Prompt.',
         },
         answer: {
+            type: GraphQLNonNull(GraphQLString),
+            description: 'The plain text answer.',
+        },
+        details: {
             type: GraphQLString,
-            description: 'The HTML answer.',
+            description: 'The HTML details.',
+        },
+        options: {
+            type: new GraphQLList(GraphQLString),
+            description: 'Plain text multiple choice options',
         },
         tries: {
             type: new GraphQLList(tryType),
@@ -186,40 +294,9 @@ const tryType = new GraphQLObjectType<Try>({
     }),
 });
 
-const userType = new GraphQLObjectType<IUser>({
-    name: 'User',
-    description: 'A user.',
-    fields: () => ({
-        _id: {
-            type: GraphQLNonNull(GraphQLString),
-            description: 'The id of the user.',
-        },
-        name: {
-            type: GraphQLString,
-            description: 'The name of the user.',
-        },
-        isAdmin: {
-            type: GraphQLBoolean,
-            description: 'Is the user an admin.',
-        },
-        username: {
-            type: GraphQLString,
-            description: 'Username.',
-        },
-        password: {
-            type: GraphQLString,
-            description: 'Password',
-        },
-        token: {
-            type: GraphQLString,
-            description: 'Api Token',
-        },
-    }),
-});
-
 export const Schema = new GraphQLSchema({
     query: queryType,
-    //dunno if i need all these
-    types: [deckType, userType, tryType, cardType, userInputType, postInputType],
+    //dunno if i need all these?
+    types: [deckType],
     mutation: mutationType,
 });
