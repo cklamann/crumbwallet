@@ -7,11 +7,11 @@ import {
     GraphQLString,
     GraphQLNonNull,
 } from 'graphql';
-import mongoose from 'mongoose';
-import Decks, { Deck } from '../models/Decks';
+import Decks, { Deck, DeckDoc } from '../models/Decks';
 import { Try } from '../models/Tries';
 import { Card } from '../models/Cards';
 import { IUser } from '../models/Users';
+import { get } from 'lodash';
 
 const queryType = new GraphQLObjectType<any, { user: IUser }, any>({
     name: 'RootQuery',
@@ -59,6 +59,18 @@ const mutationType = new GraphQLObjectType({
                 return Decks.findByIdAndUpdate(_id, fields, { new: true });
             },
         },
+        deleteDeck: {
+            type: GraphQLBoolean,
+            args: {
+                _id: {
+                    type: GraphQLNonNull(GraphQLString),
+                },
+            },
+            resolve: async (_source, { _id }) => {
+                const res = await Decks.findByIdAndDelete(_id);
+                return res ? true : false;
+            },
+        },
         addCard: {
             type: deckType,
             args: {
@@ -80,7 +92,7 @@ const mutationType = new GraphQLObjectType({
                 },
             },
             resolve: async (_source, { _id }) => {
-                const deck = await Decks.findOne({ 'cards._id': mongoose.Types.ObjectId(_id) });
+                const deck: DeckDoc = await Decks.schema.statics.findByCardId(_id);
                 deck.cards = deck.cards.filter(c => c._id != _id);
                 return deck.save();
             },
@@ -94,15 +106,53 @@ const mutationType = new GraphQLObjectType({
             },
             resolve: async (_source, { input }) => {
                 const { cardId, ...fields } = input,
-                    deck = await Decks.findOne({ 'cards._id': mongoose.Types.ObjectId(cardId) });
+                    deck: DeckDoc = await Decks.schema.statics.findByCardId(cardId);
                 deck.cards = deck.cards.map(c => {
                     return c._id == cardId
                         ? {
-                              c,
+                              ...c,
                               ...fields,
                           }
                         : c;
                 });
+                return deck.save();
+            },
+        },
+        addTry: {
+            type: deckType,
+            args: {
+                input: {
+                    type: GraphQLNonNull(newTryInputType),
+                },
+            },
+            resolve: async (_source, { input }) => {
+                const { cardId, ...fields } = input,
+                    deck = await Decks.schema.statics.findByCardId(cardId);
+                return deck.addTry(cardId, { ...fields, created: new Date(), updated: new Date() });
+            },
+        },
+        updateTry: {
+            type: deckType,
+            args: {
+                input: {
+                    type: GraphQLNonNull(updateTryInputType),
+                },
+            },
+            resolve: async (_source, { input }) => {
+                const { tryId, ...fields } = input,
+                    deck: DeckDoc = await Decks.schema.statics.findByTryId(tryId);
+                deck.cards = deck.cards.map(c =>
+                    get(c, 'tries', []).find(t => t._id == tryId)
+                        ? {
+                              ...c,
+                              ...{
+                                  tries: c.tries.map(t =>
+                                      t._id == tryId ? { ...t, updated: new Date(), ...fields } : t
+                                  ),
+                              },
+                          }
+                        : c
+                );
                 return deck.save();
             },
         },
@@ -294,9 +344,35 @@ const tryType = new GraphQLObjectType<Try>({
     }),
 });
 
+const newTryInputType = new GraphQLInputObjectType({
+    name: 'newTryInput',
+    fields: () => ({
+        cardId: {
+            type: GraphQLNonNull(GraphQLString),
+            description: 'The _id of the containing card',
+        },
+        correct: {
+            type: GraphQLNonNull(GraphQLBoolean),
+            description: 'Whether the try was successful.',
+        },
+    }),
+});
+
+const updateTryInputType = new GraphQLInputObjectType({
+    name: 'updateTryInput',
+    fields: () => ({
+        tryId: {
+            type: GraphQLNonNull(GraphQLString),
+            description: 'The _id of the try',
+        },
+        correct: {
+            type: GraphQLNonNull(GraphQLBoolean),
+            description: 'Whether the try was successful.',
+        },
+    }),
+});
+
 export const Schema = new GraphQLSchema({
     query: queryType,
-    //dunno if i need all these?
-    types: [deckType],
     mutation: mutationType,
 });

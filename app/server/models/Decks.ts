@@ -1,5 +1,6 @@
 import * as mongoose from 'mongoose';
 import { Card, cardSchema } from './Cards';
+import { Try } from './Tries';
 import { remove } from 'lodash';
 
 export interface Deck {
@@ -15,6 +16,7 @@ export interface DeckDoc extends mongoose.Document, Deck {
     _id: string;
     addCard: (card: Card) => Promise<Deck>;
     getDecks: () => Promise<Deck[]>;
+    addTry: (cardId: string, tr: Try) => Promise<Deck>;
     updateCard: (card: Partial<Card>) => Promise<Deck>;
 }
 
@@ -41,6 +43,8 @@ const deckSchema = new mongoose.Schema<DeckDoc>({
     },
 });
 
+deckSchema.static('findByCardId', (cardId: string) => Decks.findOne({ 'cards._id': mongoose.Types.ObjectId(cardId) }));
+
 deckSchema.methods.addCard = function(card: Card) {
     if (!card.created) {
         card.created = new Date();
@@ -48,8 +52,27 @@ deckSchema.methods.addCard = function(card: Card) {
     if (!card._id) {
         card._id = mongoose.Types.ObjectId();
     }
+    if (!card.tries) {
+        card.tries = [];
+    }
     this.cards.push(card);
     return this.save();
+};
+
+deckSchema.methods.addTry = function(cardId: string, tr: Try) {
+    tr._id = mongoose.Types.ObjectId();
+    (this.cards as Card[]).find(c => c._id == cardId).tries.push(tr);
+	//https://github.com/Automattic/mongoose/issues/1204
+	this.markModified('cards');
+	return this.save();
+};
+
+deckSchema.statics.findByCardId = function(cardId: string) {
+    return Decks.findOne({ 'cards._id': mongoose.Types.ObjectId(cardId) });
+};
+
+deckSchema.statics.findByTryId = function(tryId: string) {
+    return Decks.findOne({ 'cards.tries._id': mongoose.Types.ObjectId(tryId) });
 };
 
 deckSchema.methods.updateCard = function(card: Partial<Card>) {
