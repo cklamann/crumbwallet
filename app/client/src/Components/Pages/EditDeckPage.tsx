@@ -1,7 +1,6 @@
-import { useLocation } from 'react-router-dom';
+import { useLocation, useHistory } from 'react-router-dom';
 import { Deck } from 'Models/Decks';
-import { useApolloQuery, fetchDeckQuery } from '../../api/ApolloClient';
-import { ThemeProvider, makeStyles, createStyles } from '@material-ui/core/styles';
+import { addCardMutation, useApolloMutation, useApolloQuery, fetchDeckQuery } from '../../api/ApolloClient';
 import React from 'react';
 import Paper from '@material-ui/core/Paper';
 import ExpansionPanel from '@material-ui/core/ExpansionPanel';
@@ -15,9 +14,11 @@ interface EditDeckPage {}
 
 const EditDeckPage: React.FC<EditDeckPage> = ({}) => {
     const deckId = useQuery().get('deckId'),
-        { loading, refetch, data, error } = useApolloQuery<{ deck: Deck }>(fetchDeckQuery, {
+        { loading, data } = useApolloQuery<{ deck: Deck }>(fetchDeckQuery, {
             variables: { _id: deckId },
-        });
+        }),
+        [createCard] = useApolloMutation<{ addCard: { _id: string } }>(addCardMutation),
+        history = useHistory();
 
     return (
         <Paper>
@@ -32,7 +33,14 @@ const EditDeckPage: React.FC<EditDeckPage> = ({}) => {
                         <ExpansionPanelDetails>Edit name</ExpansionPanelDetails>
                     </ExpansionPanel>
                     {/* onclick, create and redirect */}
-                    <ExpansionPanel expanded={false}>
+                    <ExpansionPanel
+                        expanded={false}
+                        onClick={() =>
+                            createCard({ variables: { deckId } }).then(res =>
+                                history.push(`editCard?cardId=${res.data.addCard._id}`)
+                            )
+                        }
+                    >
                         <ExpansionPanelSummary>
                             <Typography>Add Card</Typography>
                         </ExpansionPanelSummary>
@@ -48,8 +56,5 @@ const EditDeckPage: React.FC<EditDeckPage> = ({}) => {
         </Paper>
     );
 };
-
-//can either edit deckname, etc or select a card or create a card
-//for this we need card carousel with thunmnail? and edit/delete buttons
 
 export default EditDeckPage;

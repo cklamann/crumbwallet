@@ -38,3 +38,34 @@ export const fetchDeckQuery = gql`
         }
     }
 `;
+
+export const fetchCardQuery = gql`
+    query fetchCard($_id: String!) {
+        card(_id: $_id) {
+            _id
+            prompt
+            answer
+            details
+            options
+        }
+    }
+`;
+
+export const updateCardMutation = gql`
+    mutation updateCard($cardId: String!, $prompt: String, $answer: String, $details: string) {
+        updateCard(input: { cardId: $cardId, prompt: $prompt, answer: $answer, details: $details }) {
+            _id
+            prompt
+            answer
+            details
+        }
+    }
+`;
+
+export const addCardMutation = gql`
+    mutation addCard($deckId: String!) {
+        addCard(input: { deckId: $deckId, prompt: "<p>Prompt</p>", answer: "<p>Answer</p>", details: "details" }) {
+            _id
+        }
+    }
+`;

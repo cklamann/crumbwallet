@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import EditDeckPage from '../Pages/EditDeckPage';
+import EditCardPage from '../Pages/EditCardPage';
 import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
 import Container from '@material-ui/core/Container';
 import { theme } from './../Style/Theme';
@@ -20,35 +21,6 @@ import ListItem from '@material-ui/core/ListItem';
 import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
 import Grid from '@material-ui/core/Grid';
-
-/* 
-
-    notes:
-        pages:
-            home
-                1) run a deck
-                    - pick a deck
-                        - browse list or filter or browse by category
-                        - component loads them all up front
-                2) update a deck
-                    - browse list or search or browse by category
-                    - component loads them all up front
-                    - update deck or update card?
-                        - select card
-                            - browse list or search
-                            - update card form
-                        - select deck
-                            - update deck form
-                            - add card
-                                - add card form
-                3) create a deck
-                    - create deck form
-            create/update deck page
-            run deck page
-        
-        mobile first!
-
-*/
 
 const useHomePageStyles = makeStyles(theme =>
     createStyles({
@@ -86,6 +58,9 @@ export default () => {
                     <Switch>
                         <Route exact path="/editDeck*">
                             <EditDeckPage />
+                        </Route>
+                        <Route exact path="/editCard*">
+                            <EditCardPage />
                         </Route>
 
                         <Route path="/*">

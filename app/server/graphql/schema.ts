@@ -9,12 +9,21 @@ import {
 } from 'graphql';
 import Decks, { Deck, DeckDoc } from '../models/Decks';
 import { Try } from 'Models/Tries';
-import { Card } from 'Models/Cards';
+import Cards, { Card } from 'Models/Cards';
 import { get } from 'lodash';
 
 const queryType = new GraphQLObjectType({
     name: 'RootQuery',
     fields: () => ({
+        card: {
+            type: cardType,
+            args: {
+                _id: {
+                    type: GraphQLNonNull(GraphQLString),
+                },
+            },
+            resolve: async (_source, args, context, info) => Decks.schema.statics.findCardById(args._id),
+        },
         deck: {
             type: deckType,
             args: {
@@ -71,7 +80,16 @@ const mutationType = new GraphQLObjectType({
             },
         },
         addCard: {
-            type: deckType,
+            type: new GraphQLObjectType({
+                name: '_id',
+                description: 'ID of the new card',
+                fields: () => ({
+                    _id: {
+                        type: GraphQLString,
+                        description: 'The id of the deck.',
+                    },
+                }),
+            }),
             args: {
                 input: {
                     type: GraphQLNonNull(newCardInputType),
@@ -97,7 +115,7 @@ const mutationType = new GraphQLObjectType({
             },
         },
         updateCard: {
-            type: deckType,
+            type: cardType,
             args: {
                 input: {
                     type: GraphQLNonNull(updateCardInputType),
@@ -105,16 +123,12 @@ const mutationType = new GraphQLObjectType({
             },
             resolve: async (_source, { input }) => {
                 const { cardId, ...fields } = input,
-                    deck: DeckDoc = await Decks.schema.statics.findByCardId(cardId);
-                deck.cards = deck.cards.map(c => {
-                    return c._id == cardId
-                        ? {
-                              ...c,
-                              ...fields,
-                          }
-                        : c;
-                });
-                return deck.save();
+                    deck: DeckDoc = await Decks.schema.statics.findByCardId(cardId),
+                    card = { ...deck.cards.find(c => c._id == cardId), ...fields, ...{ updated: new Date() } };
+
+                deck.cards = deck.cards.map(c => (c._id == cardId ? card : c));
+                await deck.save();
+                return card;
             },
         },
         addTry: {

@@ -14,7 +14,7 @@ export interface Deck {
 
 export interface DeckDoc extends mongoose.Document, Deck {
     _id: string;
-    addCard: (card: Card) => Promise<Deck>;
+    addCard: (card: Card) => Promise<string>;
     getDecks: () => Promise<Deck[]>;
     addTry: (cardId: string, tr: Try) => Promise<Deck>;
     updateCard: (card: Partial<Card>) => Promise<Deck>;
@@ -45,6 +45,10 @@ const deckSchema = new mongoose.Schema<DeckDoc>({
 
 deckSchema.static('findByCardId', (cardId: string) => Decks.findOne({ 'cards._id': mongoose.Types.ObjectId(cardId) }));
 
+deckSchema.static('findCardById', (cardId: string) =>
+    Decks.findOne({ 'cards._id': mongoose.Types.ObjectId(cardId) }).then(res => res.cards.find(c => c._id == cardId))
+);
+
 deckSchema.methods.addCard = function(card: Card) {
     if (!card.created) {
         card.created = new Date();
@@ -57,16 +61,16 @@ deckSchema.methods.addCard = function(card: Card) {
         //markModified?
         card.tries = [];
     }
-	this.cards.push(card);
-    return this.save();
+    this.cards.push(card);
+    return this.save().then(() => card._id);
 };
 
 deckSchema.methods.addTry = function(cardId: string, tr: Try) {
     tr._id = mongoose.Types.ObjectId();
     (this.cards as Card[]).find(c => c._id == cardId).tries.push(tr);
-	//https://github.com/Automattic/mongoose/issues/1204
-	this.markModified('cards');
-	return this.save();
+    //https://github.com/Automattic/mongoose/issues/1204
+    this.markModified('cards');
+    return this.save();
 };
 
 deckSchema.statics.findByCardId = function(cardId: string) {
