@@ -10,6 +10,9 @@ module.exports = {
     devtool: 'inline-source-map',
     resolve: {
         extensions: ['.ts', '.tsx', '.js', '.json'],
+        alias: {
+            Models: path.resolve(__dirname, './models/'),
+        },
     },
     output: {
         path: path.join(__dirname, 'dist/'),
@@ -37,13 +40,14 @@ module.exports = {
     plugins: [
         new HtmlWebpackPlugin({
             template: './src/index.ejs',
+            hash: true,
         }),
         new webpack.DefinePlugin(
             //probably want to filter out all but those that begin with APP
             //also, this gives us db_user, etc but not TEST
             Object.entries(process.env)
                 .map(([k, v]) => ({ [k]: JSON.stringify(v) }))
-                .filter( obj => Object.keys(obj)[0].startsWith('APP_'))
+                .filter(obj => Object.keys(obj)[0].startsWith('APP_'))
                 .reduce((a, c) => {
                     a[`process.env.${Object.keys(c)[0]}`] = Object.values(c)[0];
                     return a;

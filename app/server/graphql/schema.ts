@@ -8,22 +8,21 @@ import {
     GraphQLNonNull,
 } from 'graphql';
 import Decks, { Deck, DeckDoc } from '../models/Decks';
-import { Try } from '../models/Tries';
-import { Card } from '../models/Cards';
-import { IUser } from '../models/Users';
+import { Try } from 'Models/Tries';
+import { Card } from 'Models/Cards';
 import { get } from 'lodash';
 
-const queryType = new GraphQLObjectType<any, { user: IUser }, any>({
+const queryType = new GraphQLObjectType({
     name: 'RootQuery',
     fields: () => ({
         deck: {
             type: deckType,
             args: {
-                id: {
-                    type: GraphQLString,
+                _id: {
+                    type: GraphQLNonNull(GraphQLString),
                 },
             },
-            resolve: async (_source, args, context, info) => Decks.findById(args.id),
+            resolve: async (_source, args, context, info) => Decks.findById(args._id),
         },
         decks: {
             type: new GraphQLList(deckType),

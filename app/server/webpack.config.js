@@ -4,6 +4,9 @@ module.exports = {
     entry: './start.ts',
     resolve: {
         extensions: ['.ts', '.tsx', /*for graphql*/ '.mjs', '.js', '.json'],
+        alias: {
+            Models: path.resolve(__dirname, './models/')
+        }
     },
     output: {
         path: path.join(__dirname, 'dist/'),

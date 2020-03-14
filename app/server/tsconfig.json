@@ -14,8 +14,11 @@
         "downlevelIteration": true,
         "sourceMap": true,
         "noImplicitAny": true,
-        "moduleResolution": "node"
+        "moduleResolution": "node",
+        "baseUrl": ".",
+        "paths": {
+            "Models/*": ["./models/*"]
+        }
     },
-    "include": ["./server/**/*", "./client/**/*"],
-    "exclude": ["node_modules", "./server/tests/**/*"]
+    "exclude": ["node_modules", "tests/**/*"]
 }

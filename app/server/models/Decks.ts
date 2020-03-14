@@ -53,9 +53,11 @@ deckSchema.methods.addCard = function(card: Card) {
         card._id = mongoose.Types.ObjectId();
     }
     if (!card.tries) {
+        //test: does specifying a default value free us from having to use
+        //markModified?
         card.tries = [];
     }
-    this.cards.push(card);
+	this.cards.push(card);
     return this.save();
 };
 

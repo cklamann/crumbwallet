@@ -29,8 +29,7 @@ export const cardSchema = new mongoose.Schema<CardDoc>({
         type: 'string',
     },
     tries: {
-        type: 'array',
-        of: trySchema,
+        type: [trySchema],
     },
     options: {
         type: 'array',
