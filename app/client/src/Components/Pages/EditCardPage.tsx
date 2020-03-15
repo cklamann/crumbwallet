@@ -25,7 +25,7 @@ const EditCardPage: React.FC<EditCardPage> = ({}) => {
         <Paper>
             <span>{loading && <span>Loading!</span>}</span>
 
-            {data && <form></form>}
+            {data && <></>}
         </Paper>
     );
 };

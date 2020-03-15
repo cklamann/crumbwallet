@@ -3,10 +3,12 @@ import { Try, trySchema } from './Tries';
 
 export interface Card {
     _id?: any;
-    prompt: string;
     answer: string;
     details: string;
+    handle: string;
+    imageUrl?: string;
     tries: Try[];
+    prompt: string;
     created: Date;
     updated: Date;
 }
@@ -17,10 +19,6 @@ export interface CardDoc extends mongoose.Document, Card {
 }
 
 export const cardSchema = new mongoose.Schema<CardDoc>({
-    prompt: {
-        type: 'string',
-        required: true,
-    },
     answer: {
         type: 'string',
         required: true,
@@ -28,12 +26,20 @@ export const cardSchema = new mongoose.Schema<CardDoc>({
     details: {
         type: 'string',
     },
-    tries: {
-        type: [trySchema],
+    handle: {
+        type: 'string',
+        required: true,
     },
     options: {
         type: 'array',
         of: 'string',
+    },
+    prompt: {
+        type: 'string',
+        required: true,
+    },
+    tries: {
+        type: [trySchema],
     },
     created: {
         type: 'date',

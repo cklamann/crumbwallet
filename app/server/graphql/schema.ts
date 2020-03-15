@@ -6,6 +6,7 @@ import {
     GraphQLList,
     GraphQLString,
     GraphQLNonNull,
+    GraphQLSkipDirective,
 } from 'graphql';
 import Decks, { Deck, DeckDoc } from '../models/Decks';
 import { Try } from 'Models/Tries';
@@ -241,10 +242,6 @@ const updateCardInputType = new GraphQLInputObjectType({
             type: GraphQLNonNull(GraphQLString),
             description: 'The _id of the card',
         },
-        prompt: {
-            type: GraphQLString,
-            description: 'The HTML Prompt.',
-        },
         answer: {
             type: GraphQLString,
             description: 'The HTML answer.',
@@ -253,9 +250,21 @@ const updateCardInputType = new GraphQLInputObjectType({
             type: GraphQLString,
             description: 'The HTML details.',
         },
+        handle: {
+            type: GraphQLString,
+            description: 'The name of the card'
+        },
+        imageUrl: {
+            type: GraphQLString,
+            description: "The url of the image prompt"
+        },
         options: {
             type: GraphQLList(GraphQLString),
             description: 'Plain text multiple choice answers',
+        },
+        prompt: {
+            type: GraphQLString,
+            description: 'The HTML Prompt.',
         },
     }),
 });
@@ -288,10 +297,6 @@ const deckType = new GraphQLObjectType<Deck>({
             type: GraphQLString,
             description: 'When the deck was updated',
         },
-        published: {
-            type: GraphQLString,
-            description: 'When the deck was published',
-        },
     }),
 });
 
@@ -303,21 +308,29 @@ const cardType = new GraphQLObjectType<Card>({
             type: GraphQLNonNull(GraphQLString),
             description: 'The id of the card.',
         },
-        prompt: {
-            type: GraphQLNonNull(GraphQLString),
-            description: 'The HTML Prompt.',
-        },
         answer: {
             type: GraphQLNonNull(GraphQLString),
             description: 'The plain text answer.',
         },
         details: {
             type: GraphQLString,
-            description: 'The HTML details.',
+            description: 'The plain text details.',
+        },
+        handle: {
+            type: GraphQLNonNull(GraphQLString),
+            description: 'The name of the card',
+        },
+        imageUrl: {
+            type: GraphQLString,
+            description: 'Url of the image prompt',
         },
         options: {
             type: new GraphQLList(GraphQLString),
             description: 'Plain text multiple choice options',
+        },
+        prompt: {
+            type: GraphQLNonNull(GraphQLString),
+            description: 'The HTML Prompt.',
         },
         tries: {
             type: new GraphQLList(tryType),
