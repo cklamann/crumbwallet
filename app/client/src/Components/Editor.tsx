@@ -1,92 +1,56 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { theme } from './Style/Theme';
-import { createStyles, makeStyles } from '@material-ui/core/styles';
-import { FormatIndentDecrease, FormatBold, FormatItalic } from '@material-ui/icons';
-import {
-    AtomicBlockUtils,
-    CompositeDecorator,
-    convertToRaw,
-    ContentBlock,
-    ContentState,
-    convertFromHTML,
-    getDefaultKeyBinding,
-    Editor,
-    EditorState,
-    KeyBindingUtil,
-    RichUtils,
-} from 'draft-js';
+import { createStyles, makeStyles, useTheme } from '@material-ui/core/styles';
+import { FormatBold, FormatItalic } from '@material-ui/icons';
+import { convertToRaw, ContentBlock, ContentState, convertFromHTML, Editor, EditorState, RichUtils } from 'draft-js';
 import Grid from '@material-ui/core/Grid';
 import draftToHtml from 'draftjs-to-html';
-import { get, noop } from 'lodash';
-import CircularProgress from '@material-ui/core/CircularProgress';
-import Dialog from '@material-ui/core/Dialog';
-import DialogContent from '@material-ui/core/DialogContent';
-import DialogContentText from '@material-ui/core/DialogContentText';
-import DialogTitle from '@material-ui/core/DialogTitle';
-import DialogActions from '@material-ui/core/DialogActions';
-import Button from '@material-ui/core/Button';
-import Chip from '@material-ui/core/Chip';
+import { noop } from 'lodash';
 import Paper from '@material-ui/core/Paper';
+import Typography from '@material-ui/core/Typography';
+import InputLabel from '@material-ui/core/InputLabel';
+import Box from '@material-ui/core/Box';
 import IconButton from '@material-ui/core/IconButton';
 import Toolbar from '@material-ui/core/Toolbar';
-import './../../../../../../node_modules/draft-js/dist/Draft.css';
+import './../../node_modules/draft-js/dist/Draft.css';
 
 interface RichEditor {
     content: string;
-    update: (content: string) => Promise<any>;
+    onChange: (content: string) => void;
 }
 
 const useStyles = makeStyles(theme =>
     createStyles({
         root: {},
-        Toolbar: {
-            display: 'flex',
-            justifyContent: 'space-between',
+        Editor: {
+            width: '100%',
+            border: `solid thin ${theme.palette.grey[700]}`,
+            padding: '5px',
+            flexRow: '1',
+            cursor: 'text',
         },
     })
 );
 
-const RichEditor: React.FC<RichEditor> = ({ content, update }) => {
-    const [editorState, _setEditorState] = useState<EditorState>(EditorState.createEmpty(decorator)),
-        [inputKey, setInputKey] = useState(
-            Math.random()
-                .toString(36)
-                .slice(4)
-        ),
+const RichEditor: React.FC<RichEditor> = ({ content, onChange }) => {
+    const [editorState, _setEditorState] = useState<EditorState>(null),
         editorRef = useRef<any>(),
-        classes = useStyles();
+        classes = useStyles(),
+        theme = useTheme();
 
     useEffect(() => {
-        const blocksFromHTML = convertFromHTML(content),
-            state = ContentState.createFromBlockArray(blocksFromHTML.contentBlocks, blocksFromHTML.entityMap);
-        setEditorState(EditorState.createWithContent(state));
+        if (content !== undefined && !editorState) {
+            if (content === '') {
+                return setEditorState(EditorState.createEmpty());
+            }
+            const blocksFromHTML = convertFromHTML(content),
+                state = ContentState.createFromBlockArray(blocksFromHTML.contentBlocks, blocksFromHTML.entityMap);
+            return setEditorState(EditorState.createWithContent(state));
+        }
     }, [content]);
 
     const setEditorState = (state: EditorState) => {
-        return _setEditorState(EditorState.set(state, { decorator }));
-    };
-
-    const _keyBindingFn = (e: any) => {
-        const { hasCommandModifier } = KeyBindingUtil;
-        if (e.keyCode === 83 /* `s` key */ && hasCommandModifier(e)) {
-            return 'save';
-        }
-        return getDefaultKeyBinding(e);
-    };
-
-    const _handleKeyCommand = (command: string, editorState: EditorState) => {
-        if (command === 'save') {
-            save(editorState);
-            return 'handled';
-        }
-
-        const newState = RichUtils.handleKeyCommand(editorState, command);
-
-        if (newState) {
-            setEditorState(newState);
-            return 'handled';
-        }
-        return 'not-handled';
+        _setEditorState(state);
+        return onChange(draftToHtml(convertToRaw(state.getCurrentContent())).replace(/\r\n|\n|\r/gm, '<br/>'));
     };
 
     const _blockStyleFn = (contentBlock: ContentBlock) => {
@@ -96,138 +60,59 @@ const RichEditor: React.FC<RichEditor> = ({ content, update }) => {
         }
     };
 
-    const save = (editorState: EditorState) =>
-        update(draftToHtml(convertToRaw(editorState.getCurrentContent())).replace(/\r\n|\n|\r/gm, '<br/>'));
-
-    return (
-        <>
-            <Grid direction="column" wrap="nowrap" item container spacing={1} alignContent="flex-start" xs={12}>
-                <Grid item>
-                    <Toolbar className={classes.Toolbar}>
-                        <Paper>
-                            {/* capture event that withdraws editor focus */}
+    return editorState ? (
+        <Grid direction="column" wrap="nowrap" item container spacing={1} alignContent="flex-start" xs={12}>
+            <Grid item>
+                <Paper>
+                    <Grid wrap="nowrap" container justify="space-between">
+                        <Grid item container xs={6} alignItems="flex-end">
+                            <InputLabel shrink={true}>Card Prompt</InputLabel>
+                        </Grid>
+                        <Grid container item justify="flex-end">
                             <IconButton
+                                size="small"
                                 onMouseDown={e => e.preventDefault()}
-                                style={{ color: editorState.getCurrentInlineStyle().has('ITALIC') ? 'blue' : 'black' }}
+                                style={{
+                                    color: editorState.getCurrentInlineStyle().has('ITALIC')
+                                        ? theme.palette.primary.light
+                                        : theme.palette.primary.dark,
+                                }}
                                 onClick={() => setEditorState(RichUtils.toggleInlineStyle(editorState, 'ITALIC'))}
                             >
                                 <FormatItalic />
                             </IconButton>
                             <IconButton
+                                size="small"
                                 onMouseDown={e => {
                                     e.preventDefault();
                                 }}
-                                style={{ color: editorState.getCurrentInlineStyle().has('BOLD') ? 'blue' : 'black' }}
+                                style={{
+                                    color: editorState.getCurrentInlineStyle().has('BOLD')
+                                        ? theme.palette.primary.light
+                                        : theme.palette.primary.dark,
+                                }}
                                 onClick={() => setEditorState(RichUtils.toggleInlineStyle(editorState, 'BOLD'))}
                             >
                                 <FormatBold />
                             </IconButton>
-                            <IconButton
-                                onMouseDown={e => e.preventDefault()}
-                                style={{
-                                    color:
-                                        editorState
-                                            .getCurrentContent()
-                                            .getBlockForKey(editorState.getSelection().getStartKey())
-                                            .getType() === 'blockquote'
-                                            ? theme.palette.primary.main
-                                            : 'black',
-                                }}
-                                onClick={() => setEditorState(RichUtils.toggleBlockType(editorState, 'blockquote'))}
-                            >
-                                <FormatIndentDecrease />
-                            </IconButton>
-                        </Paper>
-                    </Toolbar>
-                </Grid>
-                <Grid onClick={editorRef.current ? editorRef.current.focus : noop} item container xs={12}>
-                    <StyledWrapper>
-                        <Editor
-                            blockRendererFn={imageBlockRenderer}
-                            blockStyleFn={_blockStyleFn}
-                            editorState={editorState}
-                            handleKeyCommand={_handleKeyCommand}
-                            keyBindingFn={_keyBindingFn}
-                            onChange={setEditorState}
-                            placeholder="enter some text..."
-                            ref={editorRef}
-                            spellCheck={true}
-                        />
-                    </StyledWrapper>
-                </Grid>
-                <Grid item container>
-                    <Button variant="contained" color="primary" onClick={save.bind(null, editorState)}>
-                        Save
-                    </Button>
-                </Grid>
+                        </Grid>
+                    </Grid>
+                </Paper>
             </Grid>
-            <Dialog
-                open={false}
-                PaperProps={{
-                    style: {
-                        backgroundColor: 'transparent',
-                        boxShadow: 'none',
-                    },
-                }}
-            >
-                <DialogContent>
-                    <CircularProgress />
-                </DialogContent>
-            </Dialog>
-        </>
-    );
+            <Grid onClick={editorRef.current ? editorRef.current.focus : noop} item container xs={12}>
+                <Box className={classes.Editor}>
+                    <Editor
+                        blockStyleFn={_blockStyleFn}
+                        editorState={editorState}
+                        onChange={setEditorState}
+                        placeholder="enter some text..."
+                        ref={editorRef}
+                        spellCheck={true}
+                    />
+                </Box>
+            </Grid>
+        </Grid>
+    ) : null;
 };
 
 export default RichEditor;
-
-
-//todo: deal with this
-const StyledWrapper = styled.div`
-    width: 100%;
-    border: solid thin;
-    padding: 5px;
-    min-height: 250px;
-    flex-row: 1;
-    cursor: text;
-    img {
-        display: block;
-        margin: 0 auto;
-        max-width: 100%;
-    }
-    .content-block-default {
-        margin-bottom: ${theme.spacing(1)}px;
-    }
-`;
-
-const imageBlockRenderer = (block: ContentBlock) => {
-    if (block.getType() === 'atomic') {
-        return {
-            component: ({ contentState, block }: { contentState: Draft.ContentState; block: Draft.ContentBlock }) => {
-                const entity = contentState.getEntity(block.getEntityAt(0));
-                const { src } = entity.getData();
-                return <img src={src} />;
-            },
-            editable: false,
-        };
-    }
-    return null;
-};
-
-const findImageEntities = (contentBlock: ContentBlock, callback: any, contentState: ContentState) => {
-    contentBlock.findEntityRanges(character => {
-        const entityKey = character.getEntity();
-        return entityKey !== null && contentState.getEntity(entityKey).getType() === 'IMAGE';
-    }, callback);
-};
-//todo: merge into imageBlockRenderer once rendering
-const Image: React.FC<{ contentState: ContentState; entityKey: string }> = ({ contentState, entityKey }) => {
-    const { height, src, width } = contentState.getEntity(entityKey).getData();
-    return <img src={src} height={height} width={width} />;
-};
-
-const decorator = new CompositeDecorator([
-    {
-        strategy: findImageEntities,
-        component: Image,
-    },
-]);

@@ -44,7 +44,7 @@ export const fetchCardQuery = gql`
             _id
             prompt
             answer
-            imageUrl
+            imageKey
             details
             options
             handle
@@ -59,7 +59,7 @@ export const updateCardMutation = gql`
         $answer: String
         $details: String
         $handle: String
-        $imageUrl: String
+        $imageKey: String
         $options: [String!]
     ) {
         updateCard(
@@ -69,7 +69,7 @@ export const updateCardMutation = gql`
                 answer: $answer
                 details: $details
                 handle: $handle
-                imageUrl: $imageUrl
+                imageKey: $imageKey
                 options: $options
             }
         ) {
@@ -78,7 +78,7 @@ export const updateCardMutation = gql`
             answer
             details
             handle
-            imageUrl
+            imageKey
             options
         }
     }

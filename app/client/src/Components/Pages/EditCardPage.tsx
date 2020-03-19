@@ -2,32 +2,42 @@ import React, { useReducer, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { Card } from 'Models/Cards';
 import { fetchCardQuery, updateCardMutation, useApolloMutation, useApolloQuery } from '../../api/ApolloClient';
-import { makeStyles, createStyles, useTheme } from '@material-ui/core/styles';
+import Editor from './../Editor';
 import Paper from '@material-ui/core/Paper';
-import Typography from '@material-ui/core/Typography';
 import Grid from '@material-ui/core/Grid';
 import FormControl from '@material-ui/core/FormControl';
-import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Button from '@material-ui/core/Button';
 import Input from '@material-ui/core/Input';
 import InputLabel from '@material-ui/core/InputLabel';
-import { capitalize, get, isEqual, pick } from 'lodash';
+import { capitalize, get, pick } from 'lodash';
 import { withAuthenticator, S3Image } from 'aws-amplify-react';
+import { makeStyles, createStyles, useTheme } from '@material-ui/core/styles';
 
 interface EditCardPage {
     uploadToS3: (file: File) => Promise<string>;
 }
 
-type ReducerState = Pick<Card, 'answer' | 'prompt' | 'imageUrl' | 'handle' | 'options' | 'details'>;
+type ReducerState = Pick<Card, 'answer' | 'prompt' | 'imageKey' | 'handle' | 'options' | 'details'>;
 
 const INITIAL_STATE: ReducerState = {
     answer: '',
     details: '',
-    prompt: '',
-    imageUrl: '',
+    prompt: undefined,
+    imageKey: '',
     handle: '',
-    options: null,
+    options: undefined,
 };
+
+const usePageStyles = makeStyles(theme =>
+    createStyles({
+        root: {
+            border: 'black',
+            img: {
+                width: '100%',
+            },
+        },
+    })
+);
 
 const EditCardPage: React.FC<EditCardPage> = ({ uploadToS3 }) => {
     const { cardId } = useParams(),
@@ -37,17 +47,19 @@ const EditCardPage: React.FC<EditCardPage> = ({ uploadToS3 }) => {
         theme = useTheme(),
         [state, dispatch] = useReducer(reducer, INITIAL_STATE),
         [_updateCard] = useApolloMutation<{ card: { _id: string } }>(updateCardMutation),
-        updateCard = (args: ReducerState = {}) =>
-            _updateCard({ variables: { _id: get(data, 'card._id'), ...state, ...args } }),
+        updateCard = (args: Partial<ReducerState> = {}) => {
+            console.log({ variables: { _id: get(data, 'card._id'), ...state, ...args } });
+            _updateCard({ variables: { _id: get(data, 'card._id'), ...state, ...args } });
+        },
         updateField = <T extends keyof ReducerState>(field: T) => (value: ReducerState[T]) =>
             dispatch({ type: 'update', payload: { [field]: value } }),
-        inputRef = useRef();
+        classes = usePageStyles();
 
     useEffect(() => {
         if (get(data, 'card')) {
             dispatch({
                 type: 'update',
-                payload: pick(get(data, 'card'), 'answer', 'prompt', 'imageUrl', 'handle', 'options', 'details'),
+                payload: pick(get(data, 'card'), 'answer', 'prompt', 'imageKey', 'handle', 'options', 'details'),
             });
         }
     }, [get(data, 'card')]);
@@ -63,8 +75,31 @@ const EditCardPage: React.FC<EditCardPage> = ({ uploadToS3 }) => {
                             <TextInput name="handle" updateFn={updateField} val={state.handle} />
                         </Grid>
                         <Grid item container xs={12} md={6}>
-                            {data.card.imageUrl ? (
-                                <S3Image imgKey={data.card.imageUrl} />
+                            <Editor content={state.prompt} onChange={updateField('prompt')} />
+                        </Grid>
+                        <Grid item container xs={12} md={6}>
+                            {data.card.imageKey ? (
+                                <>
+                                    <S3Image
+                                        theme={{
+                                            photoImg: {
+                                                width: '100%',
+                                                objectFit: 'cover',
+                                            },
+                                        }}
+                                        imgKey={data.card.imageKey}
+                                    />
+                                    <label htmlFor="contained-button-file">
+                                        <Button
+                                            onClick={() => updateCard({ imageKey: '' })}
+                                            variant="contained"
+                                            color="primary"
+                                            component="span"
+                                        >
+                                            Remove Image
+                                        </Button>
+                                    </label>
+                                </>
                             ) : (
                                 <>
                                     <input
@@ -75,7 +110,7 @@ const EditCardPage: React.FC<EditCardPage> = ({ uploadToS3 }) => {
                                         onChange={async e => {
                                             //setUpdating
                                             const key = await uploadToS3(e.currentTarget.files[0]);
-                                            updateCard({ imageUrl: key });
+                                            updateCard({ imageKey: key });
                                             //setnot updating
                                         }}
                                     />
@@ -96,7 +131,7 @@ const EditCardPage: React.FC<EditCardPage> = ({ uploadToS3 }) => {
                     </Grid>
                     <Grid container spacing={2}>
                         <Grid item>
-                            <Button variant="outlined" onClick={updateCard}>
+                            <Button variant="outlined" onClick={updateCard.bind(null, {})}>
                                 Update
                             </Button>
                         </Grid>
