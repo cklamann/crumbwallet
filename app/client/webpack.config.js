@@ -9,7 +9,7 @@ module.exports = {
     entry: './src/index.tsx',
     devtool: 'inline-source-map',
     resolve: {
-        extensions: ['.ts', '.tsx', '.js', '.json'],
+        extensions: ['.ts', '.tsx', '.js', '.mjs', '.json'],
         alias: {
             Models: path.resolve(__dirname, './models/'),
         },
@@ -26,6 +26,11 @@ module.exports = {
                 exclude: /node_modules/,
             },
             {
+                test: /\.mjs$/,
+                include: /node_modules/,
+                type: "javascript/auto",
+              },
+            {
                 test: /\.js$/,
                 use: ['source-map-loader'],
                 enforce: 'pre',
@@ -35,12 +40,15 @@ module.exports = {
                 exclude: /node_modules/,
                 use: ['style-loader', MiniCssExtractPlugin.loader, 'css-loader', 'sass-loader'],
             },
+            {
+                test: /\.css$/,
+                use: ['style-loader', 'css-loader'],
+            },
         ],
     },
     plugins: [
         new HtmlWebpackPlugin({
             template: './src/index.ejs',
-            hash: true,
         }),
         new webpack.DefinePlugin(
             //probably want to filter out all but those that begin with APP

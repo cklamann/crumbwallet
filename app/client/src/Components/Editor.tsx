@@ -66,13 +66,9 @@ const RichEditor: React.FC<RichEditor> = ({ content, update }) => {
         return _setEditorState(EditorState.set(state, { decorator }));
     };
 
-    const removeImage = (key: string) => {
-        /* todo: figure out */
-    };
-
     const _keyBindingFn = (e: any) => {
         const { hasCommandModifier } = KeyBindingUtil;
-        if (e.keyCode === 83 /* `S` key */ && hasCommandModifier(e)) {
+        if (e.keyCode === 83 /* `s` key */ && hasCommandModifier(e)) {
             return 'save';
         }
         return getDefaultKeyBinding(e);
@@ -80,7 +76,7 @@ const RichEditor: React.FC<RichEditor> = ({ content, update }) => {
 
     const _handleKeyCommand = (command: string, editorState: EditorState) => {
         if (command === 'save') {
-            saveDraft(editorState);
+            save(editorState);
             return 'handled';
         }
 
@@ -102,14 +98,6 @@ const RichEditor: React.FC<RichEditor> = ({ content, update }) => {
 
     const save = (editorState: EditorState) =>
         update(draftToHtml(convertToRaw(editorState.getCurrentContent())).replace(/\r\n|\n|\r/gm, '<br/>'));
-
-    const insertImage = (src: string) => {
-        const contentState = editorState.getCurrentContent(),
-            contentStateWithEntity = contentState.createEntity('IMAGE', 'IMMUTABLE', { src }),
-            entityKey = contentStateWithEntity.getLastCreatedEntityKey(),
-            newEditorState = EditorState.set(editorState, { currentContent: contentStateWithEntity });
-        setEditorState(AtomicBlockUtils.insertAtomicBlock(newEditorState, entityKey, ' '));
-    };
 
     return (
         <>
@@ -149,22 +137,6 @@ const RichEditor: React.FC<RichEditor> = ({ content, update }) => {
                             >
                                 <FormatIndentDecrease />
                             </IconButton>
-                            <input
-                                key={inputKey}
-                                type="file"
-                                onMouseDown={e => e.preventDefault()}
-                                onChange={e => {
-                                    //todo: this should probably be passed in and should be serverless
-                                    //also,probably need a periodic purge of orphaned images if we're posting them all...
-                                    postToS3(e.currentTarget.files[0]);
-                                    setInputKey(
-                                        Math.random()
-                                            .toString(36)
-                                            .slice(4)
-                                    );
-                                }}
-                                accept=".jpg"
-                            />
                         </Paper>
                     </Toolbar>
                 </Grid>

@@ -1,6 +1,5 @@
 import ApolloClient, { gql, DocumentNode } from 'apollo-boost';
 import { useQuery, useMutation, QueryHookOptions } from '@apollo/react-hooks';
-import { Deck } from 'Models/Decks';
 
 const port = process.env.APP_PORT;
 const host = process.env.APP_HOST === '0.0.0.0' ? 'localhost' : process.env.APP_HOST;
@@ -45,19 +44,42 @@ export const fetchCardQuery = gql`
             _id
             prompt
             answer
+            imageUrl
             details
             options
+            handle
         }
     }
 `;
 
 export const updateCardMutation = gql`
-    mutation updateCard($cardId: String!, $prompt: String, $answer: String, $details: string) {
-        updateCard(input: { cardId: $cardId, prompt: $prompt, answer: $answer, details: $details }) {
+    mutation card(
+        $_id: String!
+        $prompt: String
+        $answer: String
+        $details: String
+        $handle: String
+        $imageUrl: String
+        $options: [String!]
+    ) {
+        updateCard(
+            input: {
+                _id: $_id
+                prompt: $prompt
+                answer: $answer
+                details: $details
+                handle: $handle
+                imageUrl: $imageUrl
+                options: $options
+            }
+        ) {
             _id
             prompt
             answer
             details
+            handle
+            imageUrl
+            options
         }
     }
 `;
@@ -65,6 +87,22 @@ export const updateCardMutation = gql`
 export const addCardMutation = gql`
     mutation addCard($deckId: String!) {
         addCard(input: { deckId: $deckId, prompt: "<p>Prompt</p>", answer: "<p>Answer</p>", details: "details" }) {
+            _id
+        }
+    }
+`;
+
+export const addDeckMutation = gql`
+    mutation deckId($name: String!, $categories: [String!]) {
+        createDeck(input: { name: $name, categories: $categories }) {
+            _id
+        }
+    }
+`;
+
+export const updateDeckMutation = gql`
+    mutation deck($_id: String!, $name: String, $categories: [String!], $details: String) {
+        updateDeck(input: { _id: $_id, name: $name, categories: $categories, details: $details }) {
             _id
         }
     }

@@ -1,0 +1,15 @@
+{
+	"auth": {
+		"flashcard5d99d84a": {
+			"service": "Cognito",
+			"providerPlugin": "awscloudformation",
+			"dependsOn": []
+		}
+	},
+	"storage": {
+		"images": {
+			"service": "S3",
+			"providerPlugin": "awscloudformation"
+		}
+	}
+}
