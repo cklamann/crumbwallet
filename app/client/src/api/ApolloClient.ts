@@ -1,5 +1,5 @@
 import ApolloClient, { gql, DocumentNode } from 'apollo-boost';
-import { useQuery, useMutation, QueryHookchoices } from '@apollo/react-hooks';
+import { useQuery, useMutation, QueryHookOptions } from '@apollo/react-hooks';
 
 const port = process.env.APP_PORT;
 const host = process.env.APP_HOST === '0.0.0.0' ? 'localhost' : process.env.APP_HOST;
@@ -8,9 +8,9 @@ const client = new ApolloClient<any>({
     uri: `http://${host}:${port}/graphql`,
 });
 
-export const useApolloQuery = <T>(query: DocumentNode, choices: QueryHookchoices = {}) =>
+export const useApolloQuery = <T>(query: DocumentNode, choices: QueryHookOptions = {}) =>
     useQuery<T>(query, { client, ...choices });
-export const useApolloMutation = <T>(query: DocumentNode, choices: QueryHookchoices = {}) =>
+export const useApolloMutation = <T>(query: DocumentNode, choices: QueryHookOptions = {}) =>
     useMutation<T, any>(query, { client, ...choices });
 
 export const fetchDeckNamesQuery = gql`
@@ -29,6 +29,7 @@ export const fetchDeckQuery = gql`
             name
             cards {
                 _id
+                handle
                 prompt
                 answer
                 details
@@ -86,7 +87,15 @@ export const updateCardMutation = gql`
 
 export const addCardMutation = gql`
     mutation addCard($deckId: String!) {
-        addCard(input: { deckId: $deckId, prompt: "<p>Prompt</p>", answer: "<p>Answer</p>", details: "details" }) {
+        addCard(
+            input: {
+                deckId: $deckId
+                handle: "New Card"
+                prompt: "<p>New Prompt</p>"
+                answer: "New answer"
+                details: "new details"
+            }
+        ) {
             _id
         }
     }

@@ -1,10 +1,8 @@
 import React, { useState } from 'react';
 import Grid from '@material-ui/core/Grid';
-import Paper from '@material-ui/core/Paper';
 import TextField from '@material-ui/core/TextField';
 import Button from '@material-ui/core/Button';
 import Chip from '@material-ui/core/Chip';
-import Done from '@material-ui/icons/Done';
 import Close from '@material-ui/icons/CloseRounded';
 
 interface ChoiceInput {

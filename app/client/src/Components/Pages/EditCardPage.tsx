@@ -122,7 +122,7 @@ const EditCardPage: React.FC<EditCardPage> = ({ uploadToS3 }) => {
                             )}
                         </Grid>
                         <Grid item container xs={12} md={6}>
-                            <TextInput name="answer" updateFn={updateField} val={state.answer} />
+                             <TextInput name="answer" updateFn={updateField} val={state.answer} />
                         </Grid>
                         <Grid item container xs={12} md={6}>
                             <TextInput textarea name="details" updateFn={updateField} val={state.details} />

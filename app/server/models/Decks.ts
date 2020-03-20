@@ -4,7 +4,7 @@ import { Try } from './Tries';
 import { remove } from 'lodash';
 
 export interface Deck {
-    _id?: any;
+    _id: string;
     name: string;
     cards: Card[];
     categories: string[];

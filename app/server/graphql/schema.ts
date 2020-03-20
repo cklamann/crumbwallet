@@ -216,6 +216,10 @@ const newCardInputType = new GraphQLInputObjectType({
             type: GraphQLNonNull(GraphQLString),
             description: 'The _id of the containing deck',
         },
+        handle: {
+            type: GraphQLNonNull(GraphQLString),
+            description: 'The identifying string of the card.',
+        },
         prompt: {
             type: GraphQLNonNull(GraphQLString),
             description: 'The HTML Prompt.',
