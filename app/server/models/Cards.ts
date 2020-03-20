@@ -6,7 +6,8 @@ export interface Card {
     answer: string;
     details: string;
     handle: string;
-    imageUrl?: string;
+    choices: string[];
+    imageKey?: string;
     tries: Try[];
     prompt: string;
     created: Date;
@@ -30,7 +31,7 @@ export const cardSchema = new mongoose.Schema<CardDoc>({
         type: 'string',
         required: true,
     },
-    options: {
+    choices: {
         type: 'array',
         of: 'string',
     },

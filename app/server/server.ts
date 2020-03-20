@@ -61,6 +61,7 @@ app.use((req, _, next) => {
     if (req.url.endsWith('.js')) {
         req.url = req.url.split('/')[req.url.split('/').length - 1];
     }
+    console.log(req.url);
     next();
 });
 

@@ -123,11 +123,11 @@ const mutationType = new GraphQLObjectType({
                 },
             },
             resolve: async (_source, { input }) => {
-                const { cardId, ...fields } = input,
-                    deck: DeckDoc = await Decks.schema.statics.findByCardId(cardId),
-                    card = { ...deck.cards.find(c => c._id == cardId), ...fields, ...{ updated: new Date() } };
+                const { _id, ...fields } = input,
+                    deck: DeckDoc = await Decks.schema.statics.findByCardId(_id),
+                    card = { ...deck.cards.find(c => c._id == _id), ...fields, ...{ updated: new Date() } };
 
-                deck.cards = deck.cards.map(c => (c._id == cardId ? card : c));
+                deck.cards = deck.cards.map(c => (c._id == _id ? card : c));
                 await deck.save();
                 return card;
             },
@@ -228,7 +228,7 @@ const newCardInputType = new GraphQLInputObjectType({
             type: GraphQLString,
             description: 'The HTML details.',
         },
-        options: {
+        choices: {
             type: GraphQLList(GraphQLString),
             description: 'Plain text multiple choice answers',
         },
@@ -238,27 +238,27 @@ const newCardInputType = new GraphQLInputObjectType({
 const updateCardInputType = new GraphQLInputObjectType({
     name: 'updateCardInput',
     fields: () => ({
-        cardId: {
+        _id: {
             type: GraphQLNonNull(GraphQLString),
             description: 'The _id of the card',
         },
         answer: {
             type: GraphQLString,
-            description: 'The HTML answer.',
+            description: 'The plain text answer.',
         },
         details: {
             type: GraphQLString,
-            description: 'The HTML details.',
+            description: 'The plain text details.',
         },
         handle: {
             type: GraphQLString,
-            description: 'The name of the card'
+            description: 'The name of the card',
         },
-        imageUrl: {
+        imageKey: {
             type: GraphQLString,
-            description: "The url of the image prompt"
+            description: 'The url of the image prompt',
         },
-        options: {
+        choices: {
             type: GraphQLList(GraphQLString),
             description: 'Plain text multiple choice answers',
         },
@@ -320,13 +320,13 @@ const cardType = new GraphQLObjectType<Card>({
             type: GraphQLNonNull(GraphQLString),
             description: 'The name of the card',
         },
-        imageUrl: {
+        imageKey: {
             type: GraphQLString,
             description: 'Url of the image prompt',
         },
-        options: {
+        choices: {
             type: new GraphQLList(GraphQLString),
-            description: 'Plain text multiple choice options',
+            description: 'Plain text multiple choice choices',
         },
         prompt: {
             type: GraphQLNonNull(GraphQLString),

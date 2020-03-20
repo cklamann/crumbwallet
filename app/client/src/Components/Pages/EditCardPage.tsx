@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { Card } from 'Models/Cards';
 import { fetchCardQuery, updateCardMutation, useApolloMutation, useApolloQuery } from '../../api/ApolloClient';
 import Editor from './../Editor';
+import ChoiceInput from './../ChoiceInput';
 import Paper from '@material-ui/core/Paper';
 import Grid from '@material-ui/core/Grid';
 import FormControl from '@material-ui/core/FormControl';
@@ -17,7 +18,7 @@ interface EditCardPage {
     uploadToS3: (file: File) => Promise<string>;
 }
 
-type ReducerState = Pick<Card, 'answer' | 'prompt' | 'imageKey' | 'handle' | 'options' | 'details'>;
+type ReducerState = Pick<Card, 'answer' | 'prompt' | 'imageKey' | 'handle' | 'choices' | 'details'>;
 
 const INITIAL_STATE: ReducerState = {
     answer: '',
@@ -25,7 +26,7 @@ const INITIAL_STATE: ReducerState = {
     prompt: undefined,
     imageKey: '',
     handle: '',
-    options: undefined,
+    choices: undefined,
 };
 
 const usePageStyles = makeStyles(theme =>
@@ -47,10 +48,8 @@ const EditCardPage: React.FC<EditCardPage> = ({ uploadToS3 }) => {
         theme = useTheme(),
         [state, dispatch] = useReducer(reducer, INITIAL_STATE),
         [_updateCard] = useApolloMutation<{ card: { _id: string } }>(updateCardMutation),
-        updateCard = (args: Partial<ReducerState> = {}) => {
-            console.log({ variables: { _id: get(data, 'card._id'), ...state, ...args } });
-            _updateCard({ variables: { _id: get(data, 'card._id'), ...state, ...args } });
-        },
+        updateCard = (args: Partial<ReducerState> = {}) =>
+            _updateCard({ variables: { _id: get(data, 'card._id'), ...state, ...args } }),
         updateField = <T extends keyof ReducerState>(field: T) => (value: ReducerState[T]) =>
             dispatch({ type: 'update', payload: { [field]: value } }),
         classes = usePageStyles();
@@ -59,7 +58,7 @@ const EditCardPage: React.FC<EditCardPage> = ({ uploadToS3 }) => {
         if (get(data, 'card')) {
             dispatch({
                 type: 'update',
-                payload: pick(get(data, 'card'), 'answer', 'prompt', 'imageKey', 'handle', 'options', 'details'),
+                payload: pick(get(data, 'card'), 'answer', 'prompt', 'imageKey', 'handle', 'choices', 'details'),
             });
         }
     }, [get(data, 'card')]);
@@ -127,6 +126,12 @@ const EditCardPage: React.FC<EditCardPage> = ({ uploadToS3 }) => {
                         </Grid>
                         <Grid item container xs={12} md={6}>
                             <TextInput textarea name="details" updateFn={updateField} val={state.details} />
+                        </Grid>
+                        <Grid item container xs={12} md={6}>
+                            <ChoiceInput
+                                choices={data.card.choices || []}
+                                updateChoices={choices => updateCard({ choices })}
+                            />
                         </Grid>
                     </Grid>
                     <Grid container spacing={2}>

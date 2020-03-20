@@ -1,5 +1,5 @@
 import ApolloClient, { gql, DocumentNode } from 'apollo-boost';
-import { useQuery, useMutation, QueryHookOptions } from '@apollo/react-hooks';
+import { useQuery, useMutation, QueryHookchoices } from '@apollo/react-hooks';
 
 const port = process.env.APP_PORT;
 const host = process.env.APP_HOST === '0.0.0.0' ? 'localhost' : process.env.APP_HOST;
@@ -8,10 +8,10 @@ const client = new ApolloClient<any>({
     uri: `http://${host}:${port}/graphql`,
 });
 
-export const useApolloQuery = <T>(query: DocumentNode, options: QueryHookOptions = {}) =>
-    useQuery<T>(query, { client, ...options });
-export const useApolloMutation = <T>(query: DocumentNode, options: QueryHookOptions = {}) =>
-    useMutation<T, any>(query, { client, ...options });
+export const useApolloQuery = <T>(query: DocumentNode, choices: QueryHookchoices = {}) =>
+    useQuery<T>(query, { client, ...choices });
+export const useApolloMutation = <T>(query: DocumentNode, choices: QueryHookchoices = {}) =>
+    useMutation<T, any>(query, { client, ...choices });
 
 export const fetchDeckNamesQuery = gql`
     query {
@@ -32,7 +32,7 @@ export const fetchDeckQuery = gql`
                 prompt
                 answer
                 details
-                options
+                choices
             }
         }
     }
@@ -46,7 +46,7 @@ export const fetchCardQuery = gql`
             answer
             imageKey
             details
-            options
+            choices
             handle
         }
     }
@@ -60,7 +60,7 @@ export const updateCardMutation = gql`
         $details: String
         $handle: String
         $imageKey: String
-        $options: [String!]
+        $choices: [String!]
     ) {
         updateCard(
             input: {
@@ -70,7 +70,7 @@ export const updateCardMutation = gql`
                 details: $details
                 handle: $handle
                 imageKey: $imageKey
-                options: $options
+                choices: $choices
             }
         ) {
             _id
@@ -79,7 +79,7 @@ export const updateCardMutation = gql`
             details
             handle
             imageKey
-            options
+            choices
         }
     }
 `;
