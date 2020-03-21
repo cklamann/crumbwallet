@@ -2,13 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useHistory } from 'react-router-dom';
 import { Deck } from 'Models/Decks';
 import { Card } from 'Models/Cards';
-import {
-    addCardMutation,
-    useApolloMutation,
-    useApolloQuery,
-    fetchDeckQuery,
-    updateDeckMutation,
-} from '../../api/ApolloClient';
+import { useAddCardMutation, useFetchDeckQuery, useUpdateDeckMutation } from '../../api/ApolloClient';
 import MenuItem from './../MenuItem';
 import Paper from '@material-ui/core/Paper';
 import Grid from '@material-ui/core/Grid';
@@ -27,11 +21,9 @@ const EditDeckPage: React.FC<EditDeckPage> = ({}) => {
     const { deckId } = useParams(),
         [newName, setNewName] = useState(''),
         [updateLoading, setUpdateLoading] = useState(false),
-        { loading: deckLoading, data, refetch: refetchDeck } = useApolloQuery<{ deck: Deck }>(fetchDeckQuery, {
-            variables: { _id: deckId },
-        }),
-        [createCard] = useApolloMutation<{ addCard: { _id: string } }>(addCardMutation),
-        [updateDeck] = useApolloMutation<{ addCard: { _id: string } }>(updateDeckMutation),
+        { loading: deckLoading, data, refetch: refetchDeck } = useFetchDeckQuery(deckId),
+        [createCard] = useAddCardMutation(),
+        [updateDeck] = useUpdateDeckMutation(),
         history = useHistory(),
         loading = updateLoading || deckLoading;
     useEffect(() => {
@@ -72,7 +64,7 @@ const EditDeckPage: React.FC<EditDeckPage> = ({}) => {
                     <MenuItem title="Edit Card">
                         <CardList
                             cards={data.deck.cards}
-                            onSelect={(cardId: string) => history.push(`/editCard/${cardId}`)}
+                            onSelect={(cardId: string) => history.push(`/decks/${deckId}/cards/${cardId}/edit`)}
                         />
                     </MenuItem>
                     <MenuItem
@@ -81,7 +73,7 @@ const EditDeckPage: React.FC<EditDeckPage> = ({}) => {
                                 style={{ display: 'flex' }}
                                 onClick={() =>
                                     createCard({ variables: { deckId } }).then(res =>
-                                        history.push(`/editCard/${res.data.addCard._id}`)
+                                        history.push(`/decks/${deckId}/cards/${res.data.addCard._id}/edit`)
                                     )
                                 }
                             >

@@ -40,20 +40,13 @@ export default () => {
                         </AppBar>
                     </Link>
                     <Switch>
-                        <Route exact path="/editDeck/:deckId">
+                        <Route exact path="/decks/:deckId/edit">
                             <EditDeckPage />
                         </Route>
-                        <Route exact path="/editCard/:cardId">
+                        <Route exact path="/decks/:deckId/cards/:cardId/edit">
                             <EditCardPage
-                                uploadToS3={(file: File) =>
-                                    Storage.put(
-                                        Math.random()
-                                            .toString(36)
-                                            .slice(2) +
-                                            '_' +
-                                            file.name,
-                                        file
-                                    ).then((res: { key: string }) => res.key)
+                                uploadToS3={(file: File, cardId: string) =>
+                                    Storage.put(cardId + '_' + file.name, file).then((res: { key: string }) => res.key)
                                 }
                             />
                         </Route>

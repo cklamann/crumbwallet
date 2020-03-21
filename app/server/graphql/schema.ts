@@ -7,6 +7,7 @@ import {
     GraphQLString,
     GraphQLNonNull,
     GraphQLSkipDirective,
+    GraphQLScalarType,
 } from 'graphql';
 import Decks, { Deck, DeckDoc } from '../models/Decks';
 import { Try } from 'Models/Tries';
@@ -103,7 +104,7 @@ const mutationType = new GraphQLObjectType({
             },
         },
         deleteCard: {
-            type: deckType,
+            type: new GraphQLObjectType({ name: 'status', fields: () => ({ deleted: { type: GraphQLBoolean } }) }),
             args: {
                 _id: {
                     type: GraphQLNonNull(GraphQLString),
@@ -112,7 +113,8 @@ const mutationType = new GraphQLObjectType({
             resolve: async (_source, { _id }) => {
                 const deck: DeckDoc = await Decks.schema.statics.findByCardId(_id);
                 deck.cards = deck.cards.filter(c => c._id != _id);
-                return deck.save();
+                await deck.save();
+                return { deleted: true };
             },
         },
         updateCard: {

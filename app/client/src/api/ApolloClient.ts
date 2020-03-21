@@ -1,5 +1,7 @@
 import ApolloClient, { gql, DocumentNode } from 'apollo-boost';
 import { useQuery, useMutation, QueryHookOptions } from '@apollo/react-hooks';
+import { Deck } from 'Models/Decks';
+import { Card } from 'Models/Cards';
 
 const port = process.env.APP_PORT;
 const host = process.env.APP_HOST === '0.0.0.0' ? 'localhost' : process.env.APP_HOST;
@@ -9,11 +11,11 @@ const client = new ApolloClient<any>({
 });
 
 export const useApolloQuery = <T>(query: DocumentNode, choices: QueryHookOptions = {}) =>
-    useQuery<T>(query, { client, ...choices });
+    useQuery<T>(query, { client, fetchPolicy: 'no-cache', ...choices });
 export const useApolloMutation = <T>(query: DocumentNode, choices: QueryHookOptions = {}) =>
-    useMutation<T, any>(query, { client, ...choices });
+    useMutation<T>(query, { client, fetchPolicy: 'no-cache', ...choices });
 
-export const fetchDeckNamesQuery = gql`
+const fetchDecksQuery = gql`
     query {
         decks {
             _id
@@ -22,7 +24,9 @@ export const fetchDeckNamesQuery = gql`
     }
 `;
 
-export const fetchDeckQuery = gql`
+export const useFetchDecksQuery = () => useApolloQuery<{ decks: Deck[] }>(fetchDecksQuery);
+
+const fetchDeckQuery = gql`
     query fetchDeck($_id: String!) {
         deck(_id: $_id) {
             _id
@@ -39,7 +43,12 @@ export const fetchDeckQuery = gql`
     }
 `;
 
-export const fetchCardQuery = gql`
+export const useFetchDeckQuery = (_id: string) =>
+    useApolloQuery<{ deck: Deck }>(fetchDeckQuery, {
+        variables: { _id },
+    });
+
+const fetchCardQuery = gql`
     query fetchCard($_id: String!) {
         card(_id: $_id) {
             _id
@@ -53,7 +62,12 @@ export const fetchCardQuery = gql`
     }
 `;
 
-export const updateCardMutation = gql`
+export const useFetchCardQuery = (_id: string) =>
+    useApolloQuery<{ card: Card }>(fetchCardQuery, {
+        variables: { _id },
+    });
+
+const updateCardMutation = gql`
     mutation card(
         $_id: String!
         $prompt: String
@@ -85,7 +99,19 @@ export const updateCardMutation = gql`
     }
 `;
 
-export const addCardMutation = gql`
+export const useUpdateCardMutation = () => useApolloMutation<{ card: { _id: string } }>(updateCardMutation);
+
+const deleteCardMutation = gql`
+    mutation deleteCard($_id: String!) {
+        deleteCard(_id: $_id) {
+            deleted
+        }
+    }
+`;
+
+export const useDeleteCardMutation = () => useApolloMutation<{ deleted: boolean }>(deleteCardMutation);
+
+const addCardMutation = gql`
     mutation addCard($deckId: String!) {
         addCard(
             input: {
@@ -101,18 +127,24 @@ export const addCardMutation = gql`
     }
 `;
 
-export const addDeckMutation = gql`
-    mutation deckId($name: String!, $categories: [String!]) {
+export const useAddCardMutation = () => useApolloMutation<{ addCard: { _id: string } }>(addCardMutation);
+
+const addDeckMutation = gql`
+    mutation whocaresswhatthisiscalled($name: String!, $categories: [String!]) {
         createDeck(input: { name: $name, categories: $categories }) {
             _id
         }
     }
 `;
 
-export const updateDeckMutation = gql`
+export const useAddDeckMutation = () => useApolloMutation<{ createDeck: { _id: string } }>(addDeckMutation);
+
+const updateDeckMutation = gql`
     mutation deck($_id: String!, $name: String, $categories: [String!], $details: String) {
         updateDeck(input: { _id: $_id, name: $name, categories: $categories, details: $details }) {
             _id
         }
     }
 `;
+
+export const useUpdateDeckMutation = () => useApolloMutation<{ addCard: { _id: string } }>(updateDeckMutation);

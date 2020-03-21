@@ -1,34 +1,34 @@
 import React, { useState } from 'react';
 import { useHistory } from 'react-router-dom';
-import { addDeckMutation, fetchDeckNamesQuery, useApolloMutation, useApolloQuery } from '../../api/ApolloClient';
+import { useAddDeckMutation, useFetchDecksQuery } from '../../api/ApolloClient';
 import Paper from '@material-ui/core/Paper';
 import Button from '@material-ui/core/Button';
 import IconButton from '@material-ui/core/IconButton';
-import Add from '@material-ui/icons/Add';
 import Edit from '@material-ui/icons/Edit';
 import TextField from '@material-ui/core/TextField';
 import Grid from '@material-ui/core/Grid';
-import { Deck } from 'Models/Decks';
 import MenuItem from './../MenuItem';
 import ModelList from './../ModelList';
 import { Typography } from '@material-ui/core';
+import { makeStyles, createStyles } from '@material-ui/core/styles';
+import { sortBy } from 'lodash';
 
 interface HomePage {}
 
 const HomePage: React.FC<HomePage> = ({}) => {
     const history = useHistory(),
-        [newTitleText, setNewTitleText] = useState<string>(''),
-        { data } = useApolloQuery<{ decks: Deck[] }>(fetchDeckNamesQuery),
-        [addDeck] = useApolloMutation<{ deckId: string }>(addDeckMutation);
+        { data } = useFetchDecksQuery(),
+        [addDeck] = useAddDeckMutation(),
+        [newTitleText, setNewTitleText] = useState<string>('');
 
     return (
         <Paper>
             {data && (
                 <>
-                    <MenuItem title="Browse Deck">
+                    <MenuItem title="Browse Decks">
                         <ModelList
                             displayNameField="name"
-                            items={data.decks}
+                            items={sortBy(data.decks, 'name')}
                             onItemClick={(deckId: string) => alert('not redirecting to run page right now')}
                             innerLinkComponent={DeckRow}
                         />
@@ -47,11 +47,11 @@ const HomePage: React.FC<HomePage> = ({}) => {
                             </Grid>
                             <Grid item>
                                 <Button
-                                    onClick={() => {
+                                    onClick={() =>
                                         addDeck({ variables: { name: newTitleText } }).then(res =>
-                                            history.push(`editDeck/${res.data.deckId}`)
-                                        );
-                                    }}
+                                            history.push(`decks/${res.data.createDeck._id}/edit`)
+                                        )
+                                    }
                                     variant="contained"
                                 >
                                     Go
@@ -67,18 +67,36 @@ const HomePage: React.FC<HomePage> = ({}) => {
 
 export default HomePage;
 
+const useDeckRowStyles = makeStyles(theme =>
+    createStyles({
+        root: {
+            flexGrow: 1,
+            display: 'flex',
+            justifyContent: ' space-between',
+            alignItems: 'center',
+        },
+        icon: {
+            color: 'inherit',
+        },
+    })
+);
+
 const DeckRow: React.FC<{ displayName: string; _id: string }> = ({ displayName, _id }) => {
-    const history = useHistory();
+    const history = useHistory(),
+        classes = useDeckRowStyles();
 
     return (
-        <span>
-            <Typography>{displayName}</Typography>
-            <Edit
+        <span className={classes.root}>
+            <Typography className={classes.root}>{displayName}</Typography>
+            <IconButton
+                className={classes.icon}
                 onClick={e => {
                     e.stopPropagation();
-                    history.push(`/editDeck/${_id}`);
+                    history.push(`/decks/${_id}/edit`);
                 }}
-            />
+            >
+                <Edit />
+            </IconButton>
         </span>
     );
 };

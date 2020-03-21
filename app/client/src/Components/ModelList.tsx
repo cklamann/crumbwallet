@@ -13,8 +13,16 @@ interface ModelList {
 
 const useCardListStyles = makeStyles(theme =>
     createStyles({
-        root: {
+        item: {
             cursor: 'pointer',
+        },
+        list: {
+            display: 'flex',
+            flexDirection: 'column',
+            flexGrow: 1,
+        },
+        link: {
+            flexGrow: 1,
         },
     })
 );
@@ -22,10 +30,10 @@ const useCardListStyles = makeStyles(theme =>
 const ModelList: React.FC<ModelList> = ({ innerLinkComponent: Component, items, displayNameField, onItemClick }) => {
     const classes = useCardListStyles();
     return (
-        <List>
+        <List className={classes.list}>
             {items.map(item => (
-                <ListItem className={classes.root} key={item._id}>
-                    <Link onClick={onItemClick.bind(null, item._id)}>
+                <ListItem className={classes.item} key={item._id}>
+                    <Link className={classes.link} onClick={onItemClick.bind(null, item._id)}>
                         {Component ? (
                             <Component {...{ displayName: item[displayNameField], _id: item._id }} />
                         ) : displayNameField ? (
