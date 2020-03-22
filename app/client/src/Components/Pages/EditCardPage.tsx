@@ -12,6 +12,8 @@ import FormControl from '@material-ui/core/FormControl';
 import Button from '@material-ui/core/Button';
 import IconButton from '@material-ui/core/IconButton';
 import Input from '@material-ui/core/Input';
+import Select from '@material-ui/core/Select';
+import MenuItem from '@material-ui/core/MenuItem';
 import InputLabel from '@material-ui/core/InputLabel';
 import { capitalize, get, pick } from 'lodash';
 import { withAuthenticator, S3Image } from 'aws-amplify-react';
@@ -63,6 +65,13 @@ const EditCardPage: React.FC<EditCardPage> = ({ uploadToS3 }) => {
         }
     }, [get(data, 'card')]);
 
+    useEffect(() => {
+        if (get(state, 'choices.length') && state.answer && !state.choices.includes(state.answer)) {
+            //check if there are choices but answer isn't a choice and remove answer
+            updateField('answer')('');
+        }
+    }, [state]);
+
     return (
         <Paper>
             <span>{loading && <span>Loading!</span>}</span>
@@ -71,7 +80,13 @@ const EditCardPage: React.FC<EditCardPage> = ({ uploadToS3 }) => {
                 <div style={{ padding: theme.spacing(1) }}>
                     <Grid container spacing={2}>
                         <Grid item container xs={12} md={6}>
-                            <TextInput name="handle" updateFn={updateField} val={state.handle} />
+                            <TextInput
+                                error={!state.handle}
+                                required
+                                name="handle"
+                                updateFn={updateField}
+                                val={state.handle}
+                            />
                         </Grid>
                         <Grid item container xs={12} md={6}>
                             <Editor content={state.prompt} onChange={updateField('prompt')} />
@@ -122,7 +137,25 @@ const EditCardPage: React.FC<EditCardPage> = ({ uploadToS3 }) => {
                             )}
                         </Grid>
                         <Grid item container xs={12} md={6}>
-                            <TextInput name="answer" updateFn={updateField} val={state.answer} />
+                            {get(state, 'choices.length') ? (
+                                <FormControl error={!state.answer} fullWidth>
+                                    <InputLabel>Answer</InputLabel>
+                                    <Select value={state.answer} onChange={e => updateField('answer')(e.target.value)}>
+                                        {state.choices.map(choice => (
+                                            <MenuItem key={choice} value={choice}>
+                                                {choice}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                </FormControl>
+                            ) : (
+                                <TextInput
+                                    error={!state.answer}
+                                    name="answer"
+                                    updateFn={updateField}
+                                    val={state.answer}
+                                />
+                            )}
                         </Grid>
                         <Grid item container xs={12} md={6}>
                             <TextInput textarea name="details" updateFn={updateField} val={state.details} />
@@ -136,7 +169,11 @@ const EditCardPage: React.FC<EditCardPage> = ({ uploadToS3 }) => {
                     </Grid>
                     <Grid container justify="space-between" spacing={2}>
                         <Grid item>
-                            <Button variant="outlined" onClick={updateCard.bind(null, {})}>
+                            <Button
+                                disabled={!state.answer || !state.prompt || !state.handle}
+                                variant="outlined"
+                                onClick={updateCard.bind(null, {})}
+                            >
                                 Update
                             </Button>
                         </Grid>
@@ -181,14 +218,16 @@ const useTextInputStyles = makeStyles(theme =>
 );
 
 const TextInput: React.FC<{
+    error?: boolean;
     name: string;
+    required?: boolean;
+    textarea?: boolean;
     updateFn: (name: string) => (val: any) => void;
     val: string;
-    textarea?: boolean;
-}> = ({ name, updateFn, textarea, val }) => {
+}> = ({ error, name, required, textarea, updateFn, val }) => {
     const classes = useTextInputStyles();
     return (
-        <FormControl className={classes.FormControl}>
+        <FormControl error={error} required={required} className={classes.FormControl}>
             <InputLabel>{capitalize(name)}</InputLabel>
             <Input onChange={e => updateFn(name)(e.currentTarget.value)} value={val} multiline={!!textarea} />
         </FormControl>

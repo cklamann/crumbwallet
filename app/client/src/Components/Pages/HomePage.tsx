@@ -15,11 +15,21 @@ import { sortBy } from 'lodash';
 
 interface HomePage {}
 
+const useHomePageStyles = makeStyles(theme =>
+    createStyles({
+        root: {},
+        form: {
+            flexWrap: 'nowrap',
+        },
+    })
+);
+
 const HomePage: React.FC<HomePage> = ({}) => {
     const history = useHistory(),
         { data } = useFetchDecksQuery(),
         [addDeck] = useAddDeckMutation(),
-        [newTitleText, setNewTitleText] = useState<string>('');
+        [newTitleText, setNewTitleText] = useState<string>(''),
+        classes = useHomePageStyles();
 
     return (
         <Paper>
@@ -34,7 +44,7 @@ const HomePage: React.FC<HomePage> = ({}) => {
                         />
                     </MenuItem>
                     <MenuItem title="Make a Deck">
-                        <Grid container>
+                        <Grid container className={classes.form}>
                             <Grid item>
                                 <TextField
                                     value={newTitleText}

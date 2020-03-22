@@ -66,7 +66,13 @@ const RichEditor: React.FC<RichEditor> = ({ content, onChange }) => {
                 <Paper>
                     <Grid wrap="nowrap" container justify="space-between">
                         <Grid item container xs={6} alignItems="flex-end">
-                            <InputLabel shrink={true}>Card Prompt</InputLabel>
+                            <InputLabel
+                                required
+                                error={!new DOMParser().parseFromString(content, 'text/html').body.innerText}
+                                shrink={true}
+                            >
+                                Prompt
+                            </InputLabel>
                         </Grid>
                         <Grid container item justify="flex-end">
                             <IconButton
