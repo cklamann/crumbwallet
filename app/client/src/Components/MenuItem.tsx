@@ -22,7 +22,7 @@ const useMenuStyles = makeStyles(theme =>
         details: {
             paddingTop: '0px',
             paddingBottom: '0px',
-            maxHeight: '150px',
+            maxHeight: '250px',
             overflowY: 'scroll',
         },
     })

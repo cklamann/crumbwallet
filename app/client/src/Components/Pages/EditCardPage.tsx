@@ -1,4 +1,4 @@
-import React, { useReducer, useEffect, useRef } from 'react';
+import React, { useReducer, useEffect } from 'react';
 import { useHistory, useParams } from 'react-router-dom';
 import { Card } from 'Models/Cards';
 import { useDeleteCardMutation, useFetchCardQuery, useUpdateCardMutation } from '../../api/ApolloClient';

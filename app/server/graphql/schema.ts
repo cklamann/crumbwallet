@@ -70,7 +70,10 @@ const mutationType = new GraphQLObjectType({
             },
         },
         deleteDeck: {
-            type: GraphQLBoolean,
+            type: new GraphQLObjectType({
+                name: 'deleteDeckStatus',
+                fields: () => ({ deleted: { type: GraphQLBoolean } }),
+            }),
             args: {
                 _id: {
                     type: GraphQLNonNull(GraphQLString),
@@ -78,7 +81,7 @@ const mutationType = new GraphQLObjectType({
             },
             resolve: async (_source, { _id }) => {
                 const res = await Decks.findByIdAndDelete(_id);
-                return res ? true : false;
+                return { deleted: res ? true : false };
             },
         },
         addCard: {
@@ -104,7 +107,10 @@ const mutationType = new GraphQLObjectType({
             },
         },
         deleteCard: {
-            type: new GraphQLObjectType({ name: 'status', fields: () => ({ deleted: { type: GraphQLBoolean } }) }),
+            type: new GraphQLObjectType({
+                name: 'cardDeletedtatus',
+                fields: () => ({ deleted: { type: GraphQLBoolean } }),
+            }),
             args: {
                 _id: {
                     type: GraphQLNonNull(GraphQLString),
@@ -135,7 +141,10 @@ const mutationType = new GraphQLObjectType({
             },
         },
         addTry: {
-            type: deckType,
+            type: new GraphQLObjectType({
+                name: 'tryAddedStatus',
+                fields: () => ({ added: { type: GraphQLBoolean } }),
+            }),
             args: {
                 input: {
                     type: GraphQLNonNull(newTryInputType),
@@ -143,8 +152,9 @@ const mutationType = new GraphQLObjectType({
             },
             resolve: async (_source, { input }) => {
                 const { cardId, ...fields } = input,
-                    deck = await Decks.schema.statics.findByCardId(cardId);
-                return deck.addTry(cardId, { ...fields, created: new Date(), updated: new Date() });
+                    deck = await Decks.schema.statics.findByCardId(cardId),
+                    res = await deck.addTry(cardId, { ...fields, created: new Date(), updated: new Date() });
+                return { added: !!res };
             },
         },
         updateTry: {

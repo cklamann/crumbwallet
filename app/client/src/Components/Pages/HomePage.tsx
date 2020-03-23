@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useHistory } from 'react-router-dom';
-import { useAddDeckMutation, useFetchDecksQuery } from '../../api/ApolloClient';
+import { useAddDeckMutation, useDeleteDeckMutation, useFetchDecksQuery } from '../../api/ApolloClient';
 import Paper from '@material-ui/core/Paper';
 import Button from '@material-ui/core/Button';
 import IconButton from '@material-ui/core/IconButton';
@@ -10,6 +10,7 @@ import Grid from '@material-ui/core/Grid';
 import MenuItem from './../MenuItem';
 import ModelList from './../ModelList';
 import { Typography } from '@material-ui/core';
+import Close from '@material-ui/icons/Close';
 import { makeStyles, createStyles } from '@material-ui/core/styles';
 import { sortBy } from 'lodash';
 
@@ -24,9 +25,15 @@ const useHomePageStyles = makeStyles(theme =>
     })
 );
 
+/*
+
+    todo: add card shorcut, prompts at submit time which deck to add it to
+
+*/
+
 const HomePage: React.FC<HomePage> = ({}) => {
     const history = useHistory(),
-        { data } = useFetchDecksQuery(),
+        { data, refetch } = useFetchDecksQuery(),
         [addDeck] = useAddDeckMutation(),
         [newTitleText, setNewTitleText] = useState<string>(''),
         classes = useHomePageStyles();
@@ -39,8 +46,8 @@ const HomePage: React.FC<HomePage> = ({}) => {
                         <ModelList
                             displayNameField="name"
                             items={sortBy(data.decks, 'name')}
-                            onItemClick={(deckId: string) => alert('not redirecting to run page right now')}
-                            innerLinkComponent={DeckRow}
+                            onItemClick={(deckId: string) => history.push(`/decks/${deckId}/cards`)}
+                            innerLinkComponent={withRefresh(refetch)(DeckRow)}
                         />
                     </MenuItem>
                     <MenuItem title="Make a Deck">
@@ -87,17 +94,36 @@ const useDeckRowStyles = makeStyles(theme =>
         },
         icon: {
             color: 'inherit',
+            padding: '0px',
+        },
+        warnIcon: {
+            color: theme.palette.warning.dark,
+            padding: '0px',
         },
     })
 );
 
-const DeckRow: React.FC<{ displayName: string; _id: string }> = ({ displayName, _id }) => {
+const DeckRow: React.FC<{ displayName: string; refresh?: () => void; _id: string }> = ({
+    displayName,
+    refresh,
+    _id,
+}) => {
     const history = useHistory(),
+        [deleteDeck] = useDeleteDeckMutation(),
         classes = useDeckRowStyles();
 
     return (
         <span className={classes.root}>
             <Typography className={classes.root}>{displayName}</Typography>
+            <IconButton
+                className={classes.warnIcon}
+                onClick={e => {
+                    e.stopPropagation();
+                    deleteDeck({ variables: { _id } }).then(() => refresh());
+                }}
+            >
+                <Close />
+            </IconButton>
             <IconButton
                 className={classes.icon}
                 onClick={e => {
@@ -109,4 +135,9 @@ const DeckRow: React.FC<{ displayName: string; _id: string }> = ({ displayName, 
             </IconButton>
         </span>
     );
+};
+
+const withRefresh = (refresh: () => void) => (Component: React.ComponentType) => (props: any) => {
+    const newProps = { ...props, refresh };
+    return <Component {...newProps} />;
 };

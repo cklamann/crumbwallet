@@ -33,11 +33,12 @@ const fetchDeckQuery = gql`
             name
             cards {
                 _id
-                handle
-                prompt
                 answer
-                details
                 choices
+                details
+                handle
+                imageKey
+                prompt
             }
         }
     }
@@ -47,6 +48,16 @@ export const useFetchDeckQuery = (_id: string) =>
     useApolloQuery<{ deck: Deck }>(fetchDeckQuery, {
         variables: { _id },
     });
+
+const deleteDeckMutation = gql`
+    mutation deleteDeck($_id: String!) {
+        deleteDeck(_id: $_id) {
+            deleted
+        }
+    }
+`;
+
+export const useDeleteDeckMutation = () => useApolloMutation<{ deleted: boolean }>(deleteDeckMutation);
 
 const fetchCardQuery = gql`
     query fetchCard($_id: String!) {
@@ -148,3 +159,13 @@ const updateDeckMutation = gql`
 `;
 
 export const useUpdateDeckMutation = () => useApolloMutation<{ addCard: { _id: string } }>(updateDeckMutation);
+
+const addTryMutation = gql`
+    mutation addTry($cardId: String!, $correct: Boolean!) {
+        addTry(input: { cardId: $cardId, correct: $correct }) {
+            added
+        }
+    }
+`;
+
+export const useAddTryMutation = () => useApolloMutation<{ addTry: { added: boolean } }>(addTryMutation);
