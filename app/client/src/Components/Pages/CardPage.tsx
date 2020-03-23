@@ -17,16 +17,41 @@ import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import Typography from '@material-ui/core/Typography';
 import IconButton from '@material-ui/core/IconButton';
+import ArrowLeft from '@material-ui/icons/ArrowLeft';
+import ArrowRight from '@material-ui/icons/ArrowRight';
 import Grid from '@material-ui/core/Grid';
-import Fade from '@material-ui/core/Fade';
 import Slide from '@material-ui/core/Slide';
+import { makeStyles, createStyles } from '@material-ui/core/styles';
 
 import { findIndex, get } from 'lodash';
 import { withAuthenticator, S3Image } from 'aws-amplify-react';
 
 interface CardPage {}
 
-//todo: swipe transitions
+const useCardPageStyles = makeStyles(theme =>
+    createStyles({
+        root: {
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            alignItems: 'center',
+        },
+        CardContent: {
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            alignItems: 'center',
+            overflow: 'hidden',
+            [theme.breakpoints.down('md')]: {
+                height: '300px',
+            },
+        },
+        canGrow: {
+            flexGrow: 1,
+        },
+        CardMedia: {},
+    })
+);
 
 const CardPage: React.FC<CardPage> = ({}) => {
     const history = useHistory(),
@@ -39,13 +64,14 @@ const CardPage: React.FC<CardPage> = ({}) => {
         [touchList, setTouchList] = useState<React.TouchList>(),
         [transitionInProgress, setTransitionInProgress] = useState(false),
         [transitionDirection, setTransitionDirection] = useState<string>('next'),
+        classes = useCardPageStyles(),
         deck = get(data, 'deck'),
         card: Card = get(deck, 'cards', []).find(c => c._id === cardId),
         submitAnswer = (answer: string) => {
             setAnswer(answer);
             setAnsweredCorrectly(answer == card.answer ? true : false);
         },
-        addTry = (correct: boolean) => _addTry({ variables: { deckId: deckId, correct } }),
+        addTry = (correct: boolean) => _addTry({ variables: { cardId, correct } }),
         goToNextCard = () => {
             const idx = findIndex(deck.cards, card => card._id === cardId),
                 target = idx < deck.cards.length - 1 ? idx + 1 : 0;
@@ -108,45 +134,46 @@ const CardPage: React.FC<CardPage> = ({}) => {
             direction={transitionDirection === 'previous' ? 'right' : 'left'}
             timeout={250}
         >
-            <CardComponent onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
+            <CardComponent className={classes.root} onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
                 {!!card && !transitionInProgress && (
                     <>
                         <CardHeader title={card.handle} />
-                        {!!card.imageKey && (
-                            <CardMedia>
-                                <S3Image
-                                    imgKey={card.imageKey}
-                                    theme={{
-                                        photoImg: {
-                                            width: '100%',
-                                            objectFit: 'cover',
-                                        },
-                                    }}
-                                    onLoad={() => setImageLoaded(true)}
-                                />
-                                {!imageLoaded && <span>Loading...</span>}
-                            </CardMedia>
-                        )}
-                        <CardContent>
-                            <Box>
-                                <Grid container>
-                                    <Grid item xs={12}>
-                                        <span dangerouslySetInnerHTML={{ __html: card.prompt }} />
-                                    </Grid>
+
+                        <CardContent className={classes.CardContent}>
+                            {!!card.imageKey && (
+                                <CardMedia>
+                                    <S3Image
+                                        imgKey={card.imageKey}
+                                        theme={{
+                                            photoImg: {
+                                                width: '100%',
+                                                objectFit: 'cover',
+                                            },
+                                        }}
+                                        onLoad={() => setImageLoaded(true)}
+                                    />
+                                    {!imageLoaded && <span>Loading...</span>}
+                                </CardMedia>
+                            )}
+                            <Grid container>
+                                <Grid item xs={12}>
+                                    <span dangerouslySetInnerHTML={{ __html: card.prompt }} />
                                 </Grid>
-                            </Box>
+                            </Grid>
                         </CardContent>
                         <CardActions>
-                            <Grid spacing={1} container>
+                            <Grid container justify="center">
                                 {get(card, 'choices.length') ? (
-                                    card.choices.map(c => (
-                                        <Grid item key={c}>
-                                            <Chip label={c} onClick={submitAnswer.bind(null, c)} />
-                                        </Grid>
-                                    ))
+                                    <Grid spacing={1} justify="center" container item xs={12}>
+                                        {card.choices.map(c => (
+                                            <Grid item key={c}>
+                                                <Chip label={c} onClick={submitAnswer.bind(null, c)} />
+                                            </Grid>
+                                        ))}
+                                    </Grid>
                                 ) : (
-                                    <>
-                                        <Grid item>
+                                    <Grid container spacing={1} item xs={12} alignItems="center" wrap="nowrap">
+                                        <Grid item className={classes.canGrow}>
                                             <TextField
                                                 value={answer}
                                                 onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
@@ -160,8 +187,16 @@ const CardPage: React.FC<CardPage> = ({}) => {
                                                 Submit
                                             </Button>
                                         </Grid>
-                                    </>
+                                    </Grid>
                                 )}
+                                <Grid justify="space-around" container item>
+                                    <IconButton onClick={goToPreviousCard}>
+                                        <ArrowLeft />
+                                    </IconButton>
+                                    <IconButton onClick={goToNextCard}>
+                                        <ArrowRight />
+                                    </IconButton>
+                                </Grid>
                             </Grid>
                         </CardActions>
                         {answeredCorrectly !== undefined && (
