@@ -1,12 +1,20 @@
 import React, { useReducer, useEffect } from 'react';
 import { useHistory, useParams } from 'react-router-dom';
 import { Card } from 'Models/Cards';
-import { useDeleteCardMutation, useFetchCardQuery, useUpdateCardMutation } from '../../api/ApolloClient';
+import {
+    useAddCardMutation,
+    useDeleteCardMutation,
+    useFetchCardQuery,
+    useUpdateCardMutation,
+} from '../../api/ApolloClient';
 import Editor from './../Editor';
+import Image from './../Image';
 import BackButton from './../BackButton';
 import ChoiceInput from './../ChoiceInput';
 import Paper from '@material-ui/core/Paper';
 import Close from '@material-ui/icons/Close';
+import LibraryAdd from '@material-ui/icons/LibraryAdd';
+import LibraryBooks from '@material-ui/icons/LibraryBooks';
 import Grid from '@material-ui/core/Grid';
 import FormControl from '@material-ui/core/FormControl';
 import Button from '@material-ui/core/Button';
@@ -16,7 +24,7 @@ import Select from '@material-ui/core/Select';
 import MenuItem from '@material-ui/core/MenuItem';
 import InputLabel from '@material-ui/core/InputLabel';
 import { capitalize, get, pick } from 'lodash';
-import { withAuthenticator, S3Image } from 'aws-amplify-react';
+import { withAuthenticator } from 'aws-amplify-react';
 import { makeStyles, createStyles, useTheme } from '@material-ui/core/styles';
 
 interface EditCardPage {
@@ -49,6 +57,7 @@ const EditCardPage: React.FC<EditCardPage> = ({ uploadToS3 }) => {
         [state, dispatch] = useReducer(reducer, INITIAL_STATE),
         [_updateCard] = useUpdateCardMutation(),
         [deleteCard] = useDeleteCardMutation(),
+        [createCard] = useAddCardMutation(),
         updateCard = (args: Partial<ReducerState> = {}) =>
             _updateCard({ variables: { _id: get(data, 'card._id'), ...state, ...args } }).then(() => refetchCard()),
         updateField = <T extends keyof ReducerState>(field: T) => (value: ReducerState[T]) =>
@@ -79,7 +88,7 @@ const EditCardPage: React.FC<EditCardPage> = ({ uploadToS3 }) => {
             {data && (
                 <div style={{ padding: theme.spacing(1) }}>
                     <Grid container spacing={2}>
-                        <Grid item container xs={12} md={6}>
+                        <Grid item container xs={12} wrap="nowrap" md={6}>
                             <TextInput
                                 error={!state.handle}
                                 required
@@ -87,32 +96,41 @@ const EditCardPage: React.FC<EditCardPage> = ({ uploadToS3 }) => {
                                 updateFn={updateField}
                                 val={state.handle}
                             />
+                            <Grid item>
+                                <IconButton
+                                    tabIndex={-1}
+                                    className={classes.CloseIcon}
+                                    onClick={() =>
+                                        deleteCard({ variables: { _id: cardId } }).then(() =>
+                                            history.push(`/decks/${deckId}/edit`)
+                                        )
+                                    }
+                                >
+                                    <Close />
+                                </IconButton>
+                            </Grid>
                         </Grid>
                         <Grid item container xs={12} md={6}>
                             <Editor content={state.prompt} onChange={updateField('prompt')} />
                         </Grid>
-                        <Grid item container xs={12} md={6}>
+                        <Grid item spacing={2} container xs={12} md={6}>
                             {data.card.imageKey ? (
                                 <>
-                                    <S3Image
-                                        theme={{
-                                            photoImg: {
-                                                width: '100%',
-                                                objectFit: 'cover',
-                                            },
-                                        }}
-                                        imgKey={data.card.imageKey}
-                                    />
-                                    <label htmlFor="contained-button-file">
-                                        <Button
-                                            onClick={() => updateCard({ imageKey: '' })}
-                                            variant="contained"
-                                            color="primary"
-                                            component="span"
-                                        >
-                                            Remove Image
-                                        </Button>
-                                    </label>
+                                    <Grid item>
+                                        <Image imgKey={data.card.imageKey} />
+                                    </Grid>
+                                    <Grid item>
+                                        <label htmlFor="contained-button-file">
+                                            <Button
+                                                onClick={() => updateCard({ imageKey: '' })}
+                                                variant="contained"
+                                                color="primary"
+                                                component="span"
+                                            >
+                                                Remove Image
+                                            </Button>
+                                        </label>
+                                    </Grid>
                                 </>
                             ) : (
                                 <>
@@ -122,10 +140,8 @@ const EditCardPage: React.FC<EditCardPage> = ({ uploadToS3 }) => {
                                         id="contained-button-file"
                                         type="file"
                                         onChange={async e => {
-                                            //setUpdating
                                             const key = await uploadToS3(e.currentTarget.files[0], cardId);
                                             updateCard({ imageKey: key });
-                                            //setnot updating
                                         }}
                                     />
                                     <label htmlFor="contained-button-file">
@@ -167,7 +183,7 @@ const EditCardPage: React.FC<EditCardPage> = ({ uploadToS3 }) => {
                             />
                         </Grid>
                     </Grid>
-                    <Grid container justify="space-between" spacing={2}>
+                    <Grid container wrap="nowrap" justify="space-between" spacing={2}>
                         <Grid item>
                             <Button
                                 disabled={!state.answer || !state.prompt || !state.handle}
@@ -177,17 +193,23 @@ const EditCardPage: React.FC<EditCardPage> = ({ uploadToS3 }) => {
                                 Update
                             </Button>
                         </Grid>
-                        <BackButton />
+                        <Grid item>
+                            <BackButton />
+                        </Grid>
                         <Grid item>
                             <IconButton
-                                className={classes.CloseIcon}
                                 onClick={() =>
-                                    deleteCard({ variables: { _id: cardId } }).then(() =>
-                                        history.push(`/decks/${deckId}/edit`)
+                                    createCard({ variables: { deckId } }).then(res =>
+                                        history.push(`/decks/${deckId}/cards/${res.data.addCard._id}/edit`)
                                     )
                                 }
                             >
-                                <Close />
+                                <LibraryAdd />
+                            </IconButton>
+                        </Grid>
+                        <Grid item>
+                            <IconButton onClick={() => history.push(`/decks/${deckId}/cards/${cardId}`)}>
+                                <LibraryBooks />
                             </IconButton>
                         </Grid>
                     </Grid>
@@ -229,7 +251,12 @@ const TextInput: React.FC<{
     return (
         <FormControl error={error} required={required} className={classes.FormControl}>
             <InputLabel>{capitalize(name)}</InputLabel>
-            <Input onChange={e => updateFn(name)(e.currentTarget.value)} value={val} multiline={!!textarea} />
+            <Input
+                onFocus={e => e.target.select()}
+                onChange={e => updateFn(name)(e.currentTarget.value)}
+                value={val}
+                multiline={!!textarea}
+            />
         </FormControl>
     );
 };

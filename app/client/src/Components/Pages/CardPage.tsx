@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useHistory, useParams } from 'react-router-dom';
 import { useFetchDeckQuery, useAddTryMutation } from './../../api/ApolloClient';
+import Image from './../Image';
 import { Card } from 'Models/Cards';
 import CardComponent from '@material-ui/core/Card';
-import Box from '@material-ui/core/Box';
 import Chip from '@material-ui/core/Chip';
 import TextField from '@material-ui/core/TextField';
 import Button from '@material-ui/core/Button';
@@ -18,13 +18,12 @@ import DialogTitle from '@material-ui/core/DialogTitle';
 import Typography from '@material-ui/core/Typography';
 import IconButton from '@material-ui/core/IconButton';
 import ArrowLeft from '@material-ui/icons/ArrowLeft';
+import Edit from '@material-ui/icons/Edit';
 import ArrowRight from '@material-ui/icons/ArrowRight';
 import Grid from '@material-ui/core/Grid';
 import Slide from '@material-ui/core/Slide';
 import { makeStyles, createStyles } from '@material-ui/core/styles';
-
 import { findIndex, get } from 'lodash';
-import { withAuthenticator, S3Image } from 'aws-amplify-react';
 
 interface CardPage {}
 
@@ -37,19 +36,25 @@ const useCardPageStyles = makeStyles(theme =>
             alignItems: 'center',
         },
         CardContent: {
+            height: '310px',
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'center',
             alignItems: 'center',
             overflow: 'hidden',
-            [theme.breakpoints.down('md')]: {
-                height: '300px',
-            },
         },
         canGrow: {
             flexGrow: 1,
         },
-        CardMedia: {},
+        CardMedia: {
+            [theme.breakpoints.down('md')]: {
+                height: '300px',
+            },
+        },
+        headerContent: {
+            display: 'flex',
+            alignItems: 'center',
+        },
     })
 );
 
@@ -67,7 +72,7 @@ const CardPage: React.FC<CardPage> = ({}) => {
         classes = useCardPageStyles(),
         deck = get(data, 'deck'),
         card: Card = get(deck, 'cards', []).find(c => c._id === cardId),
-        submitAnswer = (answer: string) => {
+        finalizeAnswer = (answer: string) => {
             setAnswer(answer);
             setAnsweredCorrectly(answer == card.answer ? true : false);
         },
@@ -132,26 +137,25 @@ const CardPage: React.FC<CardPage> = ({}) => {
             onExited={() => setTransitionInProgress(false)}
             in={!!!transitionInProgress}
             direction={transitionDirection === 'previous' ? 'right' : 'left'}
-            timeout={250}
+            timeout={150}
         >
             <CardComponent className={classes.root} onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
                 {!!card && !transitionInProgress && (
                     <>
-                        <CardHeader title={card.handle} />
+                        <CardHeader
+                            classes={{ content: classes.headerContent }}
+                            title={`${deck.name} #${findIndex(deck.cards, card => card._id === cardId) + 1}`}
+                            subheader={
+                                <IconButton onClick={() => history.push(`/decks/${deckId}/cards/${cardId}/edit`)}>
+                                    <Edit />
+                                </IconButton>
+                            }
+                        />
 
                         <CardContent className={classes.CardContent}>
                             {!!card.imageKey && (
                                 <CardMedia>
-                                    <S3Image
-                                        imgKey={card.imageKey}
-                                        theme={{
-                                            photoImg: {
-                                                width: '100%',
-                                                objectFit: 'cover',
-                                            },
-                                        }}
-                                        onLoad={() => setImageLoaded(true)}
-                                    />
+                                    <Image imgKey={card.imageKey} onLoad={() => setImageLoaded(true)} />
                                     {!imageLoaded && <span>Loading...</span>}
                                 </CardMedia>
                             )}
@@ -167,7 +171,7 @@ const CardPage: React.FC<CardPage> = ({}) => {
                                     <Grid spacing={1} justify="center" container item xs={12}>
                                         {card.choices.map(c => (
                                             <Grid item key={c}>
-                                                <Chip label={c} onClick={submitAnswer.bind(null, c)} />
+                                                <Chip label={c} onClick={finalizeAnswer.bind(null, c)} />
                                             </Grid>
                                         ))}
                                     </Grid>
@@ -183,7 +187,7 @@ const CardPage: React.FC<CardPage> = ({}) => {
                                             />
                                         </Grid>
                                         <Grid item>
-                                            <Button onClick={submitAnswer.bind(null, answer)} variant="contained">
+                                            <Button onClick={finalizeAnswer.bind(null, answer)} variant="contained">
                                                 Submit
                                             </Button>
                                         </Grid>
@@ -203,12 +207,13 @@ const CardPage: React.FC<CardPage> = ({}) => {
                             <Dialog
                                 open={true}
                                 onClose={() => {
-                                    goToNextCard();
+                                    addTry(answeredCorrectly);
+                                    resetCard();
                                 }}
                             >
                                 <DialogTitle>
                                     {answeredCorrectly === false ? (
-                                        <Typography color="error">The correct anser was {card.answer}</Typography>
+                                        <Typography color="error">The correct answer was {card.answer}</Typography>
                                     ) : (
                                         <Typography>{card.answer} is correct</Typography>
                                     )}

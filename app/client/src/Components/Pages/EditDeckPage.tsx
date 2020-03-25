@@ -50,14 +50,12 @@ const EditDeckPage: React.FC<EditDeckPage> = ({}) => {
                         <Grid item>
                             <Button
                                 onClick={async () => {
-                                    setUpdateLoading(true);
                                     await updateDeck({ variables: { name: newName, _id: data.deck._id } });
                                     await refetchDeck();
-                                    setUpdateLoading(false);
                                 }}
                                 variant="contained"
                             >
-                                Go
+                                Update
                             </Button>
                         </Grid>
                     </MenuItem>

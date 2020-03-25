@@ -6,11 +6,9 @@ import Grid from '@material-ui/core/Grid';
 import draftToHtml from 'draftjs-to-html';
 import { noop } from 'lodash';
 import Paper from '@material-ui/core/Paper';
-import Typography from '@material-ui/core/Typography';
 import InputLabel from '@material-ui/core/InputLabel';
 import Box from '@material-ui/core/Box';
 import IconButton from '@material-ui/core/IconButton';
-import Toolbar from '@material-ui/core/Toolbar';
 import './../../node_modules/draft-js/dist/Draft.css';
 
 interface RichEditor {
@@ -50,7 +48,7 @@ const RichEditor: React.FC<RichEditor> = ({ content, onChange }) => {
 
     const setEditorState = (state: EditorState) => {
         _setEditorState(state);
-        return onChange(draftToHtml(convertToRaw(state.getCurrentContent())).replace(/\r\n|\n|\r/gm, '<br/>'));
+        return onChange(draftToHtml(convertToRaw(state.getCurrentContent())));
     };
 
     const _blockStyleFn = (contentBlock: ContentBlock) => {
@@ -76,6 +74,7 @@ const RichEditor: React.FC<RichEditor> = ({ content, onChange }) => {
                         </Grid>
                         <Grid container item justify="flex-end">
                             <IconButton
+                                tabIndex={-1}
                                 size="small"
                                 onMouseDown={e => e.preventDefault()}
                                 style={{
@@ -88,6 +87,7 @@ const RichEditor: React.FC<RichEditor> = ({ content, onChange }) => {
                                 <FormatItalic />
                             </IconButton>
                             <IconButton
+                                tabIndex={-1}
                                 size="small"
                                 onMouseDown={e => {
                                     e.preventDefault();
