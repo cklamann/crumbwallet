@@ -14,15 +14,17 @@ import Container from '@material-ui/core/Container';
 import { theme } from './../Style/Theme';
 import { ThemeProvider, makeStyles, createStyles } from '@material-ui/core/styles';
 import AppBar from '@material-ui/core/AppBar';
+import Grid from '@material-ui/core/Grid';
 import IconButton from '@material-ui/core/IconButton';
 import HomeIcon from '@material-ui/icons/Home';
+import ExitIcon from '@material-ui/icons/Input';
 import CSSBaseline from '@material-ui/core/CssBaseline';
+import { withAuthenticator } from 'aws-amplify-react';
 
 const useNavBarStyles = makeStyles(theme =>
     createStyles({
         IconButton: {
-            justifyContent: 'flex-start',
-            marginLeft: theme.spacing(2),
+            color: theme.palette.text.primary,
         },
         body: {
             background: theme.palette.background.paper,
@@ -30,7 +32,7 @@ const useNavBarStyles = makeStyles(theme =>
     })
 );
 
-export default () => {
+const App: React.FC<{}> = () => {
     const NavBarStyles = useNavBarStyles();
 
     return (
@@ -39,13 +41,22 @@ export default () => {
                 <ThemeProvider theme={theme}>
                     <CSSBaseline />
                     <Router>
-                        <Link to="/home">
-                            <AppBar position="static">
-                                <IconButton className={NavBarStyles.IconButton} edge="start">
-                                    <HomeIcon />
+                        <AppBar position="static">
+                            <Grid container justify="space-between">
+                                <IconButton className={NavBarStyles.IconButton}>
+                                    <Link className={NavBarStyles.IconButton} to="/">
+                                        <HomeIcon />
+                                    </Link>
                                 </IconButton>
-                            </AppBar>
-                        </Link>
+                                <IconButton
+                                    onClick={() => Auth.signOut()}
+                                    className={NavBarStyles.IconButton}
+                                    edge="start"
+                                >
+                                    <ExitIcon />
+                                </IconButton>
+                            </Grid>
+                        </AppBar>
                         <Switch>
                             <Route exact path="/decks/:deckId/edit">
                                 <EditDeckPage />
@@ -73,3 +84,20 @@ export default () => {
         </>
     );
 };
+
+//@ts-ignore -- typing is bad, does not support config object, only args...
+export default withAuthenticator(App, {
+    theme: {
+        //targets background for login page
+        container: { backgroundColor: theme.palette.background.default },
+        //targets signin form section
+        formSection: {
+            marginTop: '20px',
+            backgroundColor: theme.palette.primary.light,
+        },
+        //targets signin button
+        button: { backgroundColor: theme.palette.primary.dark, color: theme.palette.text.primary },
+        //targets links in signin form
+        a: { color: theme.palette.action.active },
+    },
+});

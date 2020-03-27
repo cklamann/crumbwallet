@@ -13,7 +13,6 @@ import Add from '@material-ui/icons/Add';
 import Link from '@material-ui/core/Link';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
-import { withAuthenticator } from 'aws-amplify-react';
 
 interface EditDeckPage {}
 
@@ -88,7 +87,7 @@ const EditDeckPage: React.FC<EditDeckPage> = ({}) => {
     );
 };
 
-export default withAuthenticator(EditDeckPage);
+export default EditDeckPage;
 
 interface CardList {
     cards: Card[];

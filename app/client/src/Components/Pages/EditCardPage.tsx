@@ -24,7 +24,6 @@ import Select from '@material-ui/core/Select';
 import MenuItem from '@material-ui/core/MenuItem';
 import InputLabel from '@material-ui/core/InputLabel';
 import { capitalize, get, pick } from 'lodash';
-import { withAuthenticator } from 'aws-amplify-react';
 import { makeStyles, createStyles, useTheme } from '@material-ui/core/styles';
 
 interface EditCardPage {
@@ -228,7 +227,7 @@ const reducer = (state: ReducerState, action: { type: string; payload: Partial<R
     }
 };
 
-export default withAuthenticator(EditCardPage);
+export default EditCardPage;
 
 const useTextInputStyles = makeStyles(theme =>
     createStyles({
