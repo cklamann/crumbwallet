@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import { useAddDeckMutation, useDeleteDeckMutation, useFetchDecksQuery } from '../../api/ApolloClient';
 import Paper from '@material-ui/core/Paper';
@@ -8,6 +8,7 @@ import Edit from '@material-ui/icons/Edit';
 import TextField from '@material-ui/core/TextField';
 import Grid from '@material-ui/core/Grid';
 import MenuItem from './../MenuItem';
+import { UserContext } from '../App';
 import ModelList from './../ModelList';
 import { Typography } from '@material-ui/core';
 import Close from '@material-ui/icons/Close';
@@ -36,7 +37,10 @@ const HomePage: React.FC<HomePage> = ({}) => {
         { data, refetch } = useFetchDecksQuery(),
         [addDeck] = useAddDeckMutation(),
         [newTitleText, setNewTitleText] = useState<string>(''),
-        classes = useHomePageStyles();
+        classes = useHomePageStyles(),
+        userId = useContext(UserContext);
+
+        console.log(userId);
 
     return (
         <Paper>

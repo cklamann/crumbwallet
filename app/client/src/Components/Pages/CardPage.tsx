@@ -193,7 +193,7 @@ const CardPage: React.FC<CardPage> = ({}) => {
                                         </Grid>
                                     </Grid>
                                 )}
-                                <Grid justify="space-around" container item>
+                                <Grid justify="space-between" container item>
                                     <IconButton onClick={goToPreviousCard}>
                                         <ArrowLeft />
                                     </IconButton>

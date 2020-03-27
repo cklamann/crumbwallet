@@ -196,6 +196,10 @@ const newDeckInputType = new GraphQLInputObjectType({
             type: GraphQLList(GraphQLString),
             description: 'The list of deck categories.',
         },
+        userId: {
+            type: GraphQLString,
+            description: 'The ID of the owning user',
+        },
     }),
 });
 
@@ -290,11 +294,11 @@ const deckType = new GraphQLObjectType<Deck>({
     description: 'A deck.',
     fields: () => ({
         _id: {
-            type: GraphQLString,
+            type: GraphQLNonNull(GraphQLString),
             description: 'The id of the deck.',
         },
         name: {
-            type: GraphQLString,
+            type: GraphQLNonNull(GraphQLString),
             description: 'The name of the deck.',
         },
         cards: {
@@ -304,6 +308,10 @@ const deckType = new GraphQLObjectType<Deck>({
         categories: {
             type: new GraphQLList(GraphQLString),
             description: 'list of categories.',
+        },
+        userId: {
+            type: GraphQLString,
+            description: 'the user id of the owner',
         },
         created: {
             type: GraphQLString,
