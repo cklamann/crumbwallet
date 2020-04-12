@@ -9,5 +9,5 @@ frontend:
       commands:
         - npm run development
   artifacts:
-    baseDirectory: dist/
+    baseDirectory: app/client/dist
     discard-paths: yes
