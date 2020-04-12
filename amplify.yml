@@ -4,10 +4,10 @@ frontend:
     preBuild:
       commands:
         - cd app/client
+        - npm install
     build:
       commands:
         - npm run development
   artifacts:
-    files:
-        - dist/
+        baseDirectory: dist/
     discard-paths: yes
