@@ -7,6 +7,7 @@ import MenuItem from './../MenuItem';
 import Paper from '@material-ui/core/Paper';
 import Grid from '@material-ui/core/Grid';
 import TextField from '@material-ui/core/TextField';
+import Typography from '@material-ui/core/Typography';
 import Button from '@material-ui/core/Button';
 import { makeStyles, createStyles } from '@material-ui/core/styles';
 import Add from '@material-ui/icons/Add';
@@ -49,7 +50,7 @@ const EditDeckPage: React.FC<EditDeckPage> = ({}) => {
                         <Grid item>
                             <Button
                                 onClick={async () => {
-                                    await updateDeck({ variables: { name: newName, _id: data.deck._id } });
+                                    await updateDeck({ variables: { name: newName, id: data.deck.id } });
                                     await refetchDeck();
                                 }}
                                 variant="contained"
@@ -59,10 +60,14 @@ const EditDeckPage: React.FC<EditDeckPage> = ({}) => {
                         </Grid>
                     </MenuItem>
                     <MenuItem title="Edit Card">
-                        <CardList
-                            cards={data.deck.cards}
-                            onSelect={(cardId: string) => history.push(`/decks/${deckId}/cards/${cardId}/edit`)}
-                        />
+                        {data.deck.cards.length ? (
+                            <CardList
+                                cards={data.deck.cards}
+                                onSelect={(cardId: string) => history.push(`/decks/${deckId}/cards/${cardId}/edit`)}
+                            />
+                        ) : (
+                            <Typography color="error">No Cards!</Typography>
+                        )}
                     </MenuItem>
                     <MenuItem
                         title={
@@ -70,7 +75,7 @@ const EditDeckPage: React.FC<EditDeckPage> = ({}) => {
                                 style={{ display: 'flex' }}
                                 onClick={() =>
                                     createCard({ variables: { deckId } }).then(res =>
-                                        history.push(`/decks/${deckId}/cards/${res.data.addCard._id}/edit`)
+                                        history.push(`/decks/${deckId}/cards/${res.data.addCard.id}/edit`)
                                     )
                                 }
                             >
@@ -107,8 +112,8 @@ const CardList: React.FC<CardList> = ({ cards, onSelect }) => {
     return (
         <List>
             {cards.map(c => (
-                <ListItem className={classes.root} key={c._id}>
-                    <Link onClick={() => onSelect(c._id)}>{c.handle || c._id}</Link>
+                <ListItem className={classes.root} key={c.id}>
+                    <Link onClick={() => onSelect(c.id)}>{c.handle || c.id}</Link>
                 </ListItem>
             ))}
         </List>

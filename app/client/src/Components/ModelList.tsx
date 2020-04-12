@@ -5,8 +5,8 @@ import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 
 interface ModelList {
-    innerLinkComponent?: React.ComponentType<{ displayName: string; _id: string }>;
-    items: { [key: string]: any; _id: string }[];
+    innerLinkComponent?: React.ComponentType<{ displayName: string; id: string }>;
+    items: { [key: string]: any; id: string }[];
     displayNameField: string;
     onItemClick: (modelId: string) => void;
 }
@@ -32,14 +32,14 @@ const ModelList: React.FC<ModelList> = ({ innerLinkComponent: Component, items, 
     return (
         <List className={classes.list}>
             {items.map(item => (
-                <ListItem className={classes.item} key={item._id}>
-                    <Link className={classes.link} onClick={onItemClick.bind(null, item._id)}>
+                <ListItem className={classes.item} key={item.id}>
+                    <Link className={classes.link} onClick={onItemClick.bind(null, item.id)}>
                         {Component ? (
-                            <Component {...{ displayName: item[displayNameField], _id: item._id }} />
+                            <Component {...{ displayName: item[displayNameField], id: item.id }} />
                         ) : displayNameField ? (
                             item[displayNameField]
                         ) : (
-                            item.handle || item.name || item._id
+                            item.handle || item.name || item.id
                         )}
                     </Link>
                 </ListItem>

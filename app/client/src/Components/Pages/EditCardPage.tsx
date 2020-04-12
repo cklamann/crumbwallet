@@ -41,7 +41,7 @@ const INITIAL_STATE: ReducerState = {
     choices: undefined,
 };
 
-const usePageStyles = makeStyles(theme =>
+const usePageStyles = makeStyles((theme) =>
     createStyles({
         CloseIcon: {
             color: theme.palette.warning.dark,
@@ -58,7 +58,7 @@ const EditCardPage: React.FC<EditCardPage> = ({ uploadToS3 }) => {
         [deleteCard] = useDeleteCardMutation(),
         [createCard] = useAddCardMutation(),
         updateCard = (args: Partial<ReducerState> = {}) =>
-            _updateCard({ variables: { _id: get(data, 'card._id'), ...state, ...args } }).then(() => refetchCard()),
+            _updateCard({ variables: { id: cardId, deckId, ...state, ...args } }).then(() => refetchCard()),
         updateField = <T extends keyof ReducerState>(field: T) => (value: ReducerState[T]) =>
             dispatch({ type: 'update', payload: { [field]: value } }),
         history = useHistory(),
@@ -100,7 +100,7 @@ const EditCardPage: React.FC<EditCardPage> = ({ uploadToS3 }) => {
                                     tabIndex={-1}
                                     className={classes.CloseIcon}
                                     onClick={() =>
-                                        deleteCard({ variables: { _id: cardId } }).then(() =>
+                                        deleteCard({ variables: { id: cardId } }).then(() =>
                                             history.push(`/decks/${deckId}/edit`)
                                         )
                                     }
@@ -112,10 +112,10 @@ const EditCardPage: React.FC<EditCardPage> = ({ uploadToS3 }) => {
                         <Grid item container xs={12} md={6}>
                             <Editor content={state.prompt} onChange={updateField('prompt')} />
                         </Grid>
-                        <Grid item spacing={2} container xs={12} md={6}>
+                        <Grid item container direction="column" justify="center" alignItems="center" xs={12} md={6}>
                             {data.card.imageKey ? (
                                 <>
-                                    <Grid item>
+                                    <Grid item style={{ padding: '5px' }}>
                                         <Image imgKey={data.card.imageKey} />
                                     </Grid>
                                     <Grid item>
@@ -138,7 +138,7 @@ const EditCardPage: React.FC<EditCardPage> = ({ uploadToS3 }) => {
                                         style={{ display: 'none' }}
                                         id="contained-button-file"
                                         type="file"
-                                        onChange={async e => {
+                                        onChange={async (e) => {
                                             const key = await uploadToS3(e.currentTarget.files[0], cardId);
                                             updateCard({ imageKey: key });
                                         }}
@@ -155,8 +155,11 @@ const EditCardPage: React.FC<EditCardPage> = ({ uploadToS3 }) => {
                             {get(state, 'choices.length') ? (
                                 <FormControl error={!state.answer} fullWidth>
                                     <InputLabel>Answer</InputLabel>
-                                    <Select value={state.answer} onChange={e => updateField('answer')(e.target.value)}>
-                                        {state.choices.map(choice => (
+                                    <Select
+                                        value={state.answer}
+                                        onChange={(e) => updateField('answer')(e.target.value)}
+                                    >
+                                        {state.choices.map((choice) => (
                                             <MenuItem key={choice} value={choice}>
                                                 {choice}
                                             </MenuItem>
@@ -178,7 +181,7 @@ const EditCardPage: React.FC<EditCardPage> = ({ uploadToS3 }) => {
                         <Grid item container xs={12} md={6}>
                             <ChoiceInput
                                 choices={data.card.choices || []}
-                                updateChoices={choices => updateCard({ choices })}
+                                updateChoices={(choices) => updateCard({ choices })}
                             />
                         </Grid>
                     </Grid>
@@ -198,8 +201,8 @@ const EditCardPage: React.FC<EditCardPage> = ({ uploadToS3 }) => {
                         <Grid item>
                             <IconButton
                                 onClick={() =>
-                                    createCard({ variables: { deckId } }).then(res =>
-                                        history.push(`/decks/${deckId}/cards/${res.data.addCard._id}/edit`)
+                                    createCard({ variables: { deckId } }).then((res) =>
+                                        history.push(`/decks/${deckId}/cards/${res.data.addCard.id}/edit`)
                                     )
                                 }
                             >
@@ -229,7 +232,7 @@ const reducer = (state: ReducerState, action: { type: string; payload: Partial<R
 
 export default EditCardPage;
 
-const useTextInputStyles = makeStyles(theme =>
+const useTextInputStyles = makeStyles((theme) =>
     createStyles({
         root: {},
         FormControl: {
@@ -251,8 +254,8 @@ const TextInput: React.FC<{
         <FormControl error={error} required={required} className={classes.FormControl}>
             <InputLabel>{capitalize(name)}</InputLabel>
             <Input
-                onFocus={e => e.target.select()}
-                onChange={e => updateFn(name)(e.currentTarget.value)}
+                onFocus={(e) => e.target.select()}
+                onChange={(e) => updateFn(name)(e.currentTarget.value)}
                 value={val}
                 multiline={!!textarea}
             />

@@ -9,6 +9,7 @@ import * as bodyParser from 'body-parser';
 import * as cookieParser from 'cookie-parser';
 import User, { IUser } from './models/Users';
 import Users from './models/Users';
+import { printSchema } from 'graphql';
 
 //logging
 export const logger = pino(pino.destination('./node.log')),
@@ -61,7 +62,6 @@ app.use((req, _, next) => {
     if (req.url.endsWith('.js')) {
         req.url = req.url.split('/')[req.url.split('/').length - 1];
     }
-    console.log(req.url);
     next();
 });
 
@@ -76,6 +76,7 @@ app.use(
     })
 );
 
+app.get('/schema', (req, res) => res.send(printSchema(Schema)));
 
 app.get('*', (_, res) => res.sendFile(path.join(CLIENT_BUILD_PATH, 'index.html')));
 

@@ -3,6 +3,8 @@ import { useHistory } from 'react-router-dom';
 import { useAddDeckMutation, useDeleteDeckMutation, useFetchDecksQuery } from '../../api/ApolloClient';
 import Paper from '@material-ui/core/Paper';
 import Button from '@material-ui/core/Button';
+import Checkbox from '@material-ui/core/Checkbox';
+import FormControlLabel from '@material-ui/core/FormControlLabel';
 import IconButton from '@material-ui/core/IconButton';
 import Edit from '@material-ui/icons/Edit';
 import TextField from '@material-ui/core/TextField';
@@ -26,21 +28,14 @@ const useHomePageStyles = makeStyles(theme =>
     })
 );
 
-/*
-
-    todo: add card shorcut, prompts at submit time which deck to add it to
-
-*/
-
 const HomePage: React.FC<HomePage> = ({}) => {
     const history = useHistory(),
         { data, refetch } = useFetchDecksQuery(),
         [addDeck] = useAddDeckMutation(),
         [newTitleText, setNewTitleText] = useState<string>(''),
+        [newDeckPrivate, setNewDeckPrivate] = useState(false),
         classes = useHomePageStyles(),
         userId = useContext(UserContext);
-
-        console.log(userId);
 
     return (
         <Paper>
@@ -65,13 +60,23 @@ const HomePage: React.FC<HomePage> = ({}) => {
                                     required
                                     label="name"
                                 />
+                                <FormControlLabel
+                                    control={
+                                        <Checkbox
+                                            checked={newDeckPrivate}
+                                            onChange={() => setNewDeckPrivate(!newDeckPrivate)}
+                                            color="primary"
+                                        />
+                                    }
+                                    label="Private?"
+                                />
                             </Grid>
                             <Grid item>
                                 <Button
                                     onClick={() =>
-                                        addDeck({ variables: { name: newTitleText } }).then(res =>
-                                            history.push(`decks/${res.data.createDeck._id}/edit`)
-                                        )
+                                        addDeck({
+                                            variables: { name: newTitleText, userId: newDeckPrivate ? userId : null },
+                                        }).then(res => history.push(`decks/${res.data.createDeck.id}/edit`))
                                     }
                                     variant="contained"
                                 >
@@ -107,10 +112,10 @@ const useDeckRowStyles = makeStyles(theme =>
     })
 );
 
-const DeckRow: React.FC<{ displayName: string; refresh?: () => void; _id: string }> = ({
+const DeckRow: React.FC<{ displayName: string; refresh?: () => void; id: string }> = ({
     displayName,
     refresh,
-    _id,
+    id,
 }) => {
     const history = useHistory(),
         [deleteDeck] = useDeleteDeckMutation(),
@@ -123,7 +128,7 @@ const DeckRow: React.FC<{ displayName: string; refresh?: () => void; _id: string
                 className={classes.warnIcon}
                 onClick={e => {
                     e.stopPropagation();
-                    deleteDeck({ variables: { _id } }).then(() => refresh());
+                    deleteDeck({ variables: { id } }).then(() => refresh());
                 }}
             >
                 <Close />
@@ -132,7 +137,7 @@ const DeckRow: React.FC<{ displayName: string; refresh?: () => void; _id: string
                 className={classes.icon}
                 onClick={e => {
                     e.stopPropagation();
-                    history.push(`/decks/${_id}/edit`);
+                    history.push(`/decks/${id}/edit`);
                 }}
             >
                 <Edit />

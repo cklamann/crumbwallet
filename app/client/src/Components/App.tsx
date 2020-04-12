@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, {  useEffect, useState } from 'react';
 import Storage from '@aws-amplify/storage';
 import Auth from '@aws-amplify/auth';
 import awsconfig from '../aws-exports';

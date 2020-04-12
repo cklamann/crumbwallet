@@ -43,6 +43,12 @@ const useCardPageStyles = makeStyles(theme =>
             alignItems: 'center',
             overflow: 'hidden',
         },
+        CardActions: {
+            width: '100%',
+            [theme.breakpoints.up('md')]: {
+                width: '400px',
+            },
+        },
         canGrow: {
             flexGrow: 1,
         },
@@ -71,27 +77,27 @@ const CardPage: React.FC<CardPage> = ({}) => {
         [transitionDirection, setTransitionDirection] = useState<string>('next'),
         classes = useCardPageStyles(),
         deck = get(data, 'deck'),
-        card: Card = get(deck, 'cards', []).find(c => c._id === cardId),
+        card: Card = get(deck, 'cards', []).find(c => c.id === cardId),
         finalizeAnswer = (answer: string) => {
             setAnswer(answer);
             setAnsweredCorrectly(answer == card.answer ? true : false);
         },
         addTry = (correct: boolean) => _addTry({ variables: { cardId, correct } }),
         goToNextCard = () => {
-            const idx = findIndex(deck.cards, card => card._id === cardId),
+            const idx = findIndex(deck.cards, card => card.id === cardId),
                 target = idx < deck.cards.length - 1 ? idx + 1 : 0;
             resetCard();
             setTransitionDirection('next');
             setTransitionInProgress(true);
-            history.push(`/decks/${deckId}/cards/${deck.cards[target]._id}`);
+            history.push(`/decks/${deckId}/cards/${deck.cards[target].id}`);
         },
         goToPreviousCard = () => {
-            const idx = findIndex(deck.cards, card => card._id === cardId),
+            const idx = findIndex(deck.cards, card => card.id === cardId),
                 target = idx > 0 ? idx - 1 : deck.cards.length - 1;
             resetCard();
             setTransitionDirection('previous');
             setTransitionInProgress(true);
-            history.push(`/decks/${deckId}/cards/${deck.cards[target]._id}`);
+            history.push(`/decks/${deckId}/cards/${deck.cards[target].id}`);
         },
         resetCard = () => {
             setAnsweredCorrectly(undefined);
@@ -119,7 +125,7 @@ const CardPage: React.FC<CardPage> = ({}) => {
         };
     useEffect(() => {
         if (get(data, 'deck') && !cardId) {
-            history.push(`/decks/${deckId}/cards/${data.deck.cards[0]._id}`);
+            history.push(`/decks/${deckId}/cards/${data.deck.cards[0].id}`);
         }
     }, [data]);
 
@@ -144,7 +150,7 @@ const CardPage: React.FC<CardPage> = ({}) => {
                     <>
                         <CardHeader
                             classes={{ content: classes.headerContent }}
-                            title={`${deck.name} #${findIndex(deck.cards, card => card._id === cardId) + 1}`}
+                            title={`${deck.name} #${findIndex(deck.cards, card => card.id === cardId) + 1}`}
                             subheader={
                                 <IconButton onClick={() => history.push(`/decks/${deckId}/cards/${cardId}/edit`)}>
                                     <Edit />
@@ -165,7 +171,7 @@ const CardPage: React.FC<CardPage> = ({}) => {
                                 </Grid>
                             </Grid>
                         </CardContent>
-                        <CardActions>
+                        <CardActions className={classes.CardActions}>
                             <Grid container justify="center">
                                 {get(card, 'choices.length') ? (
                                     <Grid spacing={1} justify="center" container item xs={12}>

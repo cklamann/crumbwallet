@@ -1,13 +1,33 @@
-import ApolloClient, { gql, DocumentNode } from 'apollo-boost';
+import ApolloClient from 'apollo-client';
+import gql from 'graphql-tag';
+import { DocumentNode } from 'graphql';
+import { InMemoryCache } from 'apollo-cache-inmemory';
+import Auth from '@aws-amplify/auth';
+import { createAppSyncLink } from 'aws-appsync';
+import awsconfig from './../aws-exports';
+import { createHttpLink } from 'apollo-link-http';
 import { useQuery, useMutation, QueryHookOptions } from '@apollo/react-hooks';
 import { Deck } from 'Models/Decks';
 import { Card } from 'Models/Cards';
 
-const port = process.env.APP_PORT;
-const host = process.env.APP_HOST === '0.0.0.0' ? 'localhost' : process.env.APP_HOST;
+const httpLink = createHttpLink({
+    uri: awsconfig.aws_appsync_graphqlEndpoint,
+});
 
-const client = new ApolloClient<any>({
-    uri: `http://${host}:${port}/graphql`,
+const awsLink = createAppSyncLink({
+    url: awsconfig.aws_appsync_graphqlEndpoint,
+    region: awsconfig.aws_appsync_region,
+    auth: {
+        type: awsconfig.aws_appsync_authenticationType as any, //type widening....
+        credentials: () => Auth.currentCredentials(),
+        jwtToken: async () => (await Auth.currentSession()).getAccessToken().getJwtToken(),
+    },
+    complexObjectsCredentials: () => Auth.currentCredentials(),
+});
+
+export const client = new ApolloClient({
+    link: awsLink.concat(httpLink),
+    cache: new InMemoryCache(),
 });
 
 export const useApolloQuery = <T>(query: DocumentNode, choices: QueryHookOptions = {}) =>
@@ -18,7 +38,7 @@ export const useApolloMutation = <T>(query: DocumentNode, choices: QueryHookOpti
 const fetchDecksQuery = gql`
     query {
         decks {
-            _id
+            id
             name
         }
     }
@@ -27,12 +47,12 @@ const fetchDecksQuery = gql`
 export const useFetchDecksQuery = () => useApolloQuery<{ decks: Deck[] }>(fetchDecksQuery);
 
 const fetchDeckQuery = gql`
-    query fetchDeck($_id: String!) {
-        deck(_id: $_id) {
-            _id
+    query fetchDeck($id: String!) {
+        deck(id: $id) {
+            id
             name
             cards {
-                _id
+                id
                 answer
                 choices
                 details
@@ -44,14 +64,14 @@ const fetchDeckQuery = gql`
     }
 `;
 
-export const useFetchDeckQuery = (_id: string) =>
+export const useFetchDeckQuery = (id: string) =>
     useApolloQuery<{ deck: Deck }>(fetchDeckQuery, {
-        variables: { _id },
+        variables: { id },
     });
 
 const deleteDeckMutation = gql`
-    mutation deleteDeck($_id: String!) {
-        deleteDeck(_id: $_id) {
+    mutation deleteDeck($id: String!) {
+        deleteDeck(id: $id) {
             deleted
         }
     }
@@ -60,9 +80,9 @@ const deleteDeckMutation = gql`
 export const useDeleteDeckMutation = () => useApolloMutation<{ deleted: boolean }>(deleteDeckMutation);
 
 const fetchCardQuery = gql`
-    query fetchCard($_id: String!) {
-        card(_id: $_id) {
-            _id
+    query fetchCard($id: String!) {
+        card(id: $id) {
+            id
             prompt
             answer
             imageKey
@@ -73,24 +93,26 @@ const fetchCardQuery = gql`
     }
 `;
 
-export const useFetchCardQuery = (_id: string) =>
+export const useFetchCardQuery = (id: string) =>
     useApolloQuery<{ card: Card }>(fetchCardQuery, {
-        variables: { _id },
+        variables: { id },
     });
 
 const updateCardMutation = gql`
     mutation card(
-        $_id: String!
+        $id: String!
+        $deckId: String!
         $prompt: String
         $answer: String
         $details: String
         $handle: String
         $imageKey: String
-        $choices: [String!]
+        $choices: [String]
     ) {
         updateCard(
             input: {
-                _id: $_id
+                id: $id
+                deckId: $deckId
                 prompt: $prompt
                 answer: $answer
                 details: $details
@@ -99,22 +121,16 @@ const updateCardMutation = gql`
                 choices: $choices
             }
         ) {
-            _id
-            prompt
-            answer
-            details
-            handle
-            imageKey
-            choices
+            id
         }
     }
 `;
 
-export const useUpdateCardMutation = () => useApolloMutation<{ card: { _id: string } }>(updateCardMutation);
+export const useUpdateCardMutation = () => useApolloMutation<{ card: { id: string } }>(updateCardMutation);
 
 const deleteCardMutation = gql`
-    mutation deleteCard($_id: String!) {
-        deleteCard(_id: $_id) {
+    mutation deleteCard($id: String!) {
+        deleteCard(id: $id) {
             deleted
         }
     }
@@ -133,32 +149,32 @@ const addCardMutation = gql`
                 details: "new details"
             }
         ) {
-            _id
+            id
         }
     }
 `;
 
-export const useAddCardMutation = () => useApolloMutation<{ addCard: { _id: string } }>(addCardMutation);
+export const useAddCardMutation = () => useApolloMutation<{ addCard: { id: string } }>(addCardMutation);
 
 const addDeckMutation = gql`
-    mutation whocaresswhatthisiscalled($name: String!, $categories: [String!], $userId: string) {
+    mutation whocaresswhatthisiscalled($name: String!, $categories: [String], $userId: String) {
         createDeck(input: { name: $name, categories: $categories, userId: $userId }) {
-            _id
+            id
         }
     }
 `;
 
-export const useAddDeckMutation = () => useApolloMutation<{ createDeck: { _id: string } }>(addDeckMutation);
+export const useAddDeckMutation = () => useApolloMutation<{ createDeck: { id: string } }>(addDeckMutation);
 
 const updateDeckMutation = gql`
-    mutation deck($_id: String!, $name: String, $categories: [String!], $details: String) {
-        updateDeck(input: { _id: $_id, name: $name, categories: $categories, details: $details }) {
-            _id
+    mutation deck($id: String!, $name: String, $categories: [String], $details: String) {
+        updateDeck(input: { id: $id, name: $name, categories: $categories, details: $details }) {
+            id
         }
     }
 `;
 
-export const useUpdateDeckMutation = () => useApolloMutation<{ addCard: { _id: string } }>(updateDeckMutation);
+export const useUpdateDeckMutation = () => useApolloMutation<{ addCard: { id: string } }>(updateDeckMutation);
 
 const addTryMutation = gql`
     mutation addTry($cardId: String!, $correct: Boolean!) {

@@ -33,6 +33,10 @@ const deckSchema = new mongoose.Schema<DeckDoc>({
         type: 'array',
         of: 'string',
     },
+    userId: {
+        type: 'string',
+        required: false,
+    },
     created: {
         type: 'date',
         required: true,

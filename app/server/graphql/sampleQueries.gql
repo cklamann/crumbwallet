@@ -1,120 +1,112 @@
 query getDecks {
-  decks {
-    _id
-    name
-    categories
-    cards {
-      _id
-      prompt
-      tries {
-        _id,
-        correct
-      }
+    decks {
+        _id
+        name
+        categories
+        cards {
+            _id
+            prompt
+            tries {
+                _id
+                correct
+            }
+        }
     }
-  }
 }
 
 mutation createDeck {
-  createDeck(input: {name: "chess"}) {
-		name
-    _id
-    cards {
-      _id
+    createDeck(input: { name: "chess" }) {
+        name
+        _id
+        cards {
+            _id
+        }
     }
-  }
 }
 
 mutation updateDeck {
-  updateDeck(input: {_id: "5e6b7c6e3676460a04bd7911", categories: ["games"]}) {
-    _id
-		name
-    categories
-    cards {
-      _id
-      prompt
-      answer
+    updateDeck(input: { _id: "5e6b7c6e3676460a04bd7911", categories: ["games"] }) {
+        _id
+        name
+        categories
+        cards {
+            _id
+            prompt
+            answer
+        }
     }
-  }
 }
 
 mutation deleteDeck {
-  deleteDeck(_id: "5e6569d121cf4107515fcf43")
-    
+    deleteDeck(_id: "5e6569d121cf4107515fcf43")
 }
 
 mutation createCard {
-  addCard(input: {deckId: "5e6b7c6e3676460a04bd7911", prompt: "<span>what square is this?</span>", answer: "e4", details: "an excellent opening move!"}) {
-    _id
-    name
-    cards {
-      _id
-      prompt
-      answer
-      details
-      tries {
+    addCard(
+        input: {
+            deckId: "5e6b7c6e3676460a04bd7911"
+            prompt: "<span>what square is this?</span>"
+            answer: "e4"
+            details: "an excellent opening move!"
+            handle: "foo"         
+          }
+    ) {
         _id
-        correct
-      }
     }
-  }
 }
 
 mutation deleteCard {
-  deleteCard(_id: "5e6b7c853676460a04bd7912"){
-    _id
-    name
-    cards {
-      _id
-      prompt
+    deleteCard(_id: "5e6b7c853676460a04bd7912") {
+        _id
+        name
+        cards {
+            _id
+            prompt
+        }
     }
-  }
 }
 
 mutation updateCard {
-  updateCard(input: {cardId: "5e6baad623db110dbf9c1733", prompt: "<span>wud sql is thi</span>"}) {
-    _id
-    name
-    cards {
-      _id
-      prompt
-      tries {
+    updateCard(input: { cardId: "5e6baad623db110dbf9c1733", prompt: "<span>wud sql is thi</span>" }) {
         _id
-        correct
-      }
+        name
+        cards {
+            _id
+            prompt
+            tries {
+                _id
+                correct
+            }
+        }
     }
-  }
 }
 
 mutation addTry {
-  addTry(input: {cardId: "5e6baad623db110dbf9c1733", correct: false}) {
-    _id
-    name
-    cards {
-      _id
-      prompt
-      tries {
+    addTry(input: { cardId: "5e6baad623db110dbf9c1733", correct: false }) {
         _id
-        correct
-      }
+        name
+        cards {
+            _id
+            prompt
+            tries {
+                _id
+                correct
+            }
+        }
     }
-  }
 }
 
 mutation updateTry {
-  updateTry(input: {tryId: "5e6bad4b4a6f190e51c1af81", correct: false}) {
-    _id
-    name
-    cards {
-      _id
-      prompt
-      tries {
+    updateTry(input: { tryId: "5e6bad4b4a6f190e51c1af81", correct: false }) {
         _id
-        correct
-      }
+        name
+        cards {
+            _id
+            prompt
+            tries {
+                _id
+                correct
+            }
+        }
     }
-  }
 }
-
-
-
-

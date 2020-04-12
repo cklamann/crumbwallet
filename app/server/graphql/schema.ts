@@ -6,12 +6,10 @@ import {
     GraphQLList,
     GraphQLString,
     GraphQLNonNull,
-    GraphQLSkipDirective,
-    GraphQLScalarType,
 } from 'graphql';
 import Decks, { Deck, DeckDoc } from '../models/Decks';
 import { Try } from 'Models/Tries';
-import Cards, { Card } from 'Models/Cards';
+import { Card } from 'Models/Cards';
 import { get } from 'lodash';
 
 const queryType = new GraphQLObjectType({
@@ -32,11 +30,19 @@ const queryType = new GraphQLObjectType({
                 _id: {
                     type: GraphQLNonNull(GraphQLString),
                 },
+                userId: {
+                    type: GraphQLString,
+                },
             },
             resolve: async (_source, args, context, info) => Decks.findById(args._id),
         },
         decks: {
             type: new GraphQLList(deckType),
+            args: {
+                userId: {
+                    type: GraphQLString,
+                },
+            },
             resolve: async (_source, args, context, info) => Decks.find({}),
         },
     }),
@@ -108,7 +114,7 @@ const mutationType = new GraphQLObjectType({
         },
         deleteCard: {
             type: new GraphQLObjectType({
-                name: 'cardDeletedtatus',
+                name: 'cardDeletedStatus',
                 fields: () => ({ deleted: { type: GraphQLBoolean } }),
             }),
             args: {
@@ -310,7 +316,7 @@ const deckType = new GraphQLObjectType<Deck>({
             description: 'list of categories.',
         },
         userId: {
-            type: GraphQLString,
+            type:  GraphQLNonNull(GraphQLString),
             description: 'the user id of the owner',
         },
         created: {
@@ -426,3 +432,4 @@ export const Schema = new GraphQLSchema({
     query: queryType,
     mutation: mutationType,
 });
+

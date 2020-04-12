@@ -1,0 +1,13 @@
+version: 1.0
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - cd app/client
+    build:
+      commands:
+        - npm run development
+  artifacts:
+    files:
+        - dist/
+    discard-paths: yes

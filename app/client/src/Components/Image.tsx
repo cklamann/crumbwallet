@@ -9,7 +9,7 @@ const useImageStyles = makeStyles(theme =>
     })
 );
 
-const Image: React.FC<S3Image> = props => {
+const Image: React.FC<S3Image['props']> = props => {
     const newProps = {
             ...props,
             theme: {
