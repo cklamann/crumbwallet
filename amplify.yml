@@ -9,5 +9,8 @@ frontend:
       commands:
         - npm run development
   artifacts:
+    files:
+      - index.html
+      - index_bundle.js
     baseDirectory: app/client/dist
     discard-paths: yes

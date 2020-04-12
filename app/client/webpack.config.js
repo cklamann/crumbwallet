@@ -27,13 +27,13 @@ module.exports = {
             },
             {
                 test: /\.mjs$/,
-                include: /node_modules/,
-                type: "javascript/auto",
-              },
+                type: 'javascript/auto',
+            },
             {
                 test: /\.js$/,
                 use: ['source-map-loader'],
                 enforce: 'pre',
+                exclude: /node_modules/,
             },
             {
                 test: /\.scss$/,
@@ -55,7 +55,7 @@ module.exports = {
             //also, this gives us db_user, etc but not TEST
             Object.entries(process.env)
                 .map(([k, v]) => ({ [k]: JSON.stringify(v) }))
-                .filter(obj => Object.keys(obj)[0].startsWith('APP_'))
+                .filter((obj) => Object.keys(obj)[0].startsWith('APP_'))
                 .reduce((a, c) => {
                     a[`process.env.${Object.keys(c)[0]}`] = Object.values(c)[0];
                     return a;
