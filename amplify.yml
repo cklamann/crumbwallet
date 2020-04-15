@@ -7,7 +7,7 @@ frontend:
         - npm install
     build:
       commands:
-        - npm run development
+        - npm run production
   artifacts:
     files:
       - index.html

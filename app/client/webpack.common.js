@@ -5,9 +5,7 @@ const Dotenv = require('dotenv');
 const webpack = require('webpack');
 
 module.exports = {
-    mode: 'development',
     entry: './src/index.tsx',
-    devtool: 'inline-source-map',
     resolve: {
         extensions: ['.ts', '.tsx', '.js', '.mjs', '.json'],
         alias: {
