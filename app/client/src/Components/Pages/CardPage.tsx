@@ -125,9 +125,11 @@ const CardPage: React.FC<CardPage> = ({}) => {
         };
     //user could get her via the back button...
     useEffect(() => {
-        if (get(data, 'deck') && !cardId && !data.deck.cards.length) {
-            history.push(`/decks/${deckId}/cards/${data.deck.cards[0].id}`);
-        } else history.push(`/`);
+        if (!cardId && get(data, 'deck')) {
+            if (!data.deck.cards.length) {
+                history.push(`/`);
+            } else history.push(`/decks/${deckId}/cards/${data.deck.cards[0].id}`);
+        }
     });
 
     useEffect(() => {
