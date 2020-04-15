@@ -23,29 +23,6 @@ services:
     networks:
       - app-network
 
-  #Mongo Service
-  mongo:
-    image: mongo:latest
-    container_name: flashcard-mongo
-    restart: unless-stopped
-    tty: true
-    ports:
-      - "27018:27017"
-    expose: ["27017"]
-    command: mongod --bind_ip_all
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: secret
-      MONGO_INITDB_DATABASE: admin
-      DB_USER: ${DB_USER}
-      DB_PASSWORD: ${DB_PASSWORD}
-      SERVICE_TAGS: dev
-      SERVICE_NAME: mongo
-    volumes:
-      - ./mongo-init.sh:/docker-entrypoint-initdb.d/mongo-init.sh:ro
-    networks:
-      - app-network
-
 #Docker Networks
 networks:
   app-network:

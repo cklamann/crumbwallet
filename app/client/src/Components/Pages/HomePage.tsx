@@ -12,14 +12,15 @@ import Grid from '@material-ui/core/Grid';
 import MenuItem from './../MenuItem';
 import { UserContext } from '../App';
 import ModelList from './../ModelList';
+import { Deck } from 'Models/Decks';
 import { Typography } from '@material-ui/core';
 import Close from '@material-ui/icons/Close';
 import { makeStyles, createStyles } from '@material-ui/core/styles';
-import { sortBy } from 'lodash';
+import { get, noop, sortBy } from 'lodash';
 
 interface HomePage {}
 
-const useHomePageStyles = makeStyles(theme =>
+const useHomePageStyles = makeStyles((theme) =>
     createStyles({
         root: {},
         form: {
@@ -45,7 +46,9 @@ const HomePage: React.FC<HomePage> = ({}) => {
                         <ModelList
                             displayNameField="name"
                             items={sortBy(data.decks, 'name')}
-                            onItemClick={(deckId: string) => history.push(`/decks/${deckId}/cards`)}
+                            onItemClick={(deck: Deck) =>
+                                get(deck, 'cards.length') ? history.push(`/decks/${deck.id}/cards`) : noop()
+                            }
                             innerLinkComponent={withRefresh(refetch)(DeckRow)}
                         />
                     </MenuItem>
@@ -76,7 +79,7 @@ const HomePage: React.FC<HomePage> = ({}) => {
                                     onClick={() =>
                                         addDeck({
                                             variables: { name: newTitleText, userId: newDeckPrivate ? userId : null },
-                                        }).then(res => history.push(`decks/${res.data.createDeck.id}/edit`))
+                                        }).then((res) => history.push(`decks/${res.data.createDeck.id}/edit`))
                                     }
                                     variant="contained"
                                 >
@@ -93,7 +96,7 @@ const HomePage: React.FC<HomePage> = ({}) => {
 
 export default HomePage;
 
-const useDeckRowStyles = makeStyles(theme =>
+const useDeckRowStyles = makeStyles((theme) =>
     createStyles({
         root: {
             flexGrow: 1,
@@ -112,11 +115,7 @@ const useDeckRowStyles = makeStyles(theme =>
     })
 );
 
-const DeckRow: React.FC<{ displayName: string; refresh?: () => void; id: string }> = ({
-    displayName,
-    refresh,
-    id,
-}) => {
+const DeckRow: React.FC<{ displayName: string; refresh?: () => void; id: string }> = ({ displayName, refresh, id }) => {
     const history = useHistory(),
         [deleteDeck] = useDeleteDeckMutation(),
         classes = useDeckRowStyles();
@@ -126,7 +125,7 @@ const DeckRow: React.FC<{ displayName: string; refresh?: () => void; id: string 
             <Typography className={classes.root}>{displayName}</Typography>
             <IconButton
                 className={classes.warnIcon}
-                onClick={e => {
+                onClick={(e) => {
                     e.stopPropagation();
                     deleteDeck({ variables: { id } }).then(() => refresh());
                 }}
@@ -135,7 +134,7 @@ const DeckRow: React.FC<{ displayName: string; refresh?: () => void; id: string 
             </IconButton>
             <IconButton
                 className={classes.icon}
-                onClick={e => {
+                onClick={(e) => {
                     e.stopPropagation();
                     history.push(`/decks/${id}/edit`);
                 }}

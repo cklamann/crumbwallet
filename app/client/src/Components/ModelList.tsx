@@ -8,10 +8,10 @@ interface ModelList {
     innerLinkComponent?: React.ComponentType<{ displayName: string; id: string }>;
     items: { [key: string]: any; id: string }[];
     displayNameField: string;
-    onItemClick: (modelId: string) => void;
+    onItemClick: (model: { id: string; [key: string]: any }) => void;
 }
 
-const useCardListStyles = makeStyles(theme =>
+const useCardListStyles = makeStyles((theme) =>
     createStyles({
         item: {
             cursor: 'pointer',
@@ -31,9 +31,9 @@ const ModelList: React.FC<ModelList> = ({ innerLinkComponent: Component, items, 
     const classes = useCardListStyles();
     return (
         <List className={classes.list}>
-            {items.map(item => (
+            {items.map((item) => (
                 <ListItem className={classes.item} key={item.id}>
-                    <Link className={classes.link} onClick={onItemClick.bind(null, item.id)}>
+                    <Link className={classes.link} onClick={onItemClick.bind(null, item)}>
                         {Component ? (
                             <Component {...{ displayName: item[displayNameField], id: item.id }} />
                         ) : displayNameField ? (
