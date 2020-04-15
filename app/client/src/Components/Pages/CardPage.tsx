@@ -27,7 +27,7 @@ import { findIndex, get } from 'lodash';
 
 interface CardPage {}
 
-const useCardPageStyles = makeStyles(theme =>
+const useCardPageStyles = makeStyles((theme) =>
     createStyles({
         root: {
             display: 'flex',
@@ -77,14 +77,14 @@ const CardPage: React.FC<CardPage> = ({}) => {
         [transitionDirection, setTransitionDirection] = useState<string>('next'),
         classes = useCardPageStyles(),
         deck = get(data, 'deck'),
-        card: Card = get(deck, 'cards', []).find(c => c.id === cardId),
+        card: Card = get(deck, 'cards', []).find((c) => c.id === cardId),
         finalizeAnswer = (answer: string) => {
             setAnswer(answer);
             setAnsweredCorrectly(answer == card.answer ? true : false);
         },
         addTry = (correct: boolean) => _addTry({ variables: { cardId, correct } }),
         goToNextCard = () => {
-            const idx = findIndex(deck.cards, card => card.id === cardId),
+            const idx = findIndex(deck.cards, (card) => card.id === cardId),
                 target = idx < deck.cards.length - 1 ? idx + 1 : 0;
             resetCard();
             setTransitionDirection('next');
@@ -92,7 +92,7 @@ const CardPage: React.FC<CardPage> = ({}) => {
             history.push(`/decks/${deckId}/cards/${deck.cards[target].id}`);
         },
         goToPreviousCard = () => {
-            const idx = findIndex(deck.cards, card => card.id === cardId),
+            const idx = findIndex(deck.cards, (card) => card.id === cardId),
                 target = idx > 0 ? idx - 1 : deck.cards.length - 1;
             resetCard();
             setTransitionDirection('previous');
@@ -123,11 +123,12 @@ const CardPage: React.FC<CardPage> = ({}) => {
                 setTouchList(undefined);
             }
         };
+    //user could get her via the back button...
     useEffect(() => {
-        if (get(data, 'deck') && !cardId) {
+        if (get(data, 'deck') && !cardId && data.deck.cards.length) {
             history.push(`/decks/${deckId}/cards/${data.deck.cards[0].id}`);
-        }
-    }, [data]);
+        } else history.push(`/`);
+    });
 
     useEffect(() => {
         //reset image loaded state here
@@ -150,7 +151,7 @@ const CardPage: React.FC<CardPage> = ({}) => {
                     <>
                         <CardHeader
                             classes={{ content: classes.headerContent }}
-                            title={`${deck.name} #${findIndex(deck.cards, card => card.id === cardId) + 1}`}
+                            title={`${deck.name} #${findIndex(deck.cards, (card) => card.id === cardId) + 1}`}
                             subheader={
                                 <IconButton onClick={() => history.push(`/decks/${deckId}/cards/${cardId}/edit`)}>
                                     <Edit />
@@ -175,7 +176,7 @@ const CardPage: React.FC<CardPage> = ({}) => {
                             <Grid container justify="center">
                                 {get(card, 'choices.length') ? (
                                     <Grid spacing={1} justify="center" container item xs={12}>
-                                        {card.choices.map(c => (
+                                        {card.choices.map((c) => (
                                             <Grid item key={c}>
                                                 <Chip label={c} onClick={finalizeAnswer.bind(null, c)} />
                                             </Grid>

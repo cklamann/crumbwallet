@@ -16,7 +16,7 @@ import { Deck } from 'Models/Decks';
 import { Typography } from '@material-ui/core';
 import Close from '@material-ui/icons/Close';
 import { makeStyles, createStyles } from '@material-ui/core/styles';
-import { get, noop, sortBy } from 'lodash';
+import { sortBy } from 'lodash';
 
 interface HomePage {}
 
@@ -46,9 +46,7 @@ const HomePage: React.FC<HomePage> = ({}) => {
                         <ModelList
                             displayNameField="name"
                             items={sortBy(data.decks, 'name')}
-                            onItemClick={(deck: Deck) =>
-                                get(deck, 'cards.length') ? history.push(`/decks/${deck.id}/cards`) : noop()
-                            }
+                            onItemClick={(deck: Deck) => history.push(`/decks/${deck.id}/cards`)}
                             innerLinkComponent={withRefresh(refetch)(DeckRow)}
                         />
                     </MenuItem>
