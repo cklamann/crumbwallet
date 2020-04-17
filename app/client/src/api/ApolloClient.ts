@@ -129,8 +129,8 @@ const updateCardMutation = gql`
 export const useUpdateCardMutation = () => useApolloMutation<{ card: { id: string } }>(updateCardMutation);
 
 const deleteCardMutation = gql`
-    mutation deleteCard($id: String!) {
-        deleteCard(id: $id) {
+    mutation deleteCard($id: String!, $deckId: String!) {
+        deleteCard(id: $id, deckId: $deckId) {
             deleted
         }
     }

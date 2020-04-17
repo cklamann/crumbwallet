@@ -100,7 +100,7 @@ const EditCardPage: React.FC<EditCardPage> = ({ uploadToS3 }) => {
                                     tabIndex={-1}
                                     className={classes.CloseIcon}
                                     onClick={() =>
-                                        deleteCard({ variables: { id: cardId } }).then(() =>
+                                        deleteCard({ variables: { id: cardId, deckId } }).then(() =>
                                             history.push(`/decks/${deckId}/edit`)
                                         )
                                     }
