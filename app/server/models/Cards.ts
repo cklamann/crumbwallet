@@ -8,6 +8,7 @@ export interface Card {
     choices: string[];
     imageKey?: string;
     tries: Try[];
+    type: 'quotation';
     prompt: string;
     created: Date;
     updated: Date;

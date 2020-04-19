@@ -1,6 +1,6 @@
 import ApolloClient from 'apollo-client';
 import gql from 'graphql-tag';
-import { DocumentNode } from 'graphql';
+import { DocumentNode, GraphQLEnumType } from 'graphql';
 import { InMemoryCache } from 'apollo-cache-inmemory';
 import Auth from '@aws-amplify/auth';
 import { createAppSyncLink } from 'aws-appsync';
@@ -44,6 +44,11 @@ const fetchDecksQuery = gql`
     }
 `;
 
+const Type = new GraphQLEnumType({
+    name: 'Type',
+    values: { quotation: { value: 'quotation' } },
+});
+
 export const useFetchDecksQuery = () => useApolloQuery<{ decks: Deck[] }>(fetchDecksQuery);
 
 const fetchDeckQuery = gql`
@@ -59,6 +64,7 @@ const fetchDeckQuery = gql`
                 handle
                 imageKey
                 prompt
+                type
             }
         }
     }
@@ -82,13 +88,14 @@ export const useDeleteDeckMutation = () => useApolloMutation<{ deleted: boolean 
 const fetchCardQuery = gql`
     query fetchCard($id: String!) {
         card(id: $id) {
-            id
-            prompt
             answer
-            imageKey
-            details
             choices
+            details
             handle
+            id
+            type
+            imageKey
+            prompt
         }
     }
 `;
@@ -100,25 +107,27 @@ export const useFetchCardQuery = (id: string) =>
 
 const updateCardMutation = gql`
     mutation card(
-        $id: String!
-        $deckId: String!
-        $prompt: String
         $answer: String
+        $choices: [String]
+        $deckId: String!
         $details: String
         $handle: String
+        $id: String!
         $imageKey: String
-        $choices: [String]
+        $prompt: String
+        $type: Type
     ) {
         updateCard(
             input: {
-                id: $id
-                deckId: $deckId
-                prompt: $prompt
                 answer: $answer
+                choices: $choices
+                deckId: $deckId
                 details: $details
                 handle: $handle
+                id: $id
                 imageKey: $imageKey
-                choices: $choices
+                prompt: $prompt
+                type: $type
             }
         ) {
             id

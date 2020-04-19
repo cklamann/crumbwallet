@@ -30,15 +30,16 @@ interface EditCardPage {
     uploadToS3: (file: File, carId: string) => Promise<string>;
 }
 
-type ReducerState = Pick<Card, 'answer' | 'prompt' | 'imageKey' | 'handle' | 'choices' | 'details'>;
+type ReducerState = Pick<Card, 'answer' | 'prompt' | 'imageKey' | 'handle' | 'choices' | 'details' | 'type'>;
 
 const INITIAL_STATE: ReducerState = {
     answer: '',
-    details: '',
-    prompt: undefined,
-    imageKey: '',
-    handle: '',
     choices: undefined,
+    details: '',
+    handle: '',
+    imageKey: '',
+    prompt: undefined,
+    type: '',
 };
 
 const usePageStyles = makeStyles((theme) =>
@@ -68,7 +69,16 @@ const EditCardPage: React.FC<EditCardPage> = ({ uploadToS3 }) => {
         if (get(data, 'card')) {
             dispatch({
                 type: 'update',
-                payload: pick(get(data, 'card'), 'answer', 'prompt', 'imageKey', 'handle', 'choices', 'details'),
+                payload: pick(
+                    get(data, 'card'),
+                    'answer',
+                    'prompt',
+                    'imageKey',
+                    'handle',
+                    'choices',
+                    'details',
+                    'type'
+                ),
             });
         }
     }, [get(data, 'card')]);
@@ -157,7 +167,7 @@ const EditCardPage: React.FC<EditCardPage> = ({ uploadToS3 }) => {
                                     <InputLabel>Answer</InputLabel>
                                     <Select
                                         value={state.answer}
-                                        onChange={(e) => updateField('answer')(e.target.value)}
+                                        onChange={(e) => updateField('answer')(e.target.value as string)}
                                     >
                                         {state.choices.map((choice) => (
                                             <MenuItem key={choice} value={choice}>
@@ -183,6 +193,21 @@ const EditCardPage: React.FC<EditCardPage> = ({ uploadToS3 }) => {
                                 choices={data.card.choices || []}
                                 updateChoices={(choices) => updateCard({ choices })}
                             />
+                        </Grid>
+                        <Grid item container xs={12} md={6}>
+                            <FormControl fullWidth>
+                                <InputLabel>Type</InputLabel>
+                                <Select
+                                    value={state.type}
+                                    onChange={(e) => updateField('type')(e.target.value as 'quotation')}
+                                >
+                                    {['quotation'].map((choice) => (
+                                        <MenuItem key={choice} value={choice}>
+                                            {choice}
+                                        </MenuItem>
+                                    ))}
+                                </Select>
+                            </FormControl>
                         </Grid>
                     </Grid>
                     <Grid container wrap="nowrap" justify="space-between" spacing={2}>
