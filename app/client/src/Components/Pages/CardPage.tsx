@@ -23,7 +23,7 @@ import ArrowRight from '@material-ui/icons/ArrowRight';
 import Grid from '@material-ui/core/Grid';
 import Slide from '@material-ui/core/Slide';
 import { makeStyles, createStyles } from '@material-ui/core/styles';
-import { findIndex, get } from 'lodash';
+import { findIndex, get, shuffle } from 'lodash';
 
 interface CardPage {}
 
@@ -178,7 +178,7 @@ const CardPage: React.FC<CardPage> = ({}) => {
                             <Grid container justify="center">
                                 {get(card, 'choices.length') ? (
                                     <Grid spacing={1} justify="center" container item xs={12}>
-                                        {card.choices.map((c) => (
+                                        {shuffle(card.choices).map((c) => (
                                             <Grid item key={c}>
                                                 <Chip label={c} onClick={finalizeAnswer.bind(null, c)} />
                                             </Grid>
