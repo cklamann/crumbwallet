@@ -93,6 +93,7 @@ input newCardInput {
     choices: [String]
     deckId: String!
     details: String
+    type: Type
     handle: String!
     prompt: String!
 }

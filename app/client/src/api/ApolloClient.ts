@@ -156,6 +156,7 @@ const addCardMutation = gql`
                 prompt: "<p>New Prompt</p>"
                 answer: "New answer"
                 details: "new details"
+                type: "standard"
             }
         ) {
             id
