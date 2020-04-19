@@ -39,7 +39,7 @@ const INITIAL_STATE: ReducerState = {
     handle: '',
     imageKey: '',
     prompt: '',
-    type: '' as 'quotation',
+    type: 'standard',
 };
 
 const usePageStyles = makeStyles((theme) =>

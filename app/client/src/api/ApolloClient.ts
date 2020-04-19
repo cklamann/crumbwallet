@@ -153,9 +153,9 @@ const addCardMutation = gql`
             input: {
                 deckId: $deckId
                 handle: "New Card"
-                prompt: "<p>New Prompt</p>"
+                prompt: "New Prompt"
                 answer: "New answer"
-                details: "new details"
+                details: "<p>new details</p>"
                 type: "standard"
             }
         ) {

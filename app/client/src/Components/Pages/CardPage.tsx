@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useHistory, useParams } from 'react-router-dom';
 import { useFetchDeckQuery, useAddTryMutation } from './../../api/ApolloClient';
 import Image from './../Image';
@@ -125,7 +125,8 @@ const CardPage: React.FC<CardPage> = ({}) => {
 
                 setTouchList(undefined);
             }
-        };
+        },
+        setAnswerWrong = () => setAnsweredCorrectly(false);
     //user could get her via the back button...
     useEffect(() => {
         if (!cardId && get(data, 'deck')) {
@@ -142,11 +143,13 @@ const CardPage: React.FC<CardPage> = ({}) => {
         }
     }, [cardId]);
 
-    const resolvePrompt = (card: Card) => {
-        if (card.type !== 'quotation' || !card.type) {
-            return <StandardPrompt content={card.prompt} />;
-        } else return <QuotationPrompt quotation={card.prompt} onHint={() => setAnsweredCorrectly(false)} />;
-    };
+    const resolvePrompt = useMemo(() => {
+        if (!card) return () => <span />;
+        if (get(card, 'type') !== 'quotation' || !get(card, 'type')) {
+            return () => <StandardPrompt content={card.prompt} />;
+        } else return () => <QuotationPrompt quotation={card.prompt} onHint={setAnswerWrong} />;
+    }, [card]);
+
     return (
         <Slide
             mountOnEnter
@@ -178,7 +181,7 @@ const CardPage: React.FC<CardPage> = ({}) => {
                             )}
                             <Grid container>
                                 <Grid item xs={12}>
-                                    {resolvePrompt(card)}
+                                    {resolvePrompt()}
                                 </Grid>
                             </Grid>
                         </CardContent>
@@ -292,7 +295,9 @@ const StandardPrompt: React.FC<{ content: string }> = React.memo(({ content }) =
         return (
             <span>
                 {lines.map((l) => (
-                    <p key={l}>{l}</p>
+                    <p className={classes.Line} key={l}>
+                        {l}
+                    </p>
                 ))}
             </span>
         );
