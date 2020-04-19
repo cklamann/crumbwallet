@@ -46,7 +46,7 @@ const fetchDecksQuery = gql`
 
 const Type = new GraphQLEnumType({
     name: 'Type',
-    values: { quotation: { value: 'quotation' } },
+    values: { quotation: { value: 'quotation' }, standard: { value: 'standard' } },
 });
 
 export const useFetchDecksQuery = () => useApolloQuery<{ decks: Deck[] }>(fetchDecksQuery);

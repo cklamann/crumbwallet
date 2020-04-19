@@ -16,7 +16,7 @@ interface RichEditor {
     onChange: (content: string) => void;
 }
 
-const useStyles = makeStyles(theme =>
+const useStyles = makeStyles((theme) =>
     createStyles({
         root: {},
         Editor: {
@@ -42,7 +42,7 @@ const RichEditor: React.FC<RichEditor> = ({ content, onChange }) => {
             }
             const blocksFromHTML = convertFromHTML(content),
                 state = ContentState.createFromBlockArray(blocksFromHTML.contentBlocks, blocksFromHTML.entityMap);
-            return setEditorState(EditorState.createWithContent(state));
+            setEditorState(EditorState.createWithContent(state));
         }
     }, [content]);
 
@@ -69,14 +69,14 @@ const RichEditor: React.FC<RichEditor> = ({ content, onChange }) => {
                                 error={!new DOMParser().parseFromString(content, 'text/html').body.innerText}
                                 shrink={true}
                             >
-                                Prompt
+                                Details
                             </InputLabel>
                         </Grid>
                         <Grid container item justify="flex-end">
                             <IconButton
                                 tabIndex={-1}
                                 size="small"
-                                onMouseDown={e => e.preventDefault()}
+                                onMouseDown={(e) => e.preventDefault()}
                                 style={{
                                     color: editorState.getCurrentInlineStyle().has('ITALIC')
                                         ? theme.palette.primary.light
@@ -89,7 +89,7 @@ const RichEditor: React.FC<RichEditor> = ({ content, onChange }) => {
                             <IconButton
                                 tabIndex={-1}
                                 size="small"
-                                onMouseDown={e => {
+                                onMouseDown={(e) => {
                                     e.preventDefault();
                                 }}
                                 style={{

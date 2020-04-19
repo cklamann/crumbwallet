@@ -23,7 +23,7 @@ import ArrowRight from '@material-ui/icons/ArrowRight';
 import Grid from '@material-ui/core/Grid';
 import Slide from '@material-ui/core/Slide';
 import { makeStyles, createStyles } from '@material-ui/core/styles';
-import { findIndex, get, shuffle } from 'lodash';
+import { findIndex, get, max, random, shuffle } from 'lodash';
 
 interface CardPage {}
 
@@ -71,6 +71,7 @@ const CardPage: React.FC<CardPage> = ({}) => {
         [_addTry] = useAddTryMutation(),
         [answer, setAnswer] = useState<string>(''),
         [answeredCorrectly, setAnsweredCorrectly] = useState<boolean>(),
+        [answerModalOpen, setAnswerModalOpen] = useState<boolean>(),
         [imageLoaded, setImageLoaded] = useState<boolean>(false),
         [touchList, setTouchList] = useState<React.TouchList>(),
         [transitionInProgress, setTransitionInProgress] = useState(false),
@@ -81,6 +82,7 @@ const CardPage: React.FC<CardPage> = ({}) => {
         finalizeAnswer = (answer: string) => {
             setAnswer(answer);
             setAnsweredCorrectly(answer == card.answer ? true : false);
+            setAnswerModalOpen(true);
         },
         addTry = (correct: boolean) => _addTry({ variables: { cardId, correct } }),
         goToNextCard = () => {
@@ -102,6 +104,7 @@ const CardPage: React.FC<CardPage> = ({}) => {
         resetCard = () => {
             setAnsweredCorrectly(undefined);
             setAnswer('');
+            setAnswerModalOpen(false);
         },
         handleTouchStart = (e: React.TouchEvent<any>) => setTouchList(e.changedTouches),
         handleTouchEnd = (e: React.TouchEvent<any>) => {
@@ -133,12 +136,17 @@ const CardPage: React.FC<CardPage> = ({}) => {
     });
 
     useEffect(() => {
-        //reset image loaded state here
+        //reset image loaded state here...
         if (imageLoaded) {
             setImageLoaded(false);
         }
     }, [cardId]);
 
+    const resolvePrompt = (card: Card) => {
+        if (card.type !== 'quotation' || !card.type) {
+            return <StandardPrompt content={card.prompt} />;
+        } else return <QuotationPrompt quotation={card.prompt} onHint={() => setAnsweredCorrectly(false)} />;
+    };
     return (
         <Slide
             mountOnEnter
@@ -170,7 +178,7 @@ const CardPage: React.FC<CardPage> = ({}) => {
                             )}
                             <Grid container>
                                 <Grid item xs={12}>
-                                    <span dangerouslySetInnerHTML={{ __html: card.prompt }} />
+                                    {resolvePrompt(card)}
                                 </Grid>
                             </Grid>
                         </CardContent>
@@ -212,7 +220,7 @@ const CardPage: React.FC<CardPage> = ({}) => {
                                 </Grid>
                             </Grid>
                         </CardActions>
-                        {answeredCorrectly !== undefined && (
+                        {answerModalOpen && answeredCorrectly !== undefined && (
                             <Dialog
                                 open={true}
                                 onClose={() => {
@@ -229,7 +237,9 @@ const CardPage: React.FC<CardPage> = ({}) => {
                                 </DialogTitle>
                                 {card.details && (
                                     <DialogContent>
-                                        <DialogContentText>{card.details}</DialogContentText>
+                                        <DialogContentText>
+                                            <span dangerouslySetInnerHTML={{ __html: card.details }} />
+                                        </DialogContentText>
                                     </DialogContent>
                                 )}
                             </Dialog>
@@ -240,6 +250,83 @@ const CardPage: React.FC<CardPage> = ({}) => {
         </Slide>
     );
 };
-//down here should have controls --> go to beginning, redo, shuffle, back
 
 export default CardPage;
+
+const usePromptStyles = makeStyles((theme) =>
+    createStyles({
+        root: {},
+        Line: {
+            margin: '5px 0px',
+        },
+    })
+);
+
+const QuotationPrompt: React.FC<{ quotation: string; onHint: () => void }> = React.memo(({ quotation, onHint }) => {
+    const lines = quotation.split('\n'),
+        classes = usePromptStyles();
+    if (lines.length > 1) {
+        const blanked = random(0, lines.length - 1);
+        return (
+            <span>
+                {lines.map((l, i) => {
+                    if (i === blanked) {
+                        return (
+                            <p key={i} className={classes.Line}>
+                                <BlankedOutSpace content={l} onClick={onHint} />
+                            </p>
+                        );
+                    }
+                    return <p key={i}>{l}</p>;
+                })}
+            </span>
+        );
+    }
+    return <span>{quotation}</span>;
+});
+
+const StandardPrompt: React.FC<{ content: string }> = React.memo(({ content }) => {
+    const lines = content.split('\n'),
+        classes = usePromptStyles();
+    if (lines.length > 1) {
+        return (
+            <span>
+                {lines.map((l) => (
+                    <p key={l}>{l}</p>
+                ))}
+            </span>
+        );
+    }
+    return <span>{content}</span>;
+});
+
+const useBlankStyles = makeStyles((theme) =>
+    createStyles({
+        root: {},
+        Blanked: {
+            backgroundColor: theme.palette.primary.dark,
+            cursor: 'pointer',
+        },
+    })
+);
+
+const BlankedOutSpace: React.FC<{ content: string; onClick: () => void }> = React.memo(({ content, onClick }) => {
+    const [hidden, setHidden] = useState(true),
+        classes = useBlankStyles();
+    return (
+        <span
+            onClick={() => {
+                onClick();
+                setHidden(!hidden);
+            }}
+        >
+            {hidden
+                ? content.split('').map((_, i) => (
+                      <span key={i} className={classes.Blanked}>
+                          &nbsp;
+                      </span>
+                  ))
+                : content}
+        </span>
+    );
+});

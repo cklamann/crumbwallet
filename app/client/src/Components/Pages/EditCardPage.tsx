@@ -23,7 +23,7 @@ import Input from '@material-ui/core/Input';
 import Select from '@material-ui/core/Select';
 import MenuItem from '@material-ui/core/MenuItem';
 import InputLabel from '@material-ui/core/InputLabel';
-import { capitalize, get, pick } from 'lodash';
+import { capitalize, get, pick, pickBy } from 'lodash';
 import { makeStyles, createStyles, useTheme } from '@material-ui/core/styles';
 
 interface EditCardPage {
@@ -35,11 +35,11 @@ type ReducerState = Pick<Card, 'answer' | 'prompt' | 'imageKey' | 'handle' | 'ch
 const INITIAL_STATE: ReducerState = {
     answer: '',
     choices: undefined,
-    details: '',
+    details: undefined,
     handle: '',
     imageKey: '',
-    prompt: undefined,
-    type: '',
+    prompt: '',
+    type: '' as 'quotation',
 };
 
 const usePageStyles = makeStyles((theme) =>
@@ -59,7 +59,9 @@ const EditCardPage: React.FC<EditCardPage> = ({ uploadToS3 }) => {
         [deleteCard] = useDeleteCardMutation(),
         [createCard] = useAddCardMutation(),
         updateCard = (args: Partial<ReducerState> = {}) =>
-            _updateCard({ variables: { id: cardId, deckId, ...state, ...args } }).then(() => refetchCard()),
+            _updateCard({ variables: { id: cardId, deckId, ...state, ...pickBy(args, Boolean) } }).then(() =>
+                refetchCard()
+            ),
         updateField = <T extends keyof ReducerState>(field: T) => (value: ReducerState[T]) =>
             dispatch({ type: 'update', payload: { [field]: value } }),
         history = useHistory(),
@@ -120,7 +122,7 @@ const EditCardPage: React.FC<EditCardPage> = ({ uploadToS3 }) => {
                             </Grid>
                         </Grid>
                         <Grid item container xs={12} md={6}>
-                            <Editor content={state.prompt} onChange={updateField('prompt')} />
+                            <TextInput textarea name="prompt" updateFn={updateField} val={state.prompt} />
                         </Grid>
                         <Grid item container direction="column" justify="center" alignItems="center" xs={12} md={6}>
                             {data.card.imageKey ? (
@@ -186,7 +188,7 @@ const EditCardPage: React.FC<EditCardPage> = ({ uploadToS3 }) => {
                             )}
                         </Grid>
                         <Grid item container xs={12} md={6}>
-                            <TextInput textarea name="details" updateFn={updateField} val={state.details} />
+                            <Editor content={state.details} onChange={updateField('details')} />
                         </Grid>
                         <Grid item container xs={12} md={6}>
                             <ChoiceInput
@@ -201,9 +203,12 @@ const EditCardPage: React.FC<EditCardPage> = ({ uploadToS3 }) => {
                                     value={state.type}
                                     onChange={(e) => updateField('type')(e.target.value as 'quotation')}
                                 >
-                                    {['quotation'].map((choice) => (
-                                        <MenuItem key={choice} value={choice}>
-                                            {choice}
+                                    {[
+                                        { name: 'quotation', value: 'quotation' },
+                                        { name: 'standard', value: 'standard' },
+                                    ].map((choice) => (
+                                        <MenuItem key={choice.name} value={choice.value}>
+                                            {choice.name}
                                         </MenuItem>
                                     ))}
                                 </Select>

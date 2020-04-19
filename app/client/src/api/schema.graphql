@@ -21,6 +21,7 @@ type Card {
 
 enum Type {
     qutotation
+    standard
 }
 
 type Deck {
