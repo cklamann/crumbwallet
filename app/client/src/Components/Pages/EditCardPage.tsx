@@ -23,7 +23,7 @@ import Input from '@material-ui/core/Input';
 import Select from '@material-ui/core/Select';
 import MenuItem from '@material-ui/core/MenuItem';
 import InputLabel from '@material-ui/core/InputLabel';
-import { capitalize, get, pick, pickBy } from 'lodash';
+import { capitalize, get, mapValues, pick } from 'lodash';
 import { makeStyles, createStyles, useTheme } from '@material-ui/core/styles';
 
 interface EditCardPage {
@@ -59,9 +59,10 @@ const EditCardPage: React.FC<EditCardPage> = ({ uploadToS3 }) => {
         [deleteCard] = useDeleteCardMutation(),
         [createCard] = useAddCardMutation(),
         updateCard = (args: Partial<ReducerState> = {}) =>
-            _updateCard({ variables: { id: cardId, deckId, ...state, ...pickBy(args, Boolean) } }).then(() =>
-                refetchCard()
-            ),
+            //todo: empty strings to nulls, so dynamo doesn't complain
+            _updateCard({
+                variables: { id: cardId, deckId, ...state, ...mapValues(args, (arg) => (arg === '' ? null : arg)) },
+            }).then(() => refetchCard()),
         updateField = <T extends keyof ReducerState>(field: T) => (value: ReducerState[T]) =>
             dispatch({ type: 'update', payload: { [field]: value } }),
         history = useHistory(),
@@ -72,7 +73,7 @@ const EditCardPage: React.FC<EditCardPage> = ({ uploadToS3 }) => {
             dispatch({
                 type: 'update',
                 payload: pick(
-                    get(data, 'card'),
+                    mapValues(data.card, (v) => (v === null ? '' : v)),
                     'answer',
                     'prompt',
                     'imageKey',
@@ -88,7 +89,7 @@ const EditCardPage: React.FC<EditCardPage> = ({ uploadToS3 }) => {
     useEffect(() => {
         if (get(state, 'choices.length') && state.answer && !state.choices.includes(state.answer)) {
             //check if there are choices but answer isn't a choice and remove answer
-            updateField('answer')('');
+            updateField('answer')(null);
         }
     }, [state]);
 
@@ -133,7 +134,7 @@ const EditCardPage: React.FC<EditCardPage> = ({ uploadToS3 }) => {
                                     <Grid item>
                                         <label htmlFor="contained-button-file">
                                             <Button
-                                                onClick={() => updateCard({ imageKey: '' })}
+                                                onClick={() => updateCard({ imageKey: null })}
                                                 variant="contained"
                                                 color="primary"
                                                 component="span"

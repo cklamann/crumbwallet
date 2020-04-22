@@ -4,14 +4,14 @@
 }
 
 type Card {
-    answer: String!
+    answer: String
     choices: [String]
     created: String
     details: String
     handle: String!
     id: String!
     imageKey: String
-    prompt: String!
+    prompt: String
     tries: [try]
     type: Type
     updated: String
