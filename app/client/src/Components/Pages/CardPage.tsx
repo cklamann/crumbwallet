@@ -23,7 +23,7 @@ import ArrowRight from '@material-ui/icons/ArrowRight';
 import Grid from '@material-ui/core/Grid';
 import Slide from '@material-ui/core/Slide';
 import { makeStyles, createStyles } from '@material-ui/core/styles';
-import { findIndex, get, max, random, shuffle } from 'lodash';
+import { findIndex, get, random, shuffle } from 'lodash';
 
 interface CardPage {}
 
@@ -150,6 +150,12 @@ const CardPage: React.FC<CardPage> = ({}) => {
         } else return () => <QuotationPrompt quotation={card.prompt} onHint={setAnswerWrong} />;
     }, [card]);
 
+    const shuffleAnswers = useMemo(() => {
+        if (!get(card, 'choices')) return (): any[] => [];
+        const shuffled = shuffle(card.choices);
+        return () => shuffled;
+    }, [card]);
+
     return (
         <Slide
             mountOnEnter
@@ -189,7 +195,7 @@ const CardPage: React.FC<CardPage> = ({}) => {
                             <Grid container justify="center">
                                 {get(card, 'choices.length') ? (
                                     <Grid spacing={1} justify="center" container item xs={12}>
-                                        {shuffle(card.choices).map((c) => (
+                                        {shuffleAnswers().map((c) => (
                                             <Grid item key={c}>
                                                 <Chip label={c} onClick={finalizeAnswer.bind(null, c)} />
                                             </Grid>

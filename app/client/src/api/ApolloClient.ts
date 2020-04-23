@@ -148,7 +148,7 @@ const deleteCardMutation = gql`
 export const useDeleteCardMutation = () => useApolloMutation<{ deleted: boolean }>(deleteCardMutation);
 
 const addCardMutation = gql`
-    mutation addCard($deckId: String!) {
+    mutation addCard($deckId: String!, $type: Type) {
         addCard(
             input: {
                 deckId: $deckId
@@ -156,7 +156,7 @@ const addCardMutation = gql`
                 prompt: "New Prompt"
                 answer: "New answer"
                 details: "<p>new details</p>"
-                type: "standard"
+                type: $type
             }
         ) {
             id
@@ -164,7 +164,8 @@ const addCardMutation = gql`
     }
 `;
 
-export const useAddCardMutation = () => useApolloMutation<{ addCard: { id: string } }>(addCardMutation);
+export const useAddCardMutation = () =>
+    useApolloMutation<{ addCard: { id: string; type: 'standard' } }>(addCardMutation);
 
 const addDeckMutation = gql`
     mutation whocaresswhatthisiscalled($name: String!, $categories: [String], $userId: String) {

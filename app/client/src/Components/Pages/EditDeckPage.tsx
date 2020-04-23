@@ -74,7 +74,7 @@ const EditDeckPage: React.FC<EditDeckPage> = ({}) => {
                             <span
                                 style={{ display: 'flex' }}
                                 onClick={() =>
-                                    createCard({ variables: { deckId } }).then(res =>
+                                    createCard({ variables: { deckId, type: 'standard' } }).then((res) =>
                                         history.push(`/decks/${deckId}/cards/${res.data.addCard.id}/edit`)
                                     )
                                 }
@@ -99,7 +99,7 @@ interface CardList {
     onSelect: (cardId: string) => void;
 }
 
-const useCardListStyles = makeStyles(theme =>
+const useCardListStyles = makeStyles((theme) =>
     createStyles({
         root: {
             cursor: 'pointer',
@@ -111,7 +111,7 @@ const CardList: React.FC<CardList> = ({ cards, onSelect }) => {
     const classes = useCardListStyles();
     return (
         <List>
-            {cards.map(c => (
+            {cards.map((c) => (
                 <ListItem className={classes.root} key={c.id}>
                     <Link onClick={() => onSelect(c.id)}>{c.handle || c.id}</Link>
                 </ListItem>

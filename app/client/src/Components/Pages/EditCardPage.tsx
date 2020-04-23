@@ -61,7 +61,11 @@ const EditCardPage: React.FC<EditCardPage> = ({ uploadToS3 }) => {
         updateCard = (args: Partial<ReducerState> = {}) =>
             //todo: empty strings to nulls, so dynamo doesn't complain
             _updateCard({
-                variables: { id: cardId, deckId, ...state, ...mapValues(args, (arg) => (arg === '' ? null : arg)) },
+                variables: {
+                    id: cardId,
+                    deckId,
+                    ...mapValues({ ...state, ...args }, (arg) => (arg === '' ? null : arg)),
+                },
             }).then(() => refetchCard()),
         updateField = <T extends keyof ReducerState>(field: T) => (value: ReducerState[T]) =>
             dispatch({ type: 'update', payload: { [field]: value } }),
