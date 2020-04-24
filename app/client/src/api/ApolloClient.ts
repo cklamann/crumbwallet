@@ -1,4 +1,5 @@
 import ApolloClient from 'apollo-client';
+import { useContext } from 'react';
 import gql from 'graphql-tag';
 import { DocumentNode, GraphQLEnumType } from 'graphql';
 import { InMemoryCache } from 'apollo-cache-inmemory';
@@ -6,6 +7,7 @@ import Auth from '@aws-amplify/auth';
 import { createAppSyncLink } from 'aws-appsync';
 import awsconfig from './../aws-exports';
 import { createHttpLink } from 'apollo-link-http';
+import { LoadingContext } from '../Components/App';
 import { useQuery, useMutation, QueryHookOptions } from '@apollo/react-hooks';
 import { Deck } from 'Models/Decks';
 import { Card } from 'Models/Cards';
@@ -30,10 +32,20 @@ export const client = new ApolloClient({
     cache: new InMemoryCache(),
 });
 
-//todo: wrap this, so that it also dispatches loading update and then, on return, dispatches loaded signal, before returning response
+export const useApolloQuery = <T>(query: DocumentNode, choices: QueryHookOptions = {}) => {
+    const loadingContext = useContext(LoadingContext);
 
-export const useApolloQuery = <T>(query: DocumentNode, choices: QueryHookOptions = {}) =>
-    useQuery<T>(query, { client, fetchPolicy: 'no-cache', ...choices });
+    const res = useQuery<T>(query, {
+        client,
+        fetchPolicy: 'no-cache',
+        ...choices,
+    });
+
+    //avoid simultaneous rerenders
+    setTimeout(() => loadingContext.setLoading(res.loading));
+
+    return res;
+};
 export const useApolloMutation = <T>(query: DocumentNode, choices: QueryHookOptions = {}) =>
     useMutation<T>(query, { client, fetchPolicy: 'no-cache', ...choices });
 

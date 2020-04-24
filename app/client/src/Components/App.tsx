@@ -1,4 +1,4 @@
-import React, {  useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import Storage from '@aws-amplify/storage';
 import Auth from '@aws-amplify/auth';
 import awsconfig from '../aws-exports';
@@ -21,7 +21,7 @@ import ExitIcon from '@material-ui/icons/Input';
 import CSSBaseline from '@material-ui/core/CssBaseline';
 import { withAuthenticator } from 'aws-amplify-react';
 
-const useNavBarStyles = makeStyles(theme =>
+const useNavBarStyles = makeStyles((theme) =>
     createStyles({
         IconButton: {
             color: theme.palette.text.primary,
@@ -32,62 +32,75 @@ const useNavBarStyles = makeStyles(theme =>
     })
 );
 
-export const UserContext = React.createContext('');
+const defaultLoadingContext = {
+    loading: false,
+    setLoading: (val: boolean) => {},
+};
+
+export const UserContext = React.createContext(''),
+    LoadingContext = React.createContext(defaultLoadingContext);
 
 const App: React.FC<{}> = () => {
     const NavBarStyles = useNavBarStyles(),
-        [userId, setUserId] = useState('');
+        [userId, setUserId] = useState(''),
+        [loading, setLoading] = useState(false);
 
     useEffect(() => {
-        Auth.currentUserInfo().then(i => setUserId(i.attributes.sub));
+        Auth.currentUserInfo().then((i) => setUserId(i.attributes.sub));
     }, []);
+
+    useEffect(() => {
+        console.log(loading);
+    }, [loading]);
 
     return (
         <>
             <Container maxWidth="lg">
                 <UserContext.Provider value={userId}>
-                    <ThemeProvider theme={theme}>
-                        <CSSBaseline />
-                        <Router>
-                            <AppBar position="static">
-                                <Grid container justify="space-between">
-                                    <IconButton className={NavBarStyles.IconButton}>
-                                        <Link className={NavBarStyles.IconButton} to="/">
-                                            <HomeIcon />
-                                        </Link>
-                                    </IconButton>
-                                    <IconButton
-                                        onClick={() => Auth.signOut()}
-                                        className={NavBarStyles.IconButton}
-                                        edge="start"
-                                    >
-                                        <ExitIcon />
-                                    </IconButton>
-                                </Grid>
-                            </AppBar>
-                            <Switch>
-                                <Route exact path="/decks/:deckId/edit">
-                                    <EditDeckPage />
-                                </Route>
-                                <Route exact path="/decks/:deckId/cards/:cardId?">
-                                    <CardPage />
-                                </Route>
-                                <Route exact path="/decks/:deckId/cards/:cardId/edit">
-                                    <EditCardPage
-                                        uploadToS3={(file: File, cardId: string) =>
-                                            Storage.put(cardId + '_' + file.name, file).then(
-                                                (res: { key: string }) => res.key
-                                            )
-                                        }
-                                    />
-                                </Route>
+                    <LoadingContext.Provider value={{ loading, setLoading: (val) => setLoading(val) }}>
+                        <ThemeProvider theme={theme}>
+                            <CSSBaseline />
+                            <Router>
+                                <AppBar position="static">
+                                    <Grid container justify="space-between">
+                                        <IconButton className={NavBarStyles.IconButton}>
+                                            <Link className={NavBarStyles.IconButton} to="/">
+                                                <HomeIcon />
+                                            </Link>
+                                        </IconButton>
+                                        <IconButton
+                                            onClick={() => Auth.signOut()}
+                                            className={NavBarStyles.IconButton}
+                                            edge="start"
+                                        >
+                                            <ExitIcon />
+                                        </IconButton>
+                                    </Grid>
+                                </AppBar>
+                                <Switch>
+                                    <Route exact path="/decks/:deckId/edit">
+                                        <EditDeckPage />
+                                    </Route>
+                                    <Route exact path="/decks/:deckId/cards/:cardId?">
+                                        <CardPage />
+                                    </Route>
+                                    <Route exact path="/decks/:deckId/cards/:cardId/edit">
+                                        <EditCardPage
+                                            uploadToS3={(file: File, cardId: string) =>
+                                                Storage.put(cardId + '_' + file.name, file).then(
+                                                    (res: { key: string }) => res.key
+                                                )
+                                            }
+                                        />
+                                    </Route>
 
-                                <Route path="/*">
-                                    <HomePage />
-                                </Route>
-                            </Switch>
-                        </Router>
-                    </ThemeProvider>
+                                    <Route path="/*">
+                                        <HomePage />
+                                    </Route>
+                                </Switch>
+                            </Router>
+                        </ThemeProvider>
+                    </LoadingContext.Provider>
                 </UserContext.Provider>
             </Container>
         </>
