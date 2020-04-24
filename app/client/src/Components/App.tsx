@@ -15,7 +15,9 @@ import { theme } from './Style/Theme';
 import { ThemeProvider, makeStyles, createStyles } from '@material-ui/core/styles';
 import AppBar from '@material-ui/core/AppBar';
 import Grid from '@material-ui/core/Grid';
+import Box from '@material-ui/core/Box';
 import IconButton from '@material-ui/core/IconButton';
+import LinearProgress from '@material-ui/core/LinearProgress';
 import HomeIcon from '@material-ui/icons/Home';
 import ExitIcon from '@material-ui/icons/Input';
 import CSSBaseline from '@material-ui/core/CssBaseline';
@@ -29,12 +31,22 @@ const useNavBarStyles = makeStyles((theme) =>
         body: {
             background: theme.palette.background.paper,
         },
+        LoadingBox: {
+            height: '5px',
+            width: '100%',
+        },
     })
 );
 
+interface LoadingStatus {
+    queryLoading: boolean;
+    mutationLoading: boolean;
+}
+
 const defaultLoadingContext = {
-    loading: false,
-    setLoading: (val: boolean) => {},
+    queryLoading: false,
+    mutationLoading: false,
+    setLoading: (val: Partial<LoadingStatus>) => {},
 };
 
 export const UserContext = React.createContext(''),
@@ -43,40 +55,55 @@ export const UserContext = React.createContext(''),
 const App: React.FC<{}> = () => {
     const NavBarStyles = useNavBarStyles(),
         [userId, setUserId] = useState(''),
-        [loading, setLoading] = useState(false);
+        [loadingStatus, setLoadingStatus] = useState({ queryLoading: false, mutationLoading: false }),
+        { queryLoading, mutationLoading } = loadingStatus;
 
     useEffect(() => {
         Auth.currentUserInfo().then((i) => setUserId(i.attributes.sub));
     }, []);
 
-    useEffect(() => {
-        console.log(loading);
-    }, [loading]);
+    useEffect(() => {}, [loadingStatus]);
 
     return (
         <>
             <Container maxWidth="lg">
                 <UserContext.Provider value={userId}>
-                    <LoadingContext.Provider value={{ loading, setLoading: (val) => setLoading(val) }}>
+                    <LoadingContext.Provider
+                        value={{
+                            ...loadingStatus,
+                            setLoading: (val) => setLoadingStatus({ ...loadingStatus, ...val }),
+                        }}
+                    >
                         <ThemeProvider theme={theme}>
                             <CSSBaseline />
                             <Router>
-                                <AppBar position="static">
-                                    <Grid container justify="space-between">
-                                        <IconButton className={NavBarStyles.IconButton}>
-                                            <Link className={NavBarStyles.IconButton} to="/">
-                                                <HomeIcon />
-                                            </Link>
-                                        </IconButton>
-                                        <IconButton
-                                            onClick={() => Auth.signOut()}
-                                            className={NavBarStyles.IconButton}
-                                            edge="start"
-                                        >
-                                            <ExitIcon />
-                                        </IconButton>
+                                <Grid container direction="column">
+                                    <Grid item container xs={12}>
+                                        <AppBar position="static">
+                                            <Grid container justify="space-between">
+                                                <IconButton className={NavBarStyles.IconButton}>
+                                                    <Link className={NavBarStyles.IconButton} to="/">
+                                                        <HomeIcon />
+                                                    </Link>
+                                                </IconButton>
+                                                <IconButton
+                                                    onClick={() => Auth.signOut()}
+                                                    className={NavBarStyles.IconButton}
+                                                    edge="start"
+                                                >
+                                                    <ExitIcon />
+                                                </IconButton>
+                                            </Grid>
+                                        </AppBar>
                                     </Grid>
-                                </AppBar>
+                                    <Grid item container xs={12}>
+                                        <Box className={NavBarStyles.LoadingBox}>
+                                            {(mutationLoading || queryLoading) && (
+                                                <LinearProgress variant="indeterminate" color="secondary" />
+                                            )}
+                                        </Box>
+                                    </Grid>
+                                </Grid>
                                 <Switch>
                                     <Route exact path="/decks/:deckId/edit">
                                         <EditDeckPage />

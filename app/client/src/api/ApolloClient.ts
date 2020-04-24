@@ -41,13 +41,21 @@ export const useApolloQuery = <T>(query: DocumentNode, choices: QueryHookOptions
         ...choices,
     });
 
-    //avoid simultaneous rerenders
-    setTimeout(() => loadingContext.setLoading(res.loading));
+    if (res.loading !== loadingContext.queryLoading)
+        setTimeout(() => loadingContext.setLoading({ queryLoading: res.loading }));
 
     return res;
 };
-export const useApolloMutation = <T>(query: DocumentNode, choices: QueryHookOptions = {}) =>
-    useMutation<T>(query, { client, fetchPolicy: 'no-cache', ...choices });
+export const useApolloMutation = <T>(query: DocumentNode, choices: QueryHookOptions = {}) => {
+    const loadingContext = useContext(LoadingContext);
+
+    const res = useMutation<T>(query, { client, fetchPolicy: 'no-cache', ...choices });
+
+    if (res[1].loading !== loadingContext.mutationLoading)
+        setTimeout(() => loadingContext.setLoading({ mutationLoading: res[1].loading }));
+
+    return res;
+};
 
 const fetchDecksQuery = gql`
     query {
