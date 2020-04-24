@@ -70,7 +70,7 @@ const CardPage: React.FC<CardPage> = ({}) => {
         { loading, data } = useFetchDeckQuery(deckId),
         [_addTry] = useAddTryMutation(),
         [answer, setAnswer] = useState<string>(''),
-        [answeredCorrectly, setAnsweredCorrectly] = useState<boolean>(),
+        [answeredCorrectly, setAnsweredCorrectly] = useState<boolean>(undefined),
         [answerModalOpen, setAnswerModalOpen] = useState<boolean>(),
         [imageLoaded, setImageLoaded] = useState<boolean>(false),
         [touchList, setTouchList] = useState<React.TouchList>(),
@@ -112,12 +112,12 @@ const CardPage: React.FC<CardPage> = ({}) => {
                 const touch1 = touchList[0],
                     touch2 = e.changedTouches[0];
                 if (touch1.clientX - touch2.clientX > 100) {
-                    if (answeredCorrectly) {
+                    if (typeof answeredCorrectly !== 'undefined') {
                         addTry(answeredCorrectly);
                     }
                     goToNextCard();
                 } else if (touch2.clientX - touch1.clientX > 100) {
-                    if (answeredCorrectly) {
+                    if (typeof answeredCorrectly !== 'undefined') {
                         addTry(answeredCorrectly);
                     }
                     goToPreviousCard();
