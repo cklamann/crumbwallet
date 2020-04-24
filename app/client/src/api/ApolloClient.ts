@@ -30,6 +30,8 @@ export const client = new ApolloClient({
     cache: new InMemoryCache(),
 });
 
+//todo: wrap this, so that it also dispatches loading update and then, on return, dispatches loaded signal, before returning response
+
 export const useApolloQuery = <T>(query: DocumentNode, choices: QueryHookOptions = {}) =>
     useQuery<T>(query, { client, fetchPolicy: 'no-cache', ...choices });
 export const useApolloMutation = <T>(query: DocumentNode, choices: QueryHookOptions = {}) =>
