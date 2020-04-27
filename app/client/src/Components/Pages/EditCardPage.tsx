@@ -1,4 +1,4 @@
-import React, { useReducer, useEffect } from 'react';
+import React, { useReducer, useEffect, useState } from 'react';
 import { useHistory, useParams } from 'react-router-dom';
 import { Card } from 'Models/Cards';
 import {
@@ -16,6 +16,8 @@ import Close from '@material-ui/icons/Close';
 import LibraryAdd from '@material-ui/icons/LibraryAdd';
 import LibraryBooks from '@material-ui/icons/LibraryBooks';
 import Grid from '@material-ui/core/Grid';
+import Box from '@material-ui/core/Box';
+import Typography from '@material-ui/core/Typography';
 import FormControl from '@material-ui/core/FormControl';
 import Button from '@material-ui/core/Button';
 import IconButton from '@material-ui/core/IconButton';
@@ -52,21 +54,25 @@ const usePageStyles = makeStyles((theme) =>
 
 const EditCardPage: React.FC<EditCardPage> = ({ uploadToS3 }) => {
     const { cardId, deckId } = useParams(),
-        { loading, refetch: refetchCard, data, error } = useFetchCardQuery(cardId),
+        { loading, refetch: refetchCard, data, error: fetchError } = useFetchCardQuery(cardId),
         theme = useTheme(),
+        [error, setError] = useState<string>(),
         [state, dispatch] = useReducer(reducer, INITIAL_STATE),
         [_updateCard] = useUpdateCardMutation(),
         [deleteCard] = useDeleteCardMutation(),
         [createCard] = useAddCardMutation(),
-        updateCard = (args: Partial<ReducerState> = {}) =>
-            //todo: empty strings to nulls, so dynamo doesn't complain
-            _updateCard({
-                variables: {
-                    id: cardId,
-                    deckId,
-                    ...mapValues({ ...state, ...args }, (arg) => (arg === '' ? null : arg)),
-                },
-            }).then(() => refetchCard()),
+        updateCard = (args: Partial<ReducerState> = {}) => {
+            const card = { ...state, ...args };
+            if (validateCard(card, setError)) {
+                _updateCard({
+                    variables: {
+                        id: cardId,
+                        deckId,
+                        ...mapValues(card, (arg) => (arg === '' ? null : arg)),
+                    },
+                }).then(() => refetchCard());
+            }
+        },
         updateField = <T extends keyof ReducerState>(field: T) => (value: ReducerState[T]) =>
             dispatch({ type: 'update', payload: { [field]: value } }),
         history = useHistory(),
@@ -93,16 +99,15 @@ const EditCardPage: React.FC<EditCardPage> = ({ uploadToS3 }) => {
     useEffect(() => {
         if (get(state, 'choices.length') && state.answer && !state.choices.includes(state.answer)) {
             //check if there are choices but answer isn't a choice and remove answer
-            updateField('answer')(null);
+            updateField('answer')(state.choices[0]);
         }
+        validateCard(state, setError);
     }, [state]);
 
     return (
         <Paper>
-            <span>{loading && <span>Loading!</span>}</span>
-
             {data && (
-                <div style={{ padding: theme.spacing(1) }}>
+                <Box style={{ padding: theme.spacing(1) }}>
                     <Grid container spacing={2}>
                         <Grid item container xs={12} wrap="nowrap" md={6}>
                             <TextInput
@@ -170,7 +175,7 @@ const EditCardPage: React.FC<EditCardPage> = ({ uploadToS3 }) => {
                         </Grid>
                         <Grid item container xs={12} md={6}>
                             {get(state, 'choices.length') ? (
-                                <FormControl error={!state.answer} fullWidth>
+                                <FormControl error={get(data.card, 'type') != 'quotation' && !state.answer} fullWidth>
                                     <InputLabel>Answer</InputLabel>
                                     <Select
                                         value={state.answer}
@@ -197,8 +202,8 @@ const EditCardPage: React.FC<EditCardPage> = ({ uploadToS3 }) => {
                         </Grid>
                         <Grid item container xs={12} md={6}>
                             <ChoiceInput
-                                choices={data.card.choices || []}
-                                updateChoices={(choices) => updateCard({ choices })}
+                                choices={state.choices || []}
+                                updateChoices={(choices) => updateField('choices')(choices)}
                             />
                         </Grid>
                         <Grid item container xs={12} md={6}>
@@ -220,13 +225,12 @@ const EditCardPage: React.FC<EditCardPage> = ({ uploadToS3 }) => {
                             </FormControl>
                         </Grid>
                     </Grid>
+                    <Grid container spacing={2}>
+                        <Grid item>{error && <Typography color="error">{error}</Typography>}</Grid>
+                    </Grid>
                     <Grid container wrap="nowrap" justify="space-between" spacing={2}>
                         <Grid item>
-                            <Button
-                                disabled={!state.answer || !state.prompt || !state.handle}
-                                variant="outlined"
-                                onClick={updateCard.bind(null, {})}
-                            >
+                            <Button disabled={!!error} variant="outlined" onClick={updateCard.bind(null, {})}>
                                 Update
                             </Button>
                         </Grid>
@@ -250,7 +254,7 @@ const EditCardPage: React.FC<EditCardPage> = ({ uploadToS3 }) => {
                             </IconButton>
                         </Grid>
                     </Grid>
-                </div>
+                </Box>
             )}
         </Paper>
     );
@@ -296,4 +300,28 @@ const TextInput: React.FC<{
             />
         </FormControl>
     );
+};
+
+const validateCard = (card: Partial<Card>, setError: (error: string) => void) => {
+    let error: string;
+
+    Object.entries(pick(card, 'prompt', 'handle')).forEach(([k, v]) => {
+        if (!v) error = `${v} is required!`;
+    });
+
+    if (card.type === 'quotation' && card.choices.length) {
+        error = 'Choices are not valid in quotation cards!';
+    }
+
+    if (card.type !== 'quotation' && !card.answer) {
+        error = 'Answer is required!';
+    }
+
+    if (error) {
+        setError(error);
+        return false;
+    } else {
+        setError(undefined);
+        return true;
+    }
 };

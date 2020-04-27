@@ -34,8 +34,6 @@ const EditDeckPage: React.FC<EditDeckPage> = ({}) => {
 
     return (
         <Paper>
-            <span>{loading && <span>Loading!</span>}</span>
-
             {data && (
                 <>
                     <MenuItem title={`Deck: ${data.deck.name}`}>

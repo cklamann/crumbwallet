@@ -150,10 +150,11 @@ const CardPage: React.FC<CardPage> = ({}) => {
         } else return () => <QuotationPrompt quotation={card.prompt} onHint={setAnswerWrong} />;
     }, [card]);
 
-    const shuffleAnswers = useMemo(() => {
-        if (!get(card, 'choices')) return (): any[] => [];
-        const shuffled = shuffle(card.choices);
-        return () => shuffled;
+    const resolveAnswerComponent = useMemo(() => {
+        if (!card || get(card, 'type') === 'quotation') return () => <span />;
+        if (get(card, 'choices.length'))
+            return () => <ChoicesAnswer choices={card.choices} finalizeAnswer={finalizeAnswer} />;
+        return () => <StandardAnswer answer={card.answer} setAnswer={setAnswer} finalizeAnswer={finalizeAnswer} />;
     }, [card]);
 
     return (
@@ -191,34 +192,10 @@ const CardPage: React.FC<CardPage> = ({}) => {
                                 </Grid>
                             </Grid>
                         </CardContent>
+                        {/* todo: these need to be broken into separate components */}
                         <CardActions className={classes.CardActions}>
                             <Grid container justify="center">
-                                {get(card, 'choices.length') ? (
-                                    <Grid spacing={1} justify="center" container item xs={12}>
-                                        {shuffleAnswers().map((c) => (
-                                            <Grid item key={c}>
-                                                <Chip label={c} onClick={finalizeAnswer.bind(null, c)} />
-                                            </Grid>
-                                        ))}
-                                    </Grid>
-                                ) : (
-                                    <Grid container spacing={1} item xs={12} alignItems="center" wrap="nowrap">
-                                        <Grid item className={classes.canGrow}>
-                                            <TextField
-                                                value={answer}
-                                                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                                                    setAnswer(e.currentTarget.value)
-                                                }
-                                                label="answer"
-                                            />
-                                        </Grid>
-                                        <Grid item>
-                                            <Button onClick={finalizeAnswer.bind(null, answer)} variant="contained">
-                                                Submit
-                                            </Button>
-                                        </Grid>
-                                    </Grid>
-                                )}
+                                {resolveAnswerComponent()}
                                 <Grid justify="space-between" container item>
                                     <IconButton onClick={goToPreviousCard}>
                                         <ArrowLeft />
@@ -316,6 +293,7 @@ const useBlankStyles = makeStyles((theme) =>
         root: {},
         Blanked: {
             backgroundColor: theme.palette.primary.dark,
+            color: theme.palette.primary.dark,
             cursor: 'pointer',
         },
     })
@@ -331,13 +309,44 @@ const BlankedOutSpace: React.FC<{ content: string; onClick: () => void }> = Reac
                 setHidden(!hidden);
             }}
         >
-            {hidden
-                ? content.split('').map((_, i) => (
-                      <span key={i} className={classes.Blanked}>
-                          &nbsp;
-                      </span>
-                  ))
-                : content}
+            {hidden ? <span className={classes.Blanked}>{content}</span> : content}
         </span>
     );
 });
+
+const ChoicesAnswer: React.FC<{ finalizeAnswer: (a: string) => void; choices: string[] }> = React.memo(
+    ({ choices, finalizeAnswer }) => {
+        return (
+            <Grid spacing={1} justify="center" container item xs={12}>
+                {shuffle(choices).map((c) => (
+                    <Grid item key={c}>
+                        <Chip label={c} onClick={finalizeAnswer.bind(null, c)} />
+                    </Grid>
+                ))}
+            </Grid>
+        );
+    }
+);
+
+interface StandardAnswer {
+    answer: string;
+    finalizeAnswer: (a: string) => void;
+    setAnswer: (a: string) => void;
+}
+
+const StandardAnswer: React.FC<StandardAnswer> = ({ answer, finalizeAnswer, setAnswer }) => (
+    <Grid container spacing={1} item xs={12} alignItems="center" wrap="nowrap">
+        <Grid item style={{ flexGrow: 1 }}>
+            <TextField
+                value={answer}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAnswer(e.currentTarget.value)}
+                label="answer"
+            />
+        </Grid>
+        <Grid item>
+            <Button onClick={finalizeAnswer.bind(null, answer)} variant="contained">
+                Submit
+            </Button>
+        </Grid>
+    </Grid>
+);
