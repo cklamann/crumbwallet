@@ -7,6 +7,7 @@ import CardComponent from '@material-ui/core/Card';
 import Chip from '@material-ui/core/Chip';
 import TextField from '@material-ui/core/TextField';
 import Button from '@material-ui/core/Button';
+import FAB from '@material-ui/core/Fab';
 import CardHeader from '@material-ui/core/CardHeader';
 import CardMedia from '@material-ui/core/CardMedia';
 import CardContent from '@material-ui/core/CardContent';
@@ -18,6 +19,7 @@ import DialogTitle from '@material-ui/core/DialogTitle';
 import Typography from '@material-ui/core/Typography';
 import IconButton from '@material-ui/core/IconButton';
 import ArrowLeft from '@material-ui/icons/ArrowLeft';
+import Check from '@material-ui/icons/Check';
 import Edit from '@material-ui/icons/Edit';
 import ArrowRight from '@material-ui/icons/ArrowRight';
 import Grid from '@material-ui/core/Grid';
@@ -151,7 +153,17 @@ const CardPage: React.FC<CardPage> = ({}) => {
     }, [card]);
 
     const resolveAnswerComponent = useMemo(() => {
-        if (!card || get(card, 'type') === 'quotation') return () => <span />;
+        if (!card) return () => <span />;
+        if (get(card, 'type') === 'quotation') {
+            return () => (
+                <MarkCorrectButton
+                    markCorrect={() => {
+                        setAnsweredCorrectly(true);
+                        setAnswerModalOpen(true);
+                    }}
+                />
+            );
+        }
         if (get(card, 'choices.length'))
             return () => <ChoicesAnswer choices={card.choices} finalizeAnswer={finalizeAnswer} />;
         return () => <StandardAnswer answer={card.answer} setAnswer={setAnswer} finalizeAnswer={finalizeAnswer} />;
@@ -218,7 +230,9 @@ const CardPage: React.FC<CardPage> = ({}) => {
                                     {answeredCorrectly === false ? (
                                         <Typography color="error">The correct answer was {card.answer}</Typography>
                                     ) : (
-                                        <Typography>{card.answer} is correct</Typography>
+                                        <Typography>
+                                            {card.answer ? `${card.answer} is correct` : `Nice work!`}
+                                        </Typography>
                                     )}
                                 </DialogTitle>
                                 {card.details && (
@@ -349,4 +363,11 @@ const StandardAnswer: React.FC<StandardAnswer> = ({ answer, finalizeAnswer, setA
             </Button>
         </Grid>
     </Grid>
+);
+
+const MarkCorrectButton: React.FC<{ markCorrect: () => void }> = ({ markCorrect }) => (
+    <FAB variant="extended" onClick={markCorrect}>
+        <Check />
+        &nbsp;Mark Correct
+    </FAB>
 );
