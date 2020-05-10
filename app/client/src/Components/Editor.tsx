@@ -12,6 +12,7 @@ import IconButton from '@material-ui/core/IconButton';
 import './../../node_modules/draft-js/dist/Draft.css';
 
 interface RichEditor {
+    cardId: string;
     content: string;
     onChange: (content: string) => void;
 }
@@ -29,22 +30,20 @@ const useStyles = makeStyles((theme) =>
     })
 );
 
-const RichEditor: React.FC<RichEditor> = ({ content, onChange }) => {
+const RichEditor: React.FC<RichEditor> = ({ cardId, content, onChange }) => {
     const [editorState, _setEditorState] = useState<EditorState>(null),
         editorRef = useRef<any>(),
         classes = useStyles(),
         theme = useTheme();
 
     useEffect(() => {
-        if (content !== undefined && !editorState) {
-            if (content === '') {
-                return setEditorState(EditorState.createEmpty());
-            }
-            const blocksFromHTML = convertFromHTML(content),
-                state = ContentState.createFromBlockArray(blocksFromHTML.contentBlocks, blocksFromHTML.entityMap);
-            setEditorState(EditorState.createWithContent(state));
+        if (!content) {
+            return setEditorState(EditorState.createEmpty());
         }
-    }, [content]);
+        const blocksFromHTML = convertFromHTML(content),
+            state = ContentState.createFromBlockArray(blocksFromHTML.contentBlocks, blocksFromHTML.entityMap);
+        setEditorState(EditorState.createWithContent(state));
+    }, [cardId]);
 
     const setEditorState = (state: EditorState) => {
         _setEditorState(state);

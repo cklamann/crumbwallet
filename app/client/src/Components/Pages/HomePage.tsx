@@ -76,7 +76,7 @@ const HomePage: React.FC<HomePage> = ({}) => {
                                 <Button
                                     onClick={() =>
                                         addDeck({
-                                            variables: { name: newTitleText, userId: newDeckPrivate ? userId : null },
+                                            variables: { name: newTitleText, userId, private: newDeckPrivate },
                                         }).then((res) => history.push(`decks/${res.data.createDeck.id}/edit`))
                                     }
                                     variant="contained"

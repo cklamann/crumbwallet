@@ -190,8 +190,8 @@ export const useAddCardMutation = () =>
     useApolloMutation<{ addCard: { id: string; type: 'standard' } }>(addCardMutation);
 
 const addDeckMutation = gql`
-    mutation whocaresswhatthisiscalled($name: String!, $categories: [String], $userId: String) {
-        createDeck(input: { name: $name, categories: $categories, userId: $userId }) {
+    mutation whocaresswhatthisiscalled($name: String!, $categories: [String], $userId: String, $private: Boolean!) {
+        createDeck(input: { name: $name, categories: $categories, userId: $userId, private: $private }) {
             id
         }
     }

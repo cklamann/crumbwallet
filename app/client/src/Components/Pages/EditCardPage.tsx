@@ -198,7 +198,7 @@ const EditCardPage: React.FC<EditCardPage> = ({ uploadToS3 }) => {
                             )}
                         </Grid>
                         <Grid item container xs={12} md={6}>
-                            <Editor content={state.details} onChange={updateField('details')} />
+                            <Editor cardId={cardId} content={state.details} onChange={updateField('details')} />
                         </Grid>
                         <Grid item container xs={12} md={6}>
                             <ChoiceInput
@@ -240,7 +240,7 @@ const EditCardPage: React.FC<EditCardPage> = ({ uploadToS3 }) => {
                         <Grid item>
                             <IconButton
                                 onClick={() =>
-                                    createCard({ variables: { deckId } }).then((res) =>
+                                    createCard({ variables: { deckId, type: 'standard' } }).then((res) =>
                                         history.push(`/decks/${deckId}/cards/${res.data.addCard.id}/edit`)
                                     )
                                 }

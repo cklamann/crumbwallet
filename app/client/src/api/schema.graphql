@@ -15,8 +15,7 @@ type Card {
     tries: [try]
     type: Type
     updated: String
-    # optional while we're testing at least
-    userId: String
+    userId: String!
 }
 
 enum Type {
@@ -31,7 +30,8 @@ type Deck {
     id: String!
     name: String!
     updated: String
-    userId: String
+    private: Boolean!
+    userId: String!
 }
 
 type Query {
@@ -78,12 +78,14 @@ type tryAddedStatus {
 input NewDeckInput {
     categories: [String]
     name: String!
+    private: Boolean!
     userId: String
 }
 
 input UpdateDeckInput {
     categories: [String]
     details: String
+    private: Boolean
     id: String!
     name: String
 }

@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useHistory } from 'react-router-dom';
-import { Deck } from 'Models/Decks';
 import { Card } from 'Models/Cards';
 import { useAddCardMutation, useFetchDeckQuery, useUpdateDeckMutation } from '../../api/ApolloClient';
 import MenuItem from './../MenuItem';
