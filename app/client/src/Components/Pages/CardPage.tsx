@@ -3,6 +3,7 @@ import { useHistory, useParams } from 'react-router-dom';
 import { useFetchDeckQuery, useAddTryMutation } from './../../api/ApolloClient';
 import Image from './../Image';
 import { Card } from 'Models/Cards';
+import { Deck } from 'Models/Decks';
 import CardComponent from '@material-ui/core/Card';
 import Chip from '@material-ui/core/Chip';
 import TextField from '@material-ui/core/TextField';
@@ -73,6 +74,7 @@ const CardPage: React.FC<CardPage> = ({}) => {
         { loading, data } = useFetchDeckQuery(deckId),
         [_addTry] = useAddTryMutation(),
         [answer, setAnswer] = useState<string>(''),
+        [deck, setDeck] = useState<Deck>(),
         [answeredCorrectly, setAnsweredCorrectly] = useState<boolean>(undefined),
         [answerModalOpen, setAnswerModalOpen] = useState<boolean>(),
         [imageLoaded, setImageLoaded] = useState<boolean>(false),
@@ -80,7 +82,6 @@ const CardPage: React.FC<CardPage> = ({}) => {
         [transitionInProgress, setTransitionInProgress] = useState(false),
         [transitionDirection, setTransitionDirection] = useState<string>('next'),
         classes = useCardPageStyles(),
-        deck = get(data, 'deck'),
         card: Card = get(deck, 'cards', []).find((c) => c.id === cardId),
         finalizeAnswer = (answer: string) => {
             setAnswer(answer);
@@ -130,14 +131,29 @@ const CardPage: React.FC<CardPage> = ({}) => {
             }
         },
         setAnswerWrong = () => setAnsweredCorrectly(false);
+
+    //we want to fetch the deck once and hold it, so we can shuffle, sort,
+
     //user could get her via the back button...
     useEffect(() => {
-        if (!cardId && get(data, 'deck')) {
-            if (!data.deck.cards.length) {
+        if (get(data, 'deck')) {
+            if (data.deck.cards) {
+                const { deck } = data,
+                    shuffled = shuffle(data.deck.cards);
+                deck.cards = shuffled;
+                setDeck(data.deck);
+            } else {
+                //todo: show modal and redirect
                 history.push(`/`);
-            } else history.push(`/decks/${deckId}/cards/${data.deck.cards[0].id}`);
+            }
         }
-    });
+    }, [data]);
+
+    useEffect(() => {
+        if (deck && get(deck, 'cards.length')) {
+            history.push(`/decks/${deckId}/cards/${deck.cards[0].id}`);
+        }
+    }, [deck]);
 
     useEffect(() => {
         //reset image loaded state here...

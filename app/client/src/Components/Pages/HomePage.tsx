@@ -22,7 +22,9 @@ interface HomePage {}
 
 const useHomePageStyles = makeStyles((theme) =>
     createStyles({
-        root: {},
+        root: {
+            width: '100%',
+        },
         form: {
             flexWrap: 'nowrap',
         },
@@ -39,7 +41,7 @@ const HomePage: React.FC<HomePage> = ({}) => {
         userId = useContext(UserContext);
 
     return (
-        <Paper>
+        <Paper className={classes.root}>
             {data && (
                 <>
                     <MenuItem title="Browse Decks">
