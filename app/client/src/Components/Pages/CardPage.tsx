@@ -36,6 +36,7 @@ const useCardPageStyles = makeStyles((theme) =>
             flexDirection: 'column',
             justifyContent: 'center',
             alignItems: 'center',
+            maxWidth: '450px',
         },
         CardContent: {
             height: '350px',

@@ -38,6 +38,16 @@ const useNavBarStyles = makeStyles((theme) =>
     })
 );
 
+const useAppStyles = makeStyles((theme) =>
+    createStyles({
+        Container: {
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+        },
+    })
+);
+
 interface LoadingStatus {
     queryLoading: boolean;
     mutationLoading: boolean;
@@ -53,7 +63,8 @@ export const UserContext = React.createContext(''),
     LoadingContext = React.createContext(defaultLoadingContext);
 
 const App: React.FC<{}> = () => {
-    const NavBarStyles = useNavBarStyles(),
+    const navBarClasses = useNavBarStyles(),
+        appClasses = useAppStyles(),
         [userId, setUserId] = useState(''),
         [loadingStatus, setLoadingStatus] = useState({ queryLoading: false, mutationLoading: false }),
         { queryLoading, mutationLoading } = loadingStatus;
@@ -66,7 +77,7 @@ const App: React.FC<{}> = () => {
 
     return (
         <>
-            <Container maxWidth="lg">
+            <Container className={appClasses.Container} maxWidth="lg">
                 <UserContext.Provider value={userId}>
                     <LoadingContext.Provider
                         value={{
@@ -81,14 +92,14 @@ const App: React.FC<{}> = () => {
                                     <Grid item container xs={12}>
                                         <AppBar position="static">
                                             <Grid container justify="space-between">
-                                                <IconButton className={NavBarStyles.IconButton}>
-                                                    <Link className={NavBarStyles.IconButton} to="/">
+                                                <IconButton className={navBarClasses.IconButton}>
+                                                    <Link className={navBarClasses.IconButton} to="/">
                                                         <HomeIcon />
                                                     </Link>
                                                 </IconButton>
                                                 <IconButton
                                                     onClick={() => Auth.signOut()}
-                                                    className={NavBarStyles.IconButton}
+                                                    className={navBarClasses.IconButton}
                                                     edge="start"
                                                 >
                                                     <ExitIcon />
@@ -97,7 +108,7 @@ const App: React.FC<{}> = () => {
                                         </AppBar>
                                     </Grid>
                                     <Grid item container xs={12}>
-                                        <Box className={NavBarStyles.LoadingBox}>
+                                        <Box className={navBarClasses.LoadingBox}>
                                             {(mutationLoading || queryLoading) && (
                                                 <LinearProgress variant="indeterminate" color="secondary" />
                                             )}
