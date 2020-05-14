@@ -5,16 +5,17 @@ import { convertToRaw, ContentBlock, ContentState, convertFromHTML, Editor, Edit
 import Grid from '@material-ui/core/Grid';
 import draftToHtml from 'draftjs-to-html';
 import { noop } from 'lodash';
+import { Card } from 'Models/Cards';
 import Paper from '@material-ui/core/Paper';
 import InputLabel from '@material-ui/core/InputLabel';
 import Box from '@material-ui/core/Box';
 import IconButton from '@material-ui/core/IconButton';
 import './../../node_modules/draft-js/dist/Draft.css';
+import { get } from 'lodash';
 
 interface RichEditor {
-    cardId: string;
-    content: string;
-    onChange: (content: string) => void;
+    initialContent: string;
+    onChange: (initialContent: string) => void;
 }
 
 const useStyles = makeStyles((theme) =>
@@ -30,20 +31,20 @@ const useStyles = makeStyles((theme) =>
     })
 );
 
-const RichEditor: React.FC<RichEditor> = ({ cardId, content, onChange }) => {
+const RichEditor: React.FC<RichEditor> = ({ initialContent, onChange }) => {
     const [editorState, _setEditorState] = useState<EditorState>(null),
         editorRef = useRef<any>(),
         classes = useStyles(),
         theme = useTheme();
 
     useEffect(() => {
-        if (!content) {
+        if (!initialContent) {
             return setEditorState(EditorState.createEmpty());
         }
-        const blocksFromHTML = convertFromHTML(content),
+        const blocksFromHTML = convertFromHTML(initialContent),
             state = ContentState.createFromBlockArray(blocksFromHTML.contentBlocks, blocksFromHTML.entityMap);
         setEditorState(EditorState.createWithContent(state));
-    }, [cardId]);
+    }, []);
 
     const setEditorState = (state: EditorState) => {
         _setEditorState(state);
@@ -65,7 +66,7 @@ const RichEditor: React.FC<RichEditor> = ({ cardId, content, onChange }) => {
                         <Grid item container xs={6} alignItems="flex-end">
                             <InputLabel
                                 required
-                                error={!new DOMParser().parseFromString(content, 'text/html').body.innerText}
+                                error={!new DOMParser().parseFromString(initialContent, 'text/html').body.innerText}
                                 shrink={true}
                             >
                                 Details

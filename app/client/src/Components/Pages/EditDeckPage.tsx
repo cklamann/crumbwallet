@@ -32,7 +32,7 @@ const EditDeckPage: React.FC<EditDeckPage> = ({}) => {
     }, [data]);
 
     return (
-        <Paper>
+        <Paper style={{ width: '100%' }}>
             {data && (
                 <>
                     <MenuItem title={`Deck: ${data.deck.name}`}>

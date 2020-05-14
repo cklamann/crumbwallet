@@ -198,7 +198,11 @@ const EditCardPage: React.FC<EditCardPage> = ({ uploadToS3 }) => {
                             )}
                         </Grid>
                         <Grid item container xs={12} md={6}>
-                            <Editor cardId={cardId} content={state.details} onChange={updateField('details')} />
+                            <Editor
+                                //initial content -- change will update parent but not controlled
+                                initialContent={data.card.details}
+                                onChange={updateField('details')}
+                            />
                         </Grid>
                         <Grid item container xs={12} md={6}>
                             <ChoiceInput
