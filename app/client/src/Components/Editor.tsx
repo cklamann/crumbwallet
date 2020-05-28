@@ -1,17 +1,16 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { createStyles, makeStyles, useTheme } from '@material-ui/core/styles';
-import { FormatBold, FormatItalic } from '@material-ui/icons';
+import { FormatBold, FormatItalic, Code } from '@material-ui/icons';
 import { convertToRaw, ContentBlock, ContentState, convertFromHTML, Editor, EditorState, RichUtils } from 'draft-js';
 import Grid from '@material-ui/core/Grid';
+import Immutable from 'immutable';
 import draftToHtml from 'draftjs-to-html';
 import { noop } from 'lodash';
-import { Card } from 'Models/Cards';
 import Paper from '@material-ui/core/Paper';
 import InputLabel from '@material-ui/core/InputLabel';
 import Box from '@material-ui/core/Box';
 import IconButton from '@material-ui/core/IconButton';
 import './../../node_modules/draft-js/dist/Draft.css';
-import { get } from 'lodash';
 
 interface RichEditor {
     initialContent: string;
@@ -49,13 +48,6 @@ const RichEditor: React.FC<RichEditor> = ({ initialContent, onChange }) => {
     const setEditorState = (state: EditorState) => {
         _setEditorState(state);
         return onChange(draftToHtml(convertToRaw(state.getCurrentContent())));
-    };
-
-    const _blockStyleFn = (contentBlock: ContentBlock) => {
-        const type = contentBlock.getType();
-        if (type === 'unstyled') {
-            return 'content-block-default';
-        }
     };
 
     return editorState ? (
@@ -101,6 +93,21 @@ const RichEditor: React.FC<RichEditor> = ({ initialContent, onChange }) => {
                             >
                                 <FormatBold />
                             </IconButton>
+                            <IconButton
+                                tabIndex={-1}
+                                size="small"
+                                onMouseDown={(e) => {
+                                    e.preventDefault();
+                                }}
+                                style={{
+                                    color: editorState.getCurrentInlineStyle().has('CODE')
+                                        ? theme.palette.primary.light
+                                        : theme.palette.primary.dark,
+                                }}
+                                onClick={() => setEditorState(RichUtils.toggleInlineStyle(editorState, 'CODE'))}
+                            >
+                                <Code />
+                            </IconButton>
                         </Grid>
                     </Grid>
                 </Paper>
@@ -108,7 +115,6 @@ const RichEditor: React.FC<RichEditor> = ({ initialContent, onChange }) => {
             <Grid onClick={editorRef.current ? editorRef.current.focus : noop} item container xs={12}>
                 <Box className={classes.Editor}>
                     <Editor
-                        blockStyleFn={_blockStyleFn}
                         editorState={editorState}
                         onChange={setEditorState}
                         placeholder="enter some text..."
