@@ -1,4 +1,4 @@
-import React, { useReducer, useEffect, useState } from 'react';
+import React, { useReducer, useContext, useEffect, useState } from 'react';
 import { useHistory, useParams } from 'react-router-dom';
 import { Card } from 'Models/Cards';
 import {
@@ -7,6 +7,7 @@ import {
     useFetchCardQuery,
     useUpdateCardMutation,
 } from '../../api/ApolloClient';
+import { LoadingContext } from './../App';
 import Editor from './../Editor';
 import Image from './../Image';
 import BackButton from './../BackButton';
@@ -76,7 +77,9 @@ const EditCardPage: React.FC<EditCardPage> = ({ uploadToS3 }) => {
         updateField = <T extends keyof ReducerState>(field: T) => (value: ReducerState[T]) =>
             dispatch({ type: 'update', payload: { [field]: value } }),
         history = useHistory(),
-        classes = usePageStyles();
+        classes = usePageStyles(),
+        _loadingContext = useContext(LoadingContext),
+        somethingIsLoading = _loadingContext.queryLoading || _loadingContext.mutationLoading;
 
     useEffect(() => {
         if (get(data, 'card')) {
@@ -174,26 +177,10 @@ const EditCardPage: React.FC<EditCardPage> = ({ uploadToS3 }) => {
                             )}
                         </Grid>
                         <Grid item container xs={12} md={6}>
-                            {get(state, 'choices.length') ? (
-                                <FormControl error={get(data.card, 'type') != 'quotation' && !state.answer} fullWidth>
-                                    <InputLabel>Answer</InputLabel>
-                                    <Select
-                                        value={state.answer}
-                                        onChange={(e) => updateField('answer')(e.target.value as string)}
-                                    >
-                                        {state.choices.map((choice) => (
-                                            <MenuItem key={choice} value={choice}>
-                                                {choice}
-                                            </MenuItem>
-                                        ))}
-                                    </Select>
-                                </FormControl>
-                            ) : (
-                                <TextInput
-                                    error={!state.answer}
-                                    name="answer"
-                                    updateFn={updateField}
-                                    val={state.answer}
+                            {state.type != 'quotation' && (
+                                <ChoiceInput
+                                    choices={state.choices || []}
+                                    updateChoices={(choices) => updateField('choices')(choices)}
                                 />
                             )}
                         </Grid>
@@ -203,12 +190,23 @@ const EditCardPage: React.FC<EditCardPage> = ({ uploadToS3 }) => {
                                 initialContent={data.card.details}
                                 onChange={updateField('details')}
                             />
-                        </Grid>
-                        <Grid item container xs={12} md={6}>
-                            <ChoiceInput
-                                choices={state.choices || []}
-                                updateChoices={(choices) => updateField('choices')(choices)}
-                            />
+                            <Grid item container xs={12} md={6}>
+                                {state.type != 'quotation' && (
+                                    <FormControl error={!state.answer} fullWidth>
+                                        <InputLabel>Answer</InputLabel>
+                                        <Select
+                                            value={state.answer}
+                                            onChange={(e) => updateField('answer')(e.target.value as string)}
+                                        >
+                                            {(state.choices || []).map((choice) => (
+                                                <MenuItem key={choice} value={choice}>
+                                                    {choice}
+                                                </MenuItem>
+                                            ))}
+                                        </Select>
+                                    </FormControl>
+                                )}
+                            </Grid>
                         </Grid>
                         <Grid item container xs={12} md={6}>
                             <FormControl fullWidth>
@@ -234,7 +232,11 @@ const EditCardPage: React.FC<EditCardPage> = ({ uploadToS3 }) => {
                     </Grid>
                     <Grid container wrap="nowrap" justify="space-between" spacing={2}>
                         <Grid item>
-                            <Button disabled={!!error} variant="outlined" onClick={updateCard.bind(null, {})}>
+                            <Button
+                                disabled={!!error || !!somethingIsLoading}
+                                variant="outlined"
+                                onClick={updateCard.bind(null, {})}
+                            >
                                 Update
                             </Button>
                         </Grid>

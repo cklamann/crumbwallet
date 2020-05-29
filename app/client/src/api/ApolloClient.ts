@@ -44,6 +44,8 @@ export const useApolloQuery = <T>(query: DocumentNode, choices: QueryHookOptions
     if (res.loading !== loadingContext.queryLoading)
         setTimeout(() => loadingContext.setLoading({ queryLoading: res.loading }));
 
+    if (res.error) setTimeout(() => loadingContext.setLoading({ error: res.error }));
+
     return res;
 };
 export const useApolloMutation = <T>(query: DocumentNode, choices: QueryHookOptions = {}) => {
@@ -53,6 +55,8 @@ export const useApolloMutation = <T>(query: DocumentNode, choices: QueryHookOpti
 
     if (res[1].loading !== loadingContext.mutationLoading)
         setTimeout(() => loadingContext.setLoading({ mutationLoading: res[1].loading }));
+
+    if (res[1].error) setTimeout(() => loadingContext.setLoading({ error: res[1].error }));
 
     return res;
 };

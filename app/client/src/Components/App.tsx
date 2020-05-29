@@ -22,6 +22,9 @@ import HomeIcon from '@material-ui/icons/Home';
 import ExitIcon from '@material-ui/icons/Input';
 import CSSBaseline from '@material-ui/core/CssBaseline';
 import { withAuthenticator } from 'aws-amplify-react';
+import { ApolloError } from 'apollo-client';
+import Modal from './Modals/Modal';
+import { get } from 'lodash';
 
 const useNavBarStyles = makeStyles((theme) =>
     createStyles({
@@ -51,11 +54,13 @@ const useAppStyles = makeStyles((theme) =>
 interface LoadingStatus {
     queryLoading: boolean;
     mutationLoading: boolean;
+    error: ApolloError;
 }
 
 const defaultLoadingContext = {
-    queryLoading: false,
+    error: undefined as LoadingStatus['error'],
     mutationLoading: false,
+    queryLoading: false,
     setLoading: (val: Partial<LoadingStatus>) => {},
 };
 
@@ -66,7 +71,11 @@ const App: React.FC<{}> = () => {
     const navBarClasses = useNavBarStyles(),
         appClasses = useAppStyles(),
         [userId, setUserId] = useState(''),
-        [loadingStatus, setLoadingStatus] = useState({ queryLoading: false, mutationLoading: false }),
+        [loadingStatus, setLoadingStatus] = useState<LoadingStatus>({
+            error: undefined,
+            queryLoading: false,
+            mutationLoading: false,
+        }),
         { queryLoading, mutationLoading } = loadingStatus;
 
     useEffect(() => {
@@ -141,6 +150,12 @@ const App: React.FC<{}> = () => {
                     </LoadingContext.Provider>
                 </UserContext.Provider>
             </Container>
+            <Modal
+                isOpen={!!loadingStatus.error}
+                content={get(loadingStatus, 'error.message')}
+                title="Error!"
+                onClose={() => setLoadingStatus({ ...loadingStatus, ...{ error: undefined } })}
+            />
         </>
     );
 };
