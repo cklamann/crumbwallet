@@ -198,7 +198,7 @@ const EditCardPage: React.FC<EditCardPage> = ({ uploadToS3 }) => {
                                             value={state.answer}
                                             onChange={(e) => updateField('answer')(e.target.value as string)}
                                         >
-                                            {(state.choices || []).map((choice) => (
+                                            {(state.choices || [state.answer]).map((choice) => (
                                                 <MenuItem key={choice} value={choice}>
                                                     {choice}
                                                 </MenuItem>

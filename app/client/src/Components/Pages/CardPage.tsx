@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useHistory, useParams } from 'react-router-dom';
 import { useFetchDeckQuery, useAddTryMutation } from './../../api/ApolloClient';
+import Modal from './../Modals/Modal';
 import Image from './../Image';
 import { Card } from 'Models/Cards';
 import { Deck } from 'Models/Decks';
@@ -78,6 +79,7 @@ const CardPage: React.FC<CardPage> = ({}) => {
         [deck, setDeck] = useState<Deck>(),
         [answeredCorrectly, setAnsweredCorrectly] = useState<boolean>(undefined),
         [answerModalOpen, setAnswerModalOpen] = useState<boolean>(),
+        [emptyModalOpen, setEmptyModalOpen] = useState<boolean>(),
         [imageLoaded, setImageLoaded] = useState<boolean>(false),
         [touchList, setTouchList] = useState<React.TouchList>(),
         [transitionInProgress, setTransitionInProgress] = useState(false),
@@ -133,22 +135,19 @@ const CardPage: React.FC<CardPage> = ({}) => {
         },
         setAnswerWrong = () => setAnsweredCorrectly(false);
 
-    //we want to fetch the deck once and hold it, so we can shuffle, sort,
-
     //user could get her via the back button...
     useEffect(() => {
         if (get(data, 'deck')) {
-            if (data.deck.cards) {
+            if (get(data, 'deck.cards.length')) {
                 const { deck } = data,
                     shuffled = shuffle(data.deck.cards);
                 deck.cards = shuffled;
                 setDeck(data.deck);
             } else {
-                //todo: show modal and redirect
-                history.push(`/`);
+                setEmptyModalOpen(true);
             }
         }
-    }, [data]);
+    }, [get(data, 'deck.id')]);
 
     useEffect(() => {
         if (deck && get(deck, 'cards.length')) {
@@ -188,84 +187,92 @@ const CardPage: React.FC<CardPage> = ({}) => {
     }, [card]);
 
     return (
-        <Slide
-            mountOnEnter
-            unmountOnExit
-            onExited={() => setTransitionInProgress(false)}
-            in={!!!transitionInProgress}
-            direction={transitionDirection === 'previous' ? 'right' : 'left'}
-            timeout={150}
-        >
-            <CardComponent className={classes.root} onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
-                {!!card && !transitionInProgress && (
-                    <>
-                        <CardHeader
-                            classes={{ content: classes.headerContent }}
-                            title={`${deck.name} #${findIndex(deck.cards, (card) => card.id === cardId) + 1}`}
-                            subheader={
-                                <IconButton onClick={() => history.push(`/decks/${deckId}/cards/${cardId}/edit`)}>
-                                    <Edit />
-                                </IconButton>
-                            }
-                        />
+        <>
+            <Slide
+                mountOnEnter
+                unmountOnExit
+                onExited={() => setTransitionInProgress(false)}
+                in={!!!transitionInProgress}
+                direction={transitionDirection === 'previous' ? 'right' : 'left'}
+                timeout={150}
+            >
+                <CardComponent className={classes.root} onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
+                    {!!card && !transitionInProgress && (
+                        <>
+                            <CardHeader
+                                classes={{ content: classes.headerContent }}
+                                title={`${deck.name} #${findIndex(deck.cards, (card) => card.id === cardId) + 1}`}
+                                subheader={
+                                    <IconButton onClick={() => history.push(`/decks/${deckId}/cards/${cardId}/edit`)}>
+                                        <Edit />
+                                    </IconButton>
+                                }
+                            />
 
-                        <CardContent className={classes.CardContent}>
-                            {!!card.imageKey && (
-                                <CardMedia>
-                                    <Image imgKey={card.imageKey} onLoad={() => setImageLoaded(true)} />
-                                    {!imageLoaded && <span>Loading...</span>}
-                                </CardMedia>
-                            )}
-                            <Grid container>
-                                <Grid item xs={12}>
-                                    {resolvePrompt()}
-                                </Grid>
-                            </Grid>
-                        </CardContent>
-                        {/* todo: these need to be broken into separate components */}
-                        <CardActions className={classes.CardActions}>
-                            <Grid container justify="center">
-                                {resolveAnswerComponent()}
-                                <Grid justify="space-between" container item>
-                                    <IconButton onClick={goToPreviousCard}>
-                                        <ArrowLeft />
-                                    </IconButton>
-                                    <IconButton onClick={goToNextCard}>
-                                        <ArrowRight />
-                                    </IconButton>
-                                </Grid>
-                            </Grid>
-                        </CardActions>
-                        {answerModalOpen && answeredCorrectly !== undefined && (
-                            <Dialog
-                                open={true}
-                                onClose={() => {
-                                    addTry(answeredCorrectly);
-                                    resetCard();
-                                }}
-                            >
-                                <DialogTitle>
-                                    {answeredCorrectly === false ? (
-                                        <Typography color="error">The correct answer was {card.answer}</Typography>
-                                    ) : (
-                                        <Typography>
-                                            {card.answer ? `${card.answer} is correct` : `Nice work!`}
-                                        </Typography>
-                                    )}
-                                </DialogTitle>
-                                {card.details && (
-                                    <DialogContent>
-                                        <DialogContentText>
-                                            <span dangerouslySetInnerHTML={{ __html: card.details }} />
-                                        </DialogContentText>
-                                    </DialogContent>
+                            <CardContent className={classes.CardContent}>
+                                {!!card.imageKey && (
+                                    <CardMedia>
+                                        <Image imgKey={card.imageKey} onLoad={() => setImageLoaded(true)} />
+                                        {!imageLoaded && <span>Loading...</span>}
+                                    </CardMedia>
                                 )}
-                            </Dialog>
-                        )}
-                    </>
-                )}
-            </CardComponent>
-        </Slide>
+                                <Grid container>
+                                    <Grid item xs={12}>
+                                        {resolvePrompt()}
+                                    </Grid>
+                                </Grid>
+                            </CardContent>
+                            {/* todo: these need to be broken into separate components */}
+                            <CardActions className={classes.CardActions}>
+                                <Grid container justify="center">
+                                    {resolveAnswerComponent()}
+                                    <Grid justify="space-between" container item>
+                                        <IconButton onClick={goToPreviousCard}>
+                                            <ArrowLeft />
+                                        </IconButton>
+                                        <IconButton onClick={goToNextCard}>
+                                            <ArrowRight />
+                                        </IconButton>
+                                    </Grid>
+                                </Grid>
+                            </CardActions>
+                            {answerModalOpen && answeredCorrectly !== undefined && (
+                                <Dialog
+                                    open={true}
+                                    onClose={() => {
+                                        addTry(answeredCorrectly);
+                                        resetCard();
+                                    }}
+                                >
+                                    <DialogTitle>
+                                        {answeredCorrectly === false ? (
+                                            <Typography color="error">The correct answer was {card.answer}</Typography>
+                                        ) : (
+                                            <Typography>
+                                                {card.answer ? `${card.answer} is correct` : `Nice work!`}
+                                            </Typography>
+                                        )}
+                                    </DialogTitle>
+                                    {card.details && (
+                                        <DialogContent>
+                                            <DialogContentText>
+                                                <span dangerouslySetInnerHTML={{ __html: card.details }} />
+                                            </DialogContentText>
+                                        </DialogContent>
+                                    )}
+                                </Dialog>
+                            )}
+                        </>
+                    )}
+                </CardComponent>
+            </Slide>
+            <Modal
+                isOpen={emptyModalOpen}
+                content="There are no cards in this deck yet"
+                onClose={() => history.push('/')}
+                title="No Cards!"
+            />
+        </>
     );
 };
 
