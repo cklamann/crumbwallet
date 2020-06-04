@@ -284,6 +284,10 @@ const usePromptStyles = makeStyles((theme) =>
         Line: {
             margin: '5px 0px',
         },
+        Span: {
+            display: 'flex',
+            flexWrap: 'wrap',
+        },
     })
 );
 
@@ -312,7 +316,7 @@ const QuotationPrompt: React.FC<{ quotation: string; onHint: () => void }> = Rea
             toBlank = filtered[random(0, filtered.length - 1)];
 
         return (
-            <span>
+            <span className={classes.Span}>
                 {words.map((w, i) =>
                     w === toBlank ? (
                         <span key={i}>
