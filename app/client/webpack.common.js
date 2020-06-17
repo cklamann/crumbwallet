@@ -3,6 +3,7 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const Dotenv = require('dotenv');
 const webpack = require('webpack');
+const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin');
 
 module.exports = {
     entry: './src/index.tsx',
@@ -48,6 +49,8 @@ module.exports = {
         new HtmlWebpackPlugin({
             template: './src/index.ejs',
         }),
+        new ForkTsCheckerWebpackPlugin(),
+
         new webpack.DefinePlugin(
             //probably want to filter out all but those that begin with APP
             //also, this gives us db_user, etc but not TEST
