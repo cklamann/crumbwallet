@@ -16,7 +16,7 @@ import { Deck } from 'Models/Decks';
 import { Typography } from '@material-ui/core';
 import Close from '@material-ui/icons/Close';
 import { makeStyles, createStyles } from '@material-ui/core/styles';
-import { sortBy } from 'lodash';
+import Modal from '../Modals/Modal';
 
 interface HomePage {}
 
@@ -47,7 +47,7 @@ const HomePage: React.FC<HomePage> = ({}) => {
                     <MenuItem title="Browse Decks">
                         <ModelList
                             displayNameField="name"
-                            items={sortBy(data.decks, 'name')}
+                            items={data.decks.sort((a, b) => (a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 1))}
                             onItemClick={(deck: Deck) => history.push(`/decks/${deck.id}/cards`)}
                             innerLinkComponent={withRefresh(refetch)(DeckRow)}
                         />
@@ -115,9 +115,16 @@ const useDeckRowStyles = makeStyles((theme) =>
     })
 );
 
-const DeckRow: React.FC<{ displayName: string; refresh?: () => void; id: string }> = ({ displayName, refresh, id }) => {
+interface DeckRow {
+    displayName: string;
+    refresh?: () => void;
+    id: string;
+}
+
+const DeckRow: React.FC<DeckRow> = ({ displayName, refresh, id }) => {
     const history = useHistory(),
         [deleteDeck] = useDeleteDeckMutation(),
+        [deleteClicked, setDeleteClicked] = useState(false),
         classes = useDeckRowStyles();
 
     return (
@@ -127,7 +134,7 @@ const DeckRow: React.FC<{ displayName: string; refresh?: () => void; id: string 
                 className={classes.warnIcon}
                 onClick={(e) => {
                     e.stopPropagation();
-                    deleteDeck({ variables: { id } }).then(() => refresh());
+                    setDeleteClicked(true);
                 }}
             >
                 <Close />
@@ -141,6 +148,17 @@ const DeckRow: React.FC<{ displayName: string; refresh?: () => void; id: string 
             >
                 <Edit />
             </IconButton>
+            <span onClick={(e) => e.stopPropagation()}>
+                <Modal
+                    acceptText="Yes"
+                    content={`Are you shure you want to delete ${displayName}?`}
+                    isOpen={!!deleteClicked}
+                    onAccept={() => deleteDeck({ variables: { id } }).then(() => refresh())}
+                    onClose={setDeleteClicked.bind(null, false)}
+                    rejectText="Never mind"
+                    title="Delete?"
+                />
+            </span>
         </span>
     );
 };

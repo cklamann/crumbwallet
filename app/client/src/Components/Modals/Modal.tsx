@@ -25,12 +25,10 @@ const Modal: React.FC<Modal> = ({ acceptText, content, isOpen, onAccept, onClose
             <DialogContentText>{content}</DialogContentText>
         </DialogContent>
         <DialogActions>
-            {onReject ? (
-                <Button onClick={flow(onReject || noop, onClose)} color="primary">
-                    {rejectText ? rejectText : 'Cancel'}
-                </Button>
-            ) : null}
-            <Button onClick={flow(onAccept || noop, onClose)} color="primary" autoFocus>
+            <Button onClick={() => flow(onReject || noop, onClose)()} color="primary">
+                {rejectText ? rejectText : 'Cancel'}
+            </Button>
+            <Button onClick={() => flow(onAccept || noop, onClose)()} color="primary" autoFocus>
                 {acceptText ? acceptText : 'OK'}
             </Button>
         </DialogActions>

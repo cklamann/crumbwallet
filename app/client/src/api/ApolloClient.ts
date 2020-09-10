@@ -27,6 +27,7 @@ const awsLink = createAppSyncLink({
     complexObjectsCredentials: () => Auth.currentCredentials(),
 });
 
+
 export const client = new ApolloClient({
     link: awsLink.concat(httpLink),
     cache: new InMemoryCache(),
@@ -34,7 +35,6 @@ export const client = new ApolloClient({
 
 export const useApolloQuery = <T>(query: DocumentNode, choices: QueryHookOptions = {}) => {
     const loadingContext = useContext(LoadingContext);
-
     const res = useQuery<T>(query, {
         client,
         fetchPolicy: 'no-cache',

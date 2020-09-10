@@ -1,0 +1,12 @@
+{
+    "docker": {
+        "configLevel": "project",
+        "useProfile": true,
+        "profileName": "conork"
+    },
+    "bracket": {
+        "configLevel": "project",
+        "useProfile": false,
+        "awsConfigFilePath": "/root/.amplify/awscloudformation/U3QrjFqt2t"
+    }
+}
