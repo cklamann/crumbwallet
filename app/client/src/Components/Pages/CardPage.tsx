@@ -135,13 +135,10 @@ const CardPage: React.FC<CardPage> = ({}) => {
         },
         setAnswerWrong = () => setAnsweredCorrectly(false);
 
-    //user could get her via the back button...
+    //user could get here via the back button
     useEffect(() => {
         if (get(data, 'deck')) {
             if (get(data, 'deck.cards.length')) {
-                const { deck } = data,
-                    shuffled = shuffle(data.deck.cards);
-                deck.cards = shuffled;
                 setDeck(data.deck);
             } else {
                 setEmptyModalOpen(true);
@@ -156,7 +153,7 @@ const CardPage: React.FC<CardPage> = ({}) => {
     }, [deck]);
 
     useEffect(() => {
-        //reset image loaded state here...
+        //reset image loaded state here...why? whuh?
         if (imageLoaded) {
             setImageLoaded(false);
         }

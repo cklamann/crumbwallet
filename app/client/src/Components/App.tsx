@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import Storage from '@aws-amplify/storage';
 import Auth from '@aws-amplify/auth';
 import awsconfig from '../aws-exports';
-Storage.configure(awsconfig);
 Auth.configure(awsconfig);
 import 'regenerator-runtime/runtime.js';
+
+import { uploadToS3 } from './../Util';
 import EditDeckPage from './Pages/EditDeckPage';
 import EditCardPage from './Pages/EditCardPage';
 import CardPage from './Pages/CardPage';
@@ -134,9 +134,7 @@ const App: React.FC<{}> = () => {
                                     <Route exact path="/decks/:deckId/cards/:cardId/edit">
                                         <EditCardPage
                                             uploadToS3={(file: File, cardId: string) =>
-                                                Storage.put(cardId + '_' + file.name, file).then(
-                                                    (res: { key: string }) => res.key
-                                                )
+                                                uploadToS3(file, cardId + '_' + file.name)
                                             }
                                         />
                                     </Route>
