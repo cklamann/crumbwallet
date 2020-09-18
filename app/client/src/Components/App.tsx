@@ -8,7 +8,7 @@ import { uploadToS3 } from './../Util';
 import EditDeckPage from './Pages/EditDeckPage';
 import EditCardPage from './Pages/EditCardPage';
 import CardPage from './Pages/CardPage';
-import HomePage from './Pages/HomePage';
+import HomePage from './Pages/HomePage/HomePage';
 import { BrowserRouter as Router, Switch, Route, Link } from 'react-router-dom';
 import Container from '@material-ui/core/Container';
 import { theme } from './Style/Theme';

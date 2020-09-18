@@ -27,7 +27,6 @@ const awsLink = createAppSyncLink({
     complexObjectsCredentials: () => Auth.currentCredentials(),
 });
 
-
 export const client = new ApolloClient({
     link: awsLink.concat(httpLink),
     cache: new InMemoryCache(),
@@ -126,6 +125,17 @@ const fetchCardQuery = gql`
     }
 `;
 
+export const useCreateChessDiagramPngUrlMutation = () =>
+    useApolloMutation<{ createChessDiagram: { key: string } }>(createChessDiagramPng);
+
+const createChessDiagramPng = gql`
+    mutation createChessDiagram($pgn: String!, $filename: String!) {
+        createChessDiagram(input: { pgn: $pgn, savePath: $filename }) {
+            key
+        }
+    }
+`;
+
 export const useFetchCardQuery = (id: string) =>
     useApolloQuery<{ card: Card }>(fetchCardQuery, {
         variables: { id },
@@ -174,14 +184,25 @@ const deleteCardMutation = gql`
 export const useDeleteCardMutation = () => useApolloMutation<{ deleted: boolean }>(deleteCardMutation);
 
 const addCardMutation = gql`
-    mutation addCard($deckId: String!, $type: Type) {
+    mutation addCard(
+        $answer: String!
+        $choices: [String]
+        $deckId: String!
+        $details: String
+        $handle: String!
+        $imageKey: String
+        $prompt: String!
+        $type: Type
+    ) {
         addCard(
             input: {
+                answer: $answer
+                choices: $choices
                 deckId: $deckId
-                handle: "New Card"
-                prompt: "New Prompt"
-                answer: "New answer"
-                details: "<p>new details</p>"
+                details: $details
+                handle: $handle
+                imageKey: $imageKey
+                prompt: $prompt
                 type: $type
             }
         ) {
@@ -190,8 +211,7 @@ const addCardMutation = gql`
     }
 `;
 
-export const useAddCardMutation = () =>
-    useApolloMutation<{ addCard: { id: string; type: 'standard' } }>(addCardMutation);
+export const useAddCardMutation = () => useApolloMutation<{ addCard: { id: string } }>(addCardMutation);
 
 const addDeckMutation = gql`
     mutation whocaresswhatthisiscalled($name: String!, $categories: [String], $userId: String, $private: Boolean!) {

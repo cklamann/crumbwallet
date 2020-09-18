@@ -15,7 +15,6 @@ type Card {
     tries: [try]
     type: Type
     updated: String
-    userId: String!
 }
 
 enum Type {
@@ -43,6 +42,7 @@ type Query {
 type RootMutation {
     addCard(input: newCardInput!): id
     addTry(input: newTryInput!): tryAddedStatus
+    createChessDiagram(input: ChessDiagramInput): ChessDiagramUrlResponse
     createDeck(input: NewDeckInput!): Deck
     deleteCard(deckId: String!, id: String!): cardDeletedStatus
     deleteDeck(id: String!): deleteDeckStatus
@@ -95,9 +95,10 @@ input newCardInput {
     choices: [String]
     deckId: String!
     details: String
-    type: Type
     handle: String!
+    imageKey: String
     prompt: String!
+    type: Type
 }
 
 input newTryInput {
@@ -121,4 +122,13 @@ input updateTryInput {
     cardId: String!
     correct: Boolean!
     id: String!
+}
+
+input ChessDiagramInput {
+    pgn: String
+    savePath: String
+}
+
+type ChessDiagramUrlResponse {
+    key: String
 }

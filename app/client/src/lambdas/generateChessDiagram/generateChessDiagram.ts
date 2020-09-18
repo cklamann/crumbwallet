@@ -50,5 +50,7 @@ export default async (params: { pgn: string; savePath: string }, context: {}) =>
         },
     });
 
-    return uploadToS3(frame.toBuffer(), `${savePath}.png`);
+    const key = await uploadToS3(frame.toBuffer(), `${savePath}.png`);
+
+    return { key };
 };

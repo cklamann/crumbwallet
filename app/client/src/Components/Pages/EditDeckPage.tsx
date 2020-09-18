@@ -71,9 +71,17 @@ const EditDeckPage: React.FC<EditDeckPage> = ({}) => {
                             <span
                                 style={{ display: 'flex' }}
                                 onClick={() =>
-                                    createCard({ variables: { deckId, type: 'standard' } }).then((res) =>
-                                        history.push(`/decks/${deckId}/cards/${res.data.addCard.id}/edit`)
-                                    )
+                                    createCard({
+                                        variables: {
+                                            answer: '',
+                                            deckId,
+                                            details: '<p>New Details</p>',
+                                            handle: '',
+                                            imageKey: null,
+                                            prompt: 'New Prompt',
+                                            type: 'standard',
+                                        },
+                                    }).then((res) => history.push(`/decks/${deckId}/cards/${res.data.addCard.id}/edit`))
                                 }
                             >
                                 Create Card
