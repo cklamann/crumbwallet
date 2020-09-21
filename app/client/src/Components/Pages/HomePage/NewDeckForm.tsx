@@ -46,7 +46,7 @@ const NewDeckForm: React.FC<{}> = ({}) => {
 
     const createDeck = () =>
         addDeck({
-            variables: { name: state.name, userId, private: state.private },
+            variables: { name: state.name, userId, private: state.private, type: state.chess ? 'chess' : null },
         })
             .then((res) => res.data.createDeck.id)
             .then((deckId) => {
@@ -153,7 +153,7 @@ const buildDiagram = (
     const promises: Promise<any>[] = [];
     for (let i = 0; i < moves.length; i++) {
         const turn = moves[i];
-
+        //not working
         turn.replace(/\{\.+\}/, '');
         const [w, b] = turn.split(' ');
 

@@ -1,10 +1,11 @@
 import { Card } from './Cards';
 
 export interface Deck {
-    id: string;
-    name: string;
     cards: Card[];
     categories: string[];
     created: Date;
+    id: string;
+    name: string;
+    type?: 'chess';
     updated: Date;
 }

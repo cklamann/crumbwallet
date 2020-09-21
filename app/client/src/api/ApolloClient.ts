@@ -65,6 +65,7 @@ const fetchDecksQuery = gql`
         decks {
             id
             name
+            type
         }
     }
 `;
@@ -81,6 +82,7 @@ const fetchDeckQuery = gql`
         deck(id: $id) {
             id
             name
+            type
             cards {
                 id
                 answer

@@ -28,6 +28,7 @@ type Deck {
     created: String
     id: String!
     name: String!
+    type: String
     updated: String
     private: Boolean!
     userId: String!
@@ -79,6 +80,7 @@ input NewDeckInput {
     categories: [String]
     name: String!
     private: Boolean!
+    type: String!
     userId: String
 }
 

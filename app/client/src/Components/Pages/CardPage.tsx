@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useHistory, useParams } from 'react-router-dom';
-import { useFetchDeckQuery, useAddTryMutation } from './../../api/ApolloClient';
+import { useAddTryMutation } from './../../api/ApolloClient';
 import Modal from './../Modals/Modal';
 import Image from './../Image';
 import { Card } from 'Models/Cards';
@@ -27,9 +27,18 @@ import ArrowRight from '@material-ui/icons/ArrowRight';
 import Grid from '@material-ui/core/Grid';
 import Slide from '@material-ui/core/Slide';
 import { makeStyles, createStyles } from '@material-ui/core/styles';
-import { findIndex, get, random, shuffle } from 'lodash';
+import { get, random, shuffle } from 'lodash';
 
-interface CardPage {}
+interface CardPage {
+    deck: Deck;
+    getCard: (cardId: string) => Card;
+    getIndex: (deck: Deck, card: Card) => number;
+    requestNextCard: () => void;
+    requestPreviousCard: () => void;
+}
+
+//todo: this page should rerender at every new card, rather than having this requestPrevious logic
+//that means that parent simply passes in card and handles all the router and transition logic
 
 const useCardPageStyles = makeStyles((theme) =>
     createStyles({
@@ -70,22 +79,20 @@ const useCardPageStyles = makeStyles((theme) =>
     })
 );
 
-const CardPage: React.FC<CardPage> = ({}) => {
+const CardPage: React.FC<CardPage> = ({ deck, getCard, getIndex, requestNextCard, requestPreviousCard }) => {
     const history = useHistory(),
-        { deckId, cardId } = useParams(),
-        { loading, data } = useFetchDeckQuery(deckId),
+        { cardId } = useParams(),
         [_addTry] = useAddTryMutation(),
         [answer, setAnswer] = useState<string>(''),
-        [deck, setDeck] = useState<Deck>(),
         [answeredCorrectly, setAnsweredCorrectly] = useState<boolean>(undefined),
         [answerModalOpen, setAnswerModalOpen] = useState<boolean>(),
+        [card, setCard] = useState<Card>(null),
         [emptyModalOpen, setEmptyModalOpen] = useState<boolean>(),
         [imageLoaded, setImageLoaded] = useState<boolean>(false),
         [touchList, setTouchList] = useState<React.TouchList>(),
         [transitionInProgress, setTransitionInProgress] = useState(false),
         [transitionDirection, setTransitionDirection] = useState<string>('next'),
         classes = useCardPageStyles(),
-        card: Card = get(deck, 'cards', []).find((c) => c.id === cardId),
         finalizeAnswer = (answer: string) => {
             setAnswer(answer);
             setAnsweredCorrectly(answer == card.answer ? true : false);
@@ -93,20 +100,16 @@ const CardPage: React.FC<CardPage> = ({}) => {
         },
         addTry = (correct: boolean) => _addTry({ variables: { cardId, correct } }),
         goToNextCard = () => {
-            const idx = findIndex(deck.cards, (card) => card.id === cardId),
-                target = idx < deck.cards.length - 1 ? idx + 1 : 0;
             resetCard();
             setTransitionDirection('next');
             setTransitionInProgress(true);
-            history.push(`/decks/${deckId}/cards/${deck.cards[target].id}`);
+            requestNextCard();
         },
         goToPreviousCard = () => {
-            const idx = findIndex(deck.cards, (card) => card.id === cardId),
-                target = idx > 0 ? idx - 1 : deck.cards.length - 1;
             resetCard();
             setTransitionDirection('previous');
             setTransitionInProgress(true);
-            history.push(`/decks/${deckId}/cards/${deck.cards[target].id}`);
+            requestPreviousCard();
         },
         resetCard = () => {
             setAnsweredCorrectly(undefined);
@@ -135,28 +138,11 @@ const CardPage: React.FC<CardPage> = ({}) => {
         },
         setAnswerWrong = () => setAnsweredCorrectly(false);
 
-    //user could get here via the back button
     useEffect(() => {
-        if (get(data, 'deck')) {
-            if (get(data, 'deck.cards.length')) {
-                setDeck(data.deck);
-            } else {
-                setEmptyModalOpen(true);
-            }
-        }
-    }, [get(data, 'deck.id')]);
-
-    useEffect(() => {
-        if (deck && get(deck, 'cards.length')) {
-            history.push(`/decks/${deckId}/cards/${deck.cards[0].id}`);
-        }
-    }, [deck]);
-
-    useEffect(() => {
-        //reset image loaded state here...why? whuh?
         if (imageLoaded) {
             setImageLoaded(false);
         }
+        setCard(getCard(cardId));
     }, [cardId]);
 
     const resolvePrompt = useMemo(() => {
@@ -190,7 +176,7 @@ const CardPage: React.FC<CardPage> = ({}) => {
                 unmountOnExit
                 onExited={() => setTransitionInProgress(false)}
                 in={!!!transitionInProgress}
-                direction={transitionDirection === 'previous' ? 'right' : 'left'}
+                direction={transitionDirection === 'previous' ? 'left' : 'right'}
                 timeout={150}
             >
                 <CardComponent className={classes.root} onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
@@ -198,9 +184,9 @@ const CardPage: React.FC<CardPage> = ({}) => {
                         <>
                             <CardHeader
                                 classes={{ content: classes.headerContent }}
-                                title={`${deck.name} #${findIndex(deck.cards, (card) => card.id === cardId) + 1}`}
+                                title={`${deck.name} #${getIndex(deck, card) + 1}`}
                                 subheader={
-                                    <IconButton onClick={() => history.push(`/decks/${deckId}/cards/${cardId}/edit`)}>
+                                    <IconButton onClick={() => history.push(`/decks/${deck.id}/cards/${cardId}/edit`)}>
                                         <Edit />
                                     </IconButton>
                                 }

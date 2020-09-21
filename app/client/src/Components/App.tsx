@@ -3,13 +3,12 @@ import Auth from '@aws-amplify/auth';
 import awsconfig from '../aws-exports';
 Auth.configure(awsconfig);
 import 'regenerator-runtime/runtime.js';
-
 import { uploadToS3 } from './../Util';
 import EditDeckPage from './Pages/EditDeckPage';
 import EditCardPage from './Pages/EditCardPage';
-import CardPage from './Pages/CardPage';
+import DeckPage from './Pages/DeckPage';
 import HomePage from './Pages/HomePage/HomePage';
-import { BrowserRouter as Router, Switch, Route, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Switch, Route, Link, useParams } from 'react-router-dom';
 import Container from '@material-ui/core/Container';
 import { theme } from './Style/Theme';
 import { ThemeProvider, makeStyles, createStyles } from '@material-ui/core/styles';
@@ -82,8 +81,6 @@ const App: React.FC<{}> = () => {
         Auth.currentUserInfo().then((i) => setUserId(i.attributes.sub));
     }, []);
 
-    useEffect(() => {}, [loadingStatus]);
-
     return (
         <>
             <Container className={appClasses.Container} maxWidth="lg">
@@ -129,7 +126,7 @@ const App: React.FC<{}> = () => {
                                         <EditDeckPage />
                                     </Route>
                                     <Route exact path="/decks/:deckId/cards/:cardId?">
-                                        <CardPage />
+                                        <DeckPage />
                                     </Route>
                                     <Route exact path="/decks/:deckId/cards/:cardId/edit">
                                         <EditCardPage
