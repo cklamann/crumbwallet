@@ -80,7 +80,7 @@ input NewDeckInput {
     categories: [String]
     name: String!
     private: Boolean!
-    type: String!
+    type: String
     userId: String
 }
 
