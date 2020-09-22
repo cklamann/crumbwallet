@@ -3,7 +3,6 @@ import { useHistory } from 'react-router-dom';
 import { useAddTryMutation } from './../../api/ApolloClient';
 import Image from './../Image';
 import { Card } from 'Models/Cards';
-import { Deck } from 'Models/Decks';
 import CardComponent from '@material-ui/core/Card';
 import Chip from '@material-ui/core/Chip';
 import TextField from '@material-ui/core/TextField';

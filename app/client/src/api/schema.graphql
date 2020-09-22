@@ -13,11 +13,11 @@ type Card {
     imageKey: String
     prompt: String
     tries: [try]
-    type: Type
+    type: CardCardType
     updated: String
 }
 
-enum Type {
+enum CardCardType {
     qutotation
     standard
 }
@@ -28,11 +28,11 @@ type Deck {
     created: String
     id: String!
     name: String!
-    type: String
+    type: SCardtring
     updated: String
     private: Boolean!
     userId: String!
-}
+}Card
 
 type Query {
     card(id: String!): Card
@@ -100,7 +100,7 @@ input newCardInput {
     handle: String!
     imageKey: String
     prompt: String!
-    type: Type
+    type: CardType
 }
 
 input newTryInput {
@@ -115,7 +115,7 @@ input updateCardInput {
     details: String
     handle: String
     id: String!
-    type: Type
+    type: CardType
     imageKey: String
     prompt: String
 }

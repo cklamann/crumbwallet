@@ -69,7 +69,7 @@ const EditCardPage: React.FC<EditCardPage> = ({ uploadToS3 }) => {
                     variables: {
                         id: cardId,
                         deckId,
-                        ...mapValues(card, (arg) => (arg === '' ? null : arg)),
+                        ...mapValues(card, (arg): any => (arg === '' ? null : arg)),
                     },
                 }).then(() => refetchCard());
             }
@@ -246,9 +246,15 @@ const EditCardPage: React.FC<EditCardPage> = ({ uploadToS3 }) => {
                         <Grid item>
                             <IconButton
                                 onClick={() =>
-                                    createCard({ variables: { deckId, type: 'standard' } }).then((res) =>
-                                        history.push(`/decks/${deckId}/cards/${res.data.addCard.id}/edit`)
-                                    )
+                                    createCard({
+                                        variables: {
+                                            deckId,
+                                            type: 'standard',
+                                            answer: 'new answer',
+                                            handle: 'newHandle',
+                                            prompt: 'new prompt',
+                                        },
+                                    }).then((res) => history.push(`/decks/${deckId}/cards/${res.data.addCard.id}/edit`))
                                 }
                             >
                                 <LibraryAdd />

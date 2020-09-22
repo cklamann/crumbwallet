@@ -47,10 +47,10 @@ export const useApolloQuery = <T>(query: DocumentNode, choices: QueryHookOptions
 
     return res;
 };
-export const useApolloMutation = <T>(query: DocumentNode, choices: QueryHookOptions = {}) => {
+export const useApolloMutation = <T, V>(query: DocumentNode) => {
     const loadingContext = useContext(LoadingContext);
 
-    const res = useMutation<T>(query, { client, fetchPolicy: 'no-cache', ...choices });
+    const res = useMutation<T, V>(query, { client, fetchPolicy: 'no-cache' });
 
     if (res[1].loading !== loadingContext.mutationLoading)
         setTimeout(() => loadingContext.setLoading({ mutationLoading: res[1].loading }));
@@ -110,7 +110,7 @@ const deleteDeckMutation = gql`
     }
 `;
 
-export const useDeleteDeckMutation = () => useApolloMutation<{ deleted: boolean }>(deleteDeckMutation);
+export const useDeleteDeckMutation = () => useApolloMutation<{ deleted: boolean }, { id: string }>(deleteDeckMutation);
 
 const fetchCardQuery = gql`
     query fetchCard($id: String!) {
@@ -128,11 +128,13 @@ const fetchCardQuery = gql`
 `;
 
 export const useCreateChessDiagramPngUrlMutation = () =>
-    useApolloMutation<{ createChessDiagram: { key: string } }>(createChessDiagramPng);
+    useApolloMutation<{ createChessDiagram: { key: string } }, { pgn: string; savePath: string }>(
+        createChessDiagramPng
+    );
 
 const createChessDiagramPng = gql`
-    mutation createChessDiagram($pgn: String!, $filename: String!) {
-        createChessDiagram(input: { pgn: $pgn, savePath: $filename }) {
+    mutation createChessDiagram($pgn: String!, $savePath: String!) {
+        createChessDiagram(input: { pgn: $pgn, savePath: $savePath }) {
             key
         }
     }
@@ -153,7 +155,7 @@ const updateCardMutation = gql`
         $id: String!
         $imageKey: String
         $prompt: String
-        $type: Type
+        $type: NewCardType
     ) {
         updateCard(
             input: {
@@ -173,7 +175,20 @@ const updateCardMutation = gql`
     }
 `;
 
-export const useUpdateCardMutation = () => useApolloMutation<{ card: { id: string } }>(updateCardMutation);
+export const useUpdateCardMutation = () =>
+    useApolloMutation<
+        { card: { id: string } },
+        {
+            id: string;
+            deckId: string;
+            answer?: string;
+            choices?: string[];
+            handle?: string;
+            imageKey?: string;
+            prompt?: string;
+            type?: NewCardType;
+        }
+    >(updateCardMutation);
 
 const deleteCardMutation = gql`
     mutation deleteCard($id: String!, $deckId: String!) {
@@ -183,7 +198,8 @@ const deleteCardMutation = gql`
     }
 `;
 
-export const useDeleteCardMutation = () => useApolloMutation<{ deleted: boolean }>(deleteCardMutation);
+export const useDeleteCardMutation = () =>
+    useApolloMutation<{ deleted: boolean }, { id: string; deckId: string }>(deleteCardMutation);
 
 const addCardMutation = gql`
     mutation addCard(
@@ -194,7 +210,7 @@ const addCardMutation = gql`
         $handle: String!
         $imageKey: String
         $prompt: String!
-        $type: Type
+        $type: NewCardType
     ) {
         addCard(
             input: {
@@ -213,17 +229,42 @@ const addCardMutation = gql`
     }
 `;
 
-export const useAddCardMutation = () => useApolloMutation<{ addCard: { id: string } }>(addCardMutation);
+type NewCardType = 'standard' | 'quotation';
+
+export const useAddCardMutation = () =>
+    useApolloMutation<
+        { addCard: { id: string } },
+        {
+            answer: string;
+            choices?: string[];
+            deckId: string;
+            details?: string;
+            handle: string;
+            imageKey?: string;
+            prompt: string;
+            type?: NewCardType;
+        }
+    >(addCardMutation);
 
 const addDeckMutation = gql`
-    mutation createDeckNameUnimportant($name: String!, $categories: [String], $type: String, $userId: String, $private: Boolean!) {
+    mutation createDeckNameUnimportant(
+        $name: String!
+        $categories: [String]
+        $type: String
+        $userId: String
+        $private: Boolean!
+    ) {
         createDeck(input: { name: $name, categories: $categories, userId: $userId, private: $private, type: $type }) {
             id
         }
     }
 `;
 
-export const useAddDeckMutation = () => useApolloMutation<{ createDeck: { id: string } }>(addDeckMutation);
+export const useAddDeckMutation = () =>
+    useApolloMutation<
+        { createDeck: { id: string } },
+        { name: string; categories?: string[]; type?: string; userId?: string; private: boolean }
+    >(addDeckMutation);
 
 const updateDeckMutation = gql`
     mutation deck($id: String!, $name: String, $categories: [String], $details: String) {
@@ -233,7 +274,11 @@ const updateDeckMutation = gql`
     }
 `;
 
-export const useUpdateDeckMutation = () => useApolloMutation<{ addCard: { id: string } }>(updateDeckMutation);
+export const useUpdateDeckMutation = () =>
+    useApolloMutation<
+        { addCard: { id: string } },
+        { id: string; name?: string; categories?: string; details?: string }
+    >(updateDeckMutation);
 
 const addTryMutation = gql`
     mutation addTry($cardId: String!, $correct: Boolean!) {
@@ -243,4 +288,5 @@ const addTryMutation = gql`
     }
 `;
 
-export const useAddTryMutation = () => useApolloMutation<{ addTry: { added: boolean } }>(addTryMutation);
+export const useAddTryMutation = () =>
+    useApolloMutation<{ addTry: { added: boolean } }, { cardId: string; correct: boolean }>(addTryMutation);

@@ -19,18 +19,21 @@ const DeckPage: React.FC<DeckPage> = () => {
         activeCardIdx = useRef(0);
 
     useEffect(() => {
-        if (data) {
+        //todo: need error handling... data.deck will be null if there's an error, for instance -- can get here via the back button after an unhandled error
+        //once error modal works should just redirect to home page
+        if (data && data.deck) {
+            if (data.deck.type === 'chess') {
+                (data.deck.cards || []).sort(chessSort);
+            }
             activeCardIdx.current = cardId ? findIndex(data.deck.cards, (c) => c.id === cardId) : 0;
             setDeck(data.deck);
             if (!cardId && data.deck.cards.length) {
                 history.push(`/decks/${deckId}/cards/${data.deck.cards[0].id}`);
+            } else {
+                setEmptyModalOpen(true);
             }
         }
     }, [get(data, 'deck')]);
-
-    if (get(deck, 'type') === 'chess') {
-        (deck.cards || []).sort(chessSort);
-    }
 
     const nextCard = () => {
             activeCardIdx.current = activeCardIdx.current === deck.cards.length - 1 ? 0 : activeCardIdx.current + 1;

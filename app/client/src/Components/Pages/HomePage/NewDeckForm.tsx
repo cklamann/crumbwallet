@@ -51,7 +51,7 @@ const NewDeckForm: React.FC<{}> = ({}) => {
             .then((res) => res.data.createDeck.id)
             .then((deckId) => {
                 const build = (pgn: string, side: 'w' | 'b', turn: number, nextMove: string) =>
-                    generateImage({ variables: { pgn, filename: `${turn}${side}${deckId}` } }).then((res) =>
+                    generateImage({ variables: { pgn, savePath: `${turn}${side}${deckId}` } }).then((res) =>
                         addCard({
                             variables: {
                                 deckId,
@@ -66,7 +66,6 @@ const NewDeckForm: React.FC<{}> = ({}) => {
                 const promises =
                     state.chess && !!state.pgn ? buildDiagram(state.pgn, build) : [new Promise((res) => res('foo'))];
                 return Promise.all(promises)
-                    .then((r) => console.log(r))
                     .then(() => history.push(`decks/${deckId}/edit`))
                     .catch((err) => console.log(err));
             });
