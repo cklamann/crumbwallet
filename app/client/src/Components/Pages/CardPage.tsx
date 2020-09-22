@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useHistory, useParams } from 'react-router-dom';
+import { useHistory } from 'react-router-dom';
 import { useAddTryMutation } from './../../api/ApolloClient';
-import Modal from './../Modals/Modal';
 import Image from './../Image';
 import { Card } from 'Models/Cards';
 import { Deck } from 'Models/Decks';
@@ -30,9 +29,10 @@ import { makeStyles, createStyles } from '@material-ui/core/styles';
 import { get, random, shuffle } from 'lodash';
 
 interface CardPage {
-    deck: Deck;
-    getCard: (cardId: string) => Card;
-    getIndex: (deck: Deck, card: Card) => number;
+    card: Card;
+    cardIndex: number;
+    deckId: string;
+    deckName: string;
     requestNextCard: () => void;
     requestPreviousCard: () => void;
 }
@@ -79,15 +79,12 @@ const useCardPageStyles = makeStyles((theme) =>
     })
 );
 
-const CardPage: React.FC<CardPage> = ({ deck, getCard, getIndex, requestNextCard, requestPreviousCard }) => {
+const CardPage: React.FC<CardPage> = ({ card, cardIndex, deckId, deckName, requestNextCard, requestPreviousCard }) => {
     const history = useHistory(),
-        { cardId } = useParams(),
         [_addTry] = useAddTryMutation(),
         [answer, setAnswer] = useState<string>(''),
         [answeredCorrectly, setAnsweredCorrectly] = useState<boolean>(undefined),
         [answerModalOpen, setAnswerModalOpen] = useState<boolean>(),
-        [card, setCard] = useState<Card>(null),
-        [emptyModalOpen, setEmptyModalOpen] = useState<boolean>(),
         [imageLoaded, setImageLoaded] = useState<boolean>(false),
         [touchList, setTouchList] = useState<React.TouchList>(),
         [transitionInProgress, setTransitionInProgress] = useState(false),
@@ -98,7 +95,7 @@ const CardPage: React.FC<CardPage> = ({ deck, getCard, getIndex, requestNextCard
             setAnsweredCorrectly(answer == card.answer ? true : false);
             setAnswerModalOpen(true);
         },
-        addTry = (correct: boolean) => _addTry({ variables: { cardId, correct } }),
+        addTry = (correct: boolean) => _addTry({ variables: { cardId: card.id, correct } }),
         goToNextCard = () => {
             resetCard();
             setTransitionDirection('next');
@@ -138,13 +135,6 @@ const CardPage: React.FC<CardPage> = ({ deck, getCard, getIndex, requestNextCard
         },
         setAnswerWrong = () => setAnsweredCorrectly(false);
 
-    useEffect(() => {
-        if (imageLoaded) {
-            setImageLoaded(false);
-        }
-        setCard(getCard(cardId));
-    }, [cardId]);
-
     const resolvePrompt = useMemo(() => {
         if (!card) return () => <span />;
         if (get(card, 'type') !== 'quotation' || !get(card, 'type')) {
@@ -176,7 +166,7 @@ const CardPage: React.FC<CardPage> = ({ deck, getCard, getIndex, requestNextCard
                 unmountOnExit
                 onExited={() => setTransitionInProgress(false)}
                 in={!!!transitionInProgress}
-                direction={transitionDirection === 'previous' ? 'left' : 'right'}
+                direction={transitionDirection === 'previous' ? 'right' : 'left'}
                 timeout={150}
             >
                 <CardComponent className={classes.root} onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
@@ -184,9 +174,11 @@ const CardPage: React.FC<CardPage> = ({ deck, getCard, getIndex, requestNextCard
                         <>
                             <CardHeader
                                 classes={{ content: classes.headerContent }}
-                                title={`${deck.name} #${getIndex(deck, card) + 1}`}
+                                title={`${deckName} #${cardIndex + 1}`}
                                 subheader={
-                                    <IconButton onClick={() => history.push(`/decks/${deck.id}/cards/${cardId}/edit`)}>
+                                    <IconButton
+                                        onClick={() => history.push(`/decks/${deckId}/cards/${card.id}/edit`)}
+                                    >
                                         <Edit />
                                     </IconButton>
                                 }
@@ -249,12 +241,6 @@ const CardPage: React.FC<CardPage> = ({ deck, getCard, getIndex, requestNextCard
                     )}
                 </CardComponent>
             </Slide>
-            <Modal
-                isOpen={emptyModalOpen}
-                content="There are no cards in this deck yet"
-                onClose={() => history.push('/')}
-                title="No Cards!"
-            />
         </>
     );
 };

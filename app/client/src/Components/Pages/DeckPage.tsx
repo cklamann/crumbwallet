@@ -3,21 +3,29 @@ import { useHistory, useParams } from 'react-router-dom';
 import { useFetchDeckQuery } from './../../api/ApolloClient';
 import { Card } from 'Models/Cards';
 import CardPage from './CardPage';
-import { get } from 'lodash';
+import { findIndex, get } from 'lodash';
 import { Deck } from 'Models/Decks';
+import Modal from '../Modals/Modal';
 
 interface DeckPage {}
 
 //this is a bad pattern, just use parent render prop to pass in deck id...
 const DeckPage: React.FC<DeckPage> = () => {
     const history = useHistory(),
-        { deckId } = useParams(),
+        { deckId, cardId } = useParams(),
         { loading, data } = useFetchDeckQuery(deckId),
         [deck, setDeck] = useState<Deck>(),
+        [emptyModalOpen, setEmptyModalOpen] = useState<boolean>(),
         activeCardIdx = useRef(0);
 
     useEffect(() => {
-        setDeck(get(data, 'deck'));
+        if (data) {
+            activeCardIdx.current = cardId ? findIndex(data.deck.cards, (c) => c.id === cardId) : 0;
+            setDeck(data.deck);
+            if (!cardId && data.deck.cards.length) {
+                history.push(`/decks/${deckId}/cards/${data.deck.cards[0].id}`);
+            }
+        }
     }, [get(data, 'deck')]);
 
     if (get(deck, 'type') === 'chess') {
@@ -34,13 +42,23 @@ const DeckPage: React.FC<DeckPage> = () => {
             history.push(`/decks/${deckId}/cards/${getCard().id}`);
         };
     return deck ? (
-        <CardPage
-            getCard={getCard}
-            getIndex={() => activeCardIdx.current}
-            deck={deck}
-            requestNextCard={nextCard}
-            requestPreviousCard={previousCard}
-        />
+        deck.cards.length ? (
+            <CardPage
+                card={deck.cards[activeCardIdx.current]}
+                cardIndex={activeCardIdx.current}
+                deckId={deck.id}
+                deckName={deck.name}
+                requestNextCard={nextCard}
+                requestPreviousCard={previousCard}
+            />
+        ) : (
+            <Modal
+                isOpen={emptyModalOpen}
+                content="There are no cards in this deck yet"
+                onClose={() => history.push('/')}
+                title="No Cards!"
+            />
+        )
     ) : null;
 };
 
