@@ -70,7 +70,7 @@ export default DeckPage;
 const chessSort = (a: Card, b: Card) => (transformHandle(a.handle) > transformHandle(b.handle) ? 1 : -1);
 
 const transformHandle = (handle: string) => {
-    const [move, side] = handle.split(''),
-        order = side === 'w' ? 1 : 2;
+    const move = handle.slice(0, handle.length - 1),
+        order = handle.slice(-1) === 'w' ? 1 : 2;
     return +`${move}${order}`;
 };
