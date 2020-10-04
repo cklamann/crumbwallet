@@ -23,7 +23,7 @@ const DeckPage: React.FC<DeckPage> = () => {
         //once error modal works should just redirect to home page
         if (data && data.deck) {
             if (data.deck.type === 'chess') {
-                (data.deck.cards || []).sort(chessSort);
+                data.deck.cards = chessSort(data.deck.cards || []);
             }
             activeCardIdx.current = cardId ? findIndex(data.deck.cards, (c) => c.id === cardId) : 0;
             setDeck(data.deck);
@@ -67,7 +67,18 @@ const DeckPage: React.FC<DeckPage> = () => {
 
 export default DeckPage;
 
-const chessSort = (a: Card, b: Card) => (transformHandle(a.handle) > transformHandle(b.handle) ? 1 : -1);
+const chessSort = (cards: Card[]) => {
+    const moveCards = cards.filter((card) => isMoveCard(card)).sort(moveSort),
+        introCards = cards.filter((card) => /^intro/.test(card.handle)).sort(handleSort),
+        outroCards = cards.filter((card) => /^outro/.test(card.handle)).sort(handleSort);
+    return [...introCards, ...moveCards, ...outroCards];
+};
+
+const isMoveCard = (card: Card) => /^\d+(b|w)$/.test(card.handle);
+
+const handleSort = (a: Card, b: Card) => (a.handle.toLowerCase() < b.handle.toLowerCase() ? -1 : 1);
+
+const moveSort = (a: Card, b: Card) => (transformHandle(a.handle) > transformHandle(b.handle) ? 1 : -1);
 
 const transformHandle = (handle: string) => {
     const move = handle.slice(0, handle.length - 1),
