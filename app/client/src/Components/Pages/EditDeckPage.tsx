@@ -1,8 +1,5 @@
-import React, { useContext, useEffect, useState } from 'react';
-import { useParams, useHistory } from 'react-router-dom';
-import { Card } from 'Models/Cards';
-import { useAddCardMutation, useFetchDeckQuery, useUpdateDeckMutation } from '../../api/ApolloClient';
-import MenuItem from './../MenuItem';
+import React, { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
 import Paper from '@material-ui/core/Paper';
 import Grid from '@material-ui/core/Grid';
 import TextField from '@material-ui/core/TextField';
@@ -10,26 +7,31 @@ import Typography from '@material-ui/core/Typography';
 import Button from '@material-ui/core/Button';
 import { makeStyles, createStyles } from '@material-ui/core/styles';
 import Add from '@material-ui/icons/Add';
+import LibraryBooks from '@material-ui/icons/LibraryBooks';
 import Link from '@material-ui/core/Link';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
+import { IconButton } from '@material-ui/core';
+import { Card } from 'Models/Cards';
+import { useGoTo } from './../../hooks';
+import { useAddCardMutation, useFetchDeckQuery, useUpdateDeckMutation } from '../../api/ApolloClient';
+import MenuItem from './../MenuItem';
 
 interface EditDeckPage {}
 
 const EditDeckPage: React.FC<EditDeckPage> = ({}) => {
     const { deckId } = useParams(),
         [newName, setNewName] = useState(''),
-        [updateLoading, setUpdateLoading] = useState(false),
         { loading: deckLoading, data, refetch: refetchDeck } = useFetchDeckQuery(deckId),
         [createCard] = useAddCardMutation(),
-        [updateDeck] = useUpdateDeckMutation(),
-        history = useHistory(),
-        loading = updateLoading || deckLoading;
+        [updateDeck] = useUpdateDeckMutation();
     useEffect(() => {
         if (data) {
             setNewName(data.deck.name);
         }
     }, [data]);
+
+    const goto = useGoTo();
 
     return (
         <Paper style={{ width: '100%' }}>
@@ -56,11 +58,18 @@ const EditDeckPage: React.FC<EditDeckPage> = ({}) => {
                             </Button>
                         </Grid>
                     </MenuItem>
+                    <MenuItem title="Go to deck">
+                        {data.deck.cards.length && (
+                            <IconButton onClick={() => goto(`/decks/${deckId}`)}>
+                                <LibraryBooks />
+                            </IconButton>
+                        )}
+                    </MenuItem>
                     <MenuItem title="Edit Card">
                         {data.deck.cards.length ? (
                             <CardList
                                 cards={data.deck.cards}
-                                onSelect={(cardId: string) => history.push(`/decks/${deckId}/cards/${cardId}/edit`)}
+                                onSelect={(cardId: string) => goto(`/decks/${deckId}/cards/${cardId}/edit`)}
                             />
                         ) : (
                             <Typography color="error">No Cards!</Typography>
@@ -81,7 +90,7 @@ const EditDeckPage: React.FC<EditDeckPage> = ({}) => {
                                             prompt: 'New Prompt',
                                             type: 'standard',
                                         },
-                                    }).then((res) => history.push(`/decks/${deckId}/cards/${res.data.addCard.id}/edit`))
+                                    }).then((res) => goto(`/decks/${deckId}/cards/${res.data.addCard.id}/edit`))
                                 }
                             >
                                 Create Card

@@ -19,8 +19,6 @@ const DeckPage: React.FC<DeckPage> = () => {
         activeCardIdx = useRef(0);
 
     useEffect(() => {
-        //todo: need error handling... data.deck will be null if there's an error, for instance -- can get here via the back button after an unhandled error
-        //once error modal works should just redirect to home page
         if (data && data.deck) {
             if (data.deck.type === 'chess') {
                 data.deck.cards = chessSort(data.deck.cards || []);
