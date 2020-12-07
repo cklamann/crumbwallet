@@ -16,7 +16,7 @@ module.exports = {
     mode: 'development',
     output: {
         path: path.join(__dirname, `dist/lambdas`),
-        filename: 'lambda_[name].js',
+        filename: '[name].js',
         libraryTarget: 'umd',
     },
     devtool: 'inline-source-map',
