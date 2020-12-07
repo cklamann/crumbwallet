@@ -155,7 +155,7 @@ const App: React.FC<{}> = () => {
     );
 };
 
-//@ts-ignore -- typing is bad, does not support config object, only args...
+//@ts-ignore -- typing is bad, does not support config object, only args
 export default withAuthenticator(App, {
     theme: {
         //targets background for login page

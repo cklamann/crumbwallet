@@ -1,0 +1,11 @@
+{
+    "AppSyncApiName": "flashcard",
+    "DynamoDBBillingMode": "PAY_PER_REQUEST",
+    "DynamoDBEnableServerSideEncryption": "false",
+    "AuthCognitoUserPoolId": {
+        "Fn::GetAtt": [
+            "authflashcard5d99d84a",
+            "Outputs.UserPoolId"
+        ]
+    }
+}

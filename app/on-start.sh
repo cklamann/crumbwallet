@@ -1,7 +1,10 @@
 #!/usr/bin/env bash
+
+set -e
+
 npm install -g jest
-npm --prefix ./server install -qy
-npm --prefix ./client install -qy
-npm --prefix ./client run dev
-npm --prefix ./server run build
-npm --prefix ./server run start
+npm install -qy --prefix ./server 
+npm install -qy --prefix ./client 
+npm run dev --prefix ./client 
+npm run build --prefix ./server 
+npm run start --prefix ./server 

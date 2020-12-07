@@ -4,6 +4,7 @@
         "development": "mode=development node_modules/.bin/webpack --progress --hide-modules --config webpack.dev.js",
         "production": "mode=development node_modules/.bin/webpack --progress --hide-modules --config webpack.prod.js",
         "lambda": "mode=development node_modules/.bin/webpack --progress --hide-modules --config webpack.lambda.js",
+        "pushLambda": "node scripts/updateLambda.js",
         "watch": "npm run development -- --watch",
         "watch-poll": "npm run watch -- --watch-poll",
         "test": "jest --detectOpenHandles"
@@ -28,6 +29,7 @@
         "apollo-link-http": "^1.5.17",
         "aws-amplify-react": "^3.1.9",
         "aws-appsync": "^3.0.4",
+        "aws-sdk": "^2.804.0",
         "canvas": "^2.6.1",
         "canvas-to-buffer": "^1.1.0",
         "chess.js": "^0.11.0",
