@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import Auth from '@aws-amplify/auth';
 import awsconfig from '../aws-exports';
 Auth.configure(awsconfig);
@@ -9,7 +9,7 @@ import EditDeckPage from './Pages/EditDeckPage';
 import EditCardPage from './Pages/EditCardPage';
 import DeckPage from './Pages/DeckPage';
 import HomePage from './Pages/HomePage/HomePage';
-import { BrowserRouter as Router, Switch, Route, Link, useParams } from 'react-router-dom';
+import { BrowserRouter as Router, Switch, Route, Link, useHistory } from 'react-router-dom';
 import Container from '@material-ui/core/Container';
 import { theme } from './Style/Theme';
 import { ThemeProvider, makeStyles, createStyles } from '@material-ui/core/styles';
@@ -22,7 +22,7 @@ import HomeIcon from '@material-ui/icons/Home';
 import ExitIcon from '@material-ui/icons/Input';
 import CSSBaseline from '@material-ui/core/CssBaseline';
 import { withAuthenticator } from 'aws-amplify-react';
-import { loadingStateSelector } from './../store/loadingReducer';
+import { clearError, loadingStateSelector } from './../store/loadingReducer';
 import Modal from './Modals/Modal';
 import { get } from 'lodash';
 
@@ -57,7 +57,8 @@ const App: React.FC<{}> = () => {
     const navBarClasses = useNavBarStyles(),
         appClasses = useAppStyles(),
         [userId, setUserId] = useState(''),
-        loadingState = useSelector(loadingStateSelector);
+        loadingState = useSelector(loadingStateSelector),
+        dispatch = useDispatch();
 
     useEffect(() => {
         Auth.currentUserInfo().then((i) => setUserId(i.attributes.sub));
@@ -111,21 +112,23 @@ const App: React.FC<{}> = () => {
                                         }
                                     />
                                 </Route>
-
-                                <Route path="/*">
+                                <Route path="*">
                                     <HomePage />
                                 </Route>
                             </Switch>
+                            <Modal
+                                isOpen={!!loadingState.error}
+                                content={get(loadingState, 'error[0].message')}
+                                title="Error!"
+                                onClose={() => {
+                                    dispatch(clearError());
+                                    window.location.assign('/');
+                                }}
+                            />
                         </Router>
                     </ThemeProvider>
                 </UserContext.Provider>
             </Container>
-            {/*             <Modal
-                isOpen={!!state.loadingStatus.error}
-                content={get(state.loadingStatus, 'error.message')}
-                title="Error!"
-                onClose={() => setLoadingStatus({ ...loadingStatus, ...{ error: undefined } })}
-            /> */}
         </>
     );
 };

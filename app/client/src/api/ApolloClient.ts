@@ -12,7 +12,7 @@ import { createAppSyncLink } from 'aws-appsync';
 import awsconfig from './../aws-exports';
 import { Deck } from 'Models/Decks';
 import { Card } from 'Models/Cards';
-import { uniqueId } from 'lodash';
+import { get, uniqueId } from 'lodash';
 
 const httpLink = createHttpLink({
     uri: awsconfig.aws_appsync_graphqlEndpoint,
@@ -32,9 +32,9 @@ const awsLink = createAppSyncLink({
 const errorLink = onError(({ graphQLErrors, networkError }) => {
     if (graphQLErrors)
         graphQLErrors.forEach(({ message, locations, path }) =>
-            console.log(`[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`)
+            console.error(`[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`)
         );
-    if (networkError) console.log(`[Network error]: ${networkError}`);
+    if (networkError) console.error(`[Network error]: ${networkError}`);
 });
 
 const localLink = new ApolloLink((operation, forward) => {
@@ -45,6 +45,11 @@ const localLink = new ApolloLink((operation, forward) => {
 
     return forward(operation).map((response) => {
         dispatch({ type: 'LOADED', payload: uid });
+
+        if (!!get(response, 'errors.length', 0)) {
+            dispatch({ type: 'ERROR', payload: response.errors });
+        }
+
         return response;
     });
 });

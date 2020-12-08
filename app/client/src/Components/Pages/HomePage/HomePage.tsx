@@ -27,6 +27,7 @@ const HomePage: React.FC<HomePage> = ({}) => {
     const history = useHistory(),
         { data, refetch } = useFetchDecksQuery(),
         classes = useHomePageStyles();
+
     return (
         <Paper className={classes.root}>
             {data && (
