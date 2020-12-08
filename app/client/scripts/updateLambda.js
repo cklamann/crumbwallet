@@ -4,7 +4,7 @@ const AWS = require('aws-sdk'),
     fs = require('fs'),
     path = require('path'),
     { execSync } = require('child_process'),
-    Lambda = new AWS.Lambda({ region: 'us-east-2' });
+    Lambda = new AWS.Lambda();
 
 const main = () => {
     const args = process.argv.slice(2);

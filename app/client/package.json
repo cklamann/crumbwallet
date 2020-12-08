@@ -26,6 +26,8 @@
         "@types/react-router-dom": "^5.1.6",
         "apollo-cache-inmemory": "^1.6.6",
         "apollo-client": "^2.6.10",
+        "apollo-link": "^1.2.14",
+        "apollo-link-error": "^1.1.13",
         "apollo-link-http": "^1.5.17",
         "aws-amplify-react": "^3.1.9",
         "aws-appsync": "^3.0.4",
@@ -39,7 +41,7 @@
         "graphql-tag": "^2.11.0",
         "react": "^16.14.0",
         "react-dom": "^16.14.0",
-        "react-redux": "^7.2.1",
+        "react-redux": "^7.2.2",
         "react-router-dom": "^5.2.0",
         "redux": "^4.0.5"
     },

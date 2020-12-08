@@ -105,7 +105,7 @@ const DeckRow: React.FC<DeckRow> = ({ displayName, refresh, id }) => {
             <span onClick={(e) => e.stopPropagation()}>
                 <Modal
                     acceptText="Yes"
-                    content={`Are you shure you want to delete ${displayName}?`}
+                    content={`Are you sure you want to delete ${displayName}?`}
                     isOpen={!!deleteClicked}
                     onAccept={() => deleteDeck({ variables: { id } }).then(() => refresh())}
                     onClose={setDeleteClicked.bind(null, false)}
