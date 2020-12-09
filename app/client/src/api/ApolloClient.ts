@@ -1,16 +1,18 @@
 import ApolloClient from 'apollo-client';
-import { useContext } from 'react';
+import { ApolloLink, from } from 'apollo-link';
+import { createHttpLink } from 'apollo-link-http';
+import { onError } from 'apollo-link-error';
+import { useQuery, useMutation, QueryHookOptions } from '@apollo/react-hooks';
+import { InMemoryCache } from 'apollo-cache-inmemory';
+import { useDispatch } from 'react-redux';
 import gql from 'graphql-tag';
 import { DocumentNode, GraphQLEnumType } from 'graphql';
-import { InMemoryCache } from 'apollo-cache-inmemory';
 import Auth from '@aws-amplify/auth';
 import { createAppSyncLink } from 'aws-appsync';
 import awsconfig from './../aws-exports';
-import { createHttpLink } from 'apollo-link-http';
-import { LoadingContext } from '../Components/App';
-import { useQuery, useMutation, QueryHookOptions } from '@apollo/react-hooks';
 import { Deck } from 'Models/Decks';
 import { Card } from 'Models/Cards';
+import { get, uniqueId } from 'lodash';
 
 const httpLink = createHttpLink({
     uri: awsconfig.aws_appsync_graphqlEndpoint,
@@ -27,37 +29,54 @@ const awsLink = createAppSyncLink({
     complexObjectsCredentials: () => Auth.currentCredentials(),
 });
 
+const errorLink = onError(({ graphQLErrors, networkError }) => {
+    if (graphQLErrors)
+        graphQLErrors.forEach(({ message, locations, path }) =>
+            console.error(`[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`)
+        );
+    if (networkError) console.error(`[Network error]: ${networkError}`);
+});
+
+const localLink = new ApolloLink((operation, forward) => {
+    const { dispatch, uid } = operation.getContext();
+
+    //could be a sync state update
+    setTimeout(() => dispatch({ type: 'LOADING', payload: uid }));
+
+    return forward(operation).map((response) => {
+        dispatch({ type: 'LOADED', payload: uid });
+
+        if (!!get(response, 'errors.length', 0)) {
+            dispatch({ type: 'ERROR', payload: response.errors });
+        }
+
+        return response;
+    });
+});
+
 export const client = new ApolloClient({
-    link: awsLink.concat(httpLink),
+    link: from([localLink, errorLink, awsLink, httpLink]),
     cache: new InMemoryCache(),
 });
 
 export const useApolloQuery = <T>(query: DocumentNode, choices: QueryHookOptions = {}) => {
-    const loadingContext = useContext(LoadingContext);
-    const res = useQuery<T>(query, {
+    const dispatch = useDispatch();
+    return useQuery<T>(query, {
         client,
+        context: { uid: uniqueId(), dispatch },
         fetchPolicy: 'no-cache',
         ...choices,
     });
-
-    if (res.loading !== loadingContext.queryLoading)
-        setTimeout(() => loadingContext.setLoading({ queryLoading: res.loading }));
-
-    if (res.error) setTimeout(() => loadingContext.setLoading({ error: res.error }));
-
-    return res;
 };
+
 export const useApolloMutation = <T, V>(query: DocumentNode) => {
-    const loadingContext = useContext(LoadingContext);
+    const dispatch = useDispatch();
 
-    const res = useMutation<T, V>(query, { client, fetchPolicy: 'no-cache' });
-
-    if (res[1].loading !== loadingContext.mutationLoading)
-        setTimeout(() => loadingContext.setLoading({ mutationLoading: res[1].loading }));
-
-    if (res[1].error) setTimeout(() => loadingContext.setLoading({ error: res[1].error }));
-
-    return res;
+    return useMutation<T, V>(query, {
+        client,
+        fetchPolicy: 'no-cache',
+        context: { uid: uniqueId(), dispatch },
+    });
 };
 
 const fetchDecksQuery = gql`

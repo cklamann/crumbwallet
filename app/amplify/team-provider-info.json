@@ -10,11 +10,6 @@
             "StackName": "amplify-flashcard-docker-142451",
             "StackId": "arn:aws:cloudformation:us-east-2:250774756640:stack/amplify-flashcard-docker-142451/661f3bb0-69ed-11ea-96b9-0a76b6c12f42",
             "AmplifyAppId": "d3tyl8cgogtsov"
-        },
-        "categories": {
-            "auth": {
-                "flashcard5d99d84a": {}
-            }
         }
     }
 }

@@ -1,7 +1,7 @@
 {
     "compilerOptions": {
         "allowSyntheticDefaultImports": true,
-        "outDir": "./dist/",
+        "outDir": "dist",
         "target": "es6",
         "module": "esNext",
         "lib": ["es2015", "es2017"],

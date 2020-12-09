@@ -27,6 +27,7 @@ const HomePage: React.FC<HomePage> = ({}) => {
     const history = useHistory(),
         { data, refetch } = useFetchDecksQuery(),
         classes = useHomePageStyles();
+
     return (
         <Paper className={classes.root}>
             {data && (
@@ -105,7 +106,7 @@ const DeckRow: React.FC<DeckRow> = ({ displayName, refresh, id }) => {
             <span onClick={(e) => e.stopPropagation()}>
                 <Modal
                     acceptText="Yes"
-                    content={`Are you shure you want to delete ${displayName}?`}
+                    content={`Are you sure you want to delete ${displayName}?`}
                     isOpen={!!deleteClicked}
                     onAccept={() => deleteDeck({ variables: { id } }).then(() => refresh())}
                     onClose={setDeleteClicked.bind(null, false)}

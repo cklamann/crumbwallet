@@ -2,18 +2,22 @@ version: "3"
 services:
   #Node Service
   node:
-    image: node:10.16.0-jessie
+    build: 
+      context: ./
+      args:
+        AWS_KEY: ${AWS_KEY}
+        AWS_SECRET: ${AWS_SECRET}
+        AWS_REGION: ${AWS_REGION}
     container_name: flashcard-node
     restart: unless-stopped
     tty: true
     environment:
       SERVICE_NAME: node
       SERVICE_TAGS: dev
-      #these are read out of global .env
-      DB_USER: ${DB_USER}
-      DB_PASSWORD: ${DB_PASSWORD}
       APP_PORT: ${APP_PORT}
       APP_HOST: ${APP_HOST}
+      AWS_SECRET: ${AWS_SECRET}
+      AWS_KEY: ${AWS_KEY}
     working_dir: /usr/app
     ports:
       - "3011:${APP_PORT}"

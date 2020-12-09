@@ -1,4 +1,5 @@
 import React, { useReducer, useContext, useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
 import { useHistory, useParams } from 'react-router-dom';
 import { Card } from 'Models/Cards';
 import {
@@ -7,11 +8,11 @@ import {
     useFetchCardQuery,
     useUpdateCardMutation,
 } from '../../api/ApolloClient';
-import { LoadingContext } from './../App';
 import Editor from './../Editor';
 import Image from './../Image';
 import BackButton from './../BackButton';
 import ChoiceInput from './../ChoiceInput';
+import { loadingStateSelector } from './../../store/loadingReducer';
 import Paper from '@material-ui/core/Paper';
 import Close from '@material-ui/icons/Close';
 import LibraryAdd from '@material-ui/icons/LibraryAdd';
@@ -78,8 +79,7 @@ const EditCardPage: React.FC<EditCardPage> = ({ uploadToS3 }) => {
             dispatch({ type: 'update', payload: { [field]: value } }),
         history = useHistory(),
         classes = usePageStyles(),
-        _loadingContext = useContext(LoadingContext),
-        somethingIsLoading = _loadingContext.queryLoading || _loadingContext.mutationLoading;
+        somethingIsLoading = !!useSelector(loadingStateSelector).loadingRequests.length;
 
     useEffect(() => {
         if (get(data, 'card')) {

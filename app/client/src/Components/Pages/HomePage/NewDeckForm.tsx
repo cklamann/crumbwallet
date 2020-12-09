@@ -138,6 +138,19 @@ const buildDiagram = (
 ) => {
     const moves = pgn
         //remove headers
+        //todo: save FEN
+        //here's the example:
+        /* 
+            const foo = chess.load_pgn(`[SetUp "1"]
+            [FEN "r1bk2r1/pppp1pBp/8/b2P4/2B4q/6Q1/P4PP1/R3R1K1 b - - 4 17"]
+
+            17... Qe7 18. Rxe7`
+            );
+        */
+       //has to be like this, with the setup just like this and a blank line
+       //and everything justified to the left hand side (no leading spaces)
+       //best thing is likely to give user optional positional FEN and compile before upload
+       //validate with chess.js before every call
         .replace(/\[.+\]/, '')
         .split(/\d+\./)
         .map((mv) => mv.trim())
@@ -145,14 +158,15 @@ const buildDiagram = (
 
     if (!moves.length) throw 'No moves detected in pgn!';
 
-    //remove score
+    //remove score if exists
     moves[moves.length - 1].replace(/ \d.+/, '');
 
     let game = '';
     const promises: Promise<any>[] = [];
     for (let i = 0; i < moves.length; i++) {
         const turn = moves[i];
-        //not working
+        //not working --> can steal regex or load_pgn from chess.js?
+        //yeah pgn() method will get us back a pgn from a pgn... but what's the point?
         turn.replace(/\{\.+\}/, '');
         const [w, b] = turn.split(' ');
 
