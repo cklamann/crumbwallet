@@ -1,6 +1,6 @@
 import Storage from '@aws-amplify/storage';
 import Auth from '@aws-amplify/auth';
-import awsconfig from './../aws-exports';
+import awsconfig from './../../aws-exports';
 
 Storage.configure(awsconfig);
 Auth.configure(awsconfig);

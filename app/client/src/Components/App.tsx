@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import Auth from '@aws-amplify/auth';
-import awsconfig from '../aws-exports';
+import awsconfig from '../../aws-exports';
 Auth.configure(awsconfig);
 import 'regenerator-runtime/runtime.js';
 import { uploadToS3 } from './../Util';

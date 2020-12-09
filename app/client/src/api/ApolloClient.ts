@@ -9,7 +9,7 @@ import gql from 'graphql-tag';
 import { DocumentNode, GraphQLEnumType } from 'graphql';
 import Auth from '@aws-amplify/auth';
 import { createAppSyncLink } from 'aws-appsync';
-import awsconfig from './../aws-exports';
+import awsconfig from './../../aws-exports';
 import { Deck } from 'Models/Decks';
 import { Card } from 'Models/Cards';
 import { get, uniqueId } from 'lodash';
