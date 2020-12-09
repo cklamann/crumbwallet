@@ -24,15 +24,3 @@ services:
     volumes:
       - ./app:/usr/app
     entrypoint: ./on-start.sh
-    networks:
-      - app-network
-
-#Docker Networks
-networks:
-  app-network:
-    driver: bridge
-
-#Volumes
-volumes:
-  dbdata:
-    driver: local

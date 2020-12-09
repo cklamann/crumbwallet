@@ -23,3 +23,5 @@ RUN mkdir -p ~/.aws && \
 RUN touch ~/.aws/config && \
     echo [default] >> ~/.aws/config && \
     echo "region = ${AWS_REGION}" >> ~/.aws/config
+
+RUN npm install -g @aws-amplify/cli
