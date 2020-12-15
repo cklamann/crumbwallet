@@ -1,9 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { createStyles, makeStyles, useTheme } from '@material-ui/core/styles';
-import { FormatBold, FormatItalic, Code } from '@material-ui/icons';
-import { convertToRaw, ContentBlock, ContentState, convertFromHTML, Editor, EditorState, RichUtils } from 'draft-js';
+import { createStyles, makeStyles, useTheme, Theme } from '@material-ui/core/styles';
+import { Code, RemoveCircle, FormatBold, FormatItalic } from '@material-ui/icons';
+import { convertToRaw, ContentState, convertFromHTML, Editor, EditorState, RichUtils } from 'draft-js';
 import Grid from '@material-ui/core/Grid';
-import Immutable from 'immutable';
 import draftToHtml from 'draftjs-to-html';
 import { noop } from 'lodash';
 import Paper from '@material-ui/core/Paper';
@@ -65,49 +64,36 @@ const RichEditor: React.FC<RichEditor> = ({ initialContent, onChange }) => {
                             </InputLabel>
                         </Grid>
                         <Grid container item justify="flex-end">
-                            <IconButton
-                                tabIndex={-1}
-                                size="small"
-                                onMouseDown={(e) => e.preventDefault()}
-                                style={{
-                                    color: editorState.getCurrentInlineStyle().has('ITALIC')
-                                        ? theme.palette.primary.light
-                                        : theme.palette.primary.dark,
-                                }}
+                            <InlineStyleButton
+                                hasStyle={editorState.getCurrentInlineStyle().has('ITALIC')}
+                                Icon={FormatItalic}
                                 onClick={() => setEditorState(RichUtils.toggleInlineStyle(editorState, 'ITALIC'))}
-                            >
-                                <FormatItalic />
-                            </IconButton>
-                            <IconButton
-                                tabIndex={-1}
-                                size="small"
-                                onMouseDown={(e) => {
-                                    e.preventDefault();
-                                }}
-                                style={{
-                                    color: editorState.getCurrentInlineStyle().has('BOLD')
-                                        ? theme.palette.primary.light
-                                        : theme.palette.primary.dark,
-                                }}
+                                theme={theme}
+                            />
+                            <InlineStyleButton
+                                hasStyle={editorState.getCurrentInlineStyle().has('BOLD')}
+                                Icon={FormatBold}
                                 onClick={() => setEditorState(RichUtils.toggleInlineStyle(editorState, 'BOLD'))}
-                            >
-                                <FormatBold />
-                            </IconButton>
-                            <IconButton
-                                tabIndex={-1}
-                                size="small"
-                                onMouseDown={(e) => {
-                                    e.preventDefault();
-                                }}
-                                style={{
-                                    color: editorState.getCurrentInlineStyle().has('CODE')
-                                        ? theme.palette.primary.light
-                                        : theme.palette.primary.dark,
-                                }}
+                                theme={theme}
+                            />
+                            <InlineStyleButton
+                                hasStyle={editorState.getCurrentInlineStyle().has('CODE')}
+                                Icon={Code}
                                 onClick={() => setEditorState(RichUtils.toggleInlineStyle(editorState, 'CODE'))}
-                            >
-                                <Code />
-                            </IconButton>
+                                theme={theme}
+                            />
+                            <InlineStyleButton
+                                hasStyle={false}
+                                Icon={RemoveCircle}
+                                onClick={() =>
+                                    setEditorState(
+                                        EditorState.createWithContent(
+                                            ContentState.createFromText(editorState.getCurrentContent().getPlainText())
+                                        )
+                                    )
+                                }
+                                theme={theme}
+                            />
                         </Grid>
                     </Grid>
                 </Paper>
@@ -127,4 +113,35 @@ const RichEditor: React.FC<RichEditor> = ({ initialContent, onChange }) => {
     ) : null;
 };
 
+/* 
+
+    to wipe out everything, need to select everything and remove all inline styles
+
+    EditorState.forceSelection(editorState, <selectionstate>)
+
+*/
+
 export default RichEditor;
+
+interface InlineStyleButton {
+    hasStyle: boolean;
+    Icon: React.ComponentType;
+    onClick: () => void;
+    theme: Theme;
+}
+
+const InlineStyleButton: React.FC<InlineStyleButton> = ({ hasStyle, Icon, onClick, theme }) => (
+    <IconButton
+        tabIndex={-1}
+        size="small"
+        onMouseDown={(e) => {
+            e.preventDefault();
+        }}
+        style={{
+            color: hasStyle ? theme.palette.primary.light : theme.palette.primary.dark,
+        }}
+        onClick={onClick}
+    >
+        <Icon />
+    </IconButton>
+);
