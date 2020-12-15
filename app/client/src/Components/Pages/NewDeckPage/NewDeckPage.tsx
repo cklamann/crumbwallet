@@ -72,63 +72,55 @@ const NewDeckForm: React.FC<{}> = ({}) => {
 
     return (
         <Grid container wrap="wrap">
-            <Grid item xs={12} container>
-                <Grid item xs={6}>
+            <Grid item xs={12} md={6} alignItems="center">
+                <TextField
+                    classes={{
+                        root: classes.wideTextField,
+                    }}
+                    value={state.name}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField('name')(e.currentTarget.value)}
+                    required
+                    label="Name"
+                />
+            </Grid>
+            <Grid item xs={6} md={2} alignItems="center">
+                <FormControlLabel
+                    control={
+                        <Checkbox
+                            checked={state.private}
+                            onChange={() => updateField('private')(!state.private)}
+                            color="primary"
+                        />
+                    }
+                    label="Private?"
+                />
+            </Grid>
+            <Grid item xs={6} md={2} alignItems="center">
+                <FormControlLabel
+                    control={
+                        <Checkbox
+                            checked={state.chess}
+                            onChange={() => updateField('chess')(!state.chess)}
+                            color="primary"
+                        />
+                    }
+                    label="Chess?"
+                />
+            </Grid>
+            {state.chess && (
+                <Grid item xs={10} alignItems="center">
                     <TextField
                         classes={{
                             root: classes.wideTextField,
                         }}
-                        value={state.name}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                            updateField('name')(e.currentTarget.value)
-                        }
-                        required
-                        label="Name"
+                        value={state.pgn}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField('pgn')(e.currentTarget.value)}
+                        required={state.chess}
+                        label="PGN"
                     />
                 </Grid>
-                <Grid item>
-                    <FormControlLabel
-                        control={
-                            <Checkbox
-                                checked={state.private}
-                                onChange={() => updateField('private')(!state.private)}
-                                color="primary"
-                            />
-                        }
-                        label="Private?"
-                    />
-                </Grid>
-                <Grid item>
-                    <FormControlLabel
-                        control={
-                            <Checkbox
-                                checked={state.chess}
-                                onChange={() => updateField('chess')(!state.chess)}
-                                color="primary"
-                            />
-                        }
-                        label="Chess?"
-                    />
-                </Grid>
-            </Grid>
-            <Grid item container xs={10}>
-                <Grid item xs={12}>
-                    {state.chess && (
-                        <TextField
-                            classes={{
-                                root: classes.wideTextField,
-                            }}
-                            value={state.pgn}
-                            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                                updateField('pgn')(e.currentTarget.value)
-                            }
-                            required={state.chess}
-                            label="PGN"
-                        />
-                    )}
-                </Grid>
-            </Grid>
-            <Grid item>
+            )}
+            <Grid item xs={2} alignItems="center">
                 <Button
                     disabled={!state.name || (state.chess && !state.pgn)}
                     onClick={() => createDeck()}
