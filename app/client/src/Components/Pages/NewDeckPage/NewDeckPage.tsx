@@ -1,19 +1,19 @@
-import React, { useContext, useReducer, useState } from 'react';
+import React, { useContext, useReducer } from 'react';
 import Button from '@material-ui/core/Button';
 import Checkbox from '@material-ui/core/Checkbox';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import TextField from '@material-ui/core/TextField';
 import Grid from '@material-ui/core/Grid';
-import { useHistory } from 'react-router-dom';
 import { makeStyles, createStyles } from '@material-ui/core/styles';
 import { useAddCardMutation, useAddDeckMutation, useCreateChessDiagramPngUrlMutation } from '../../../api/ApolloClient';
 import { UserContext } from '../../App';
+import { useGoTo } from 'Hooks';
+import { wideTextBoxRootRule } from './../../Style/rules/TextField';
 
 const useNewDeckFormStyles = makeStyles((theme) =>
     createStyles({
-        root: {
-            flexWrap: 'nowrap',
-        },
+        root: {},
+        wideTextField: wideTextBoxRootRule.root,
     })
 );
 
@@ -40,7 +40,7 @@ const NewDeckForm: React.FC<{}> = ({}) => {
         [state, dispatch] = useReducer(reducer, INITIAL_STATE),
         userId = useContext(UserContext),
         classes = useNewDeckFormStyles(),
-        history = useHistory(),
+        goto = useGoTo(),
         updateField = <T extends keyof ReducerState>(field: T) => (value: ReducerState[T]) =>
             dispatch({ type: 'update', payload: { [field]: value } });
 
@@ -66,47 +66,67 @@ const NewDeckForm: React.FC<{}> = ({}) => {
                 const promises =
                     state.chess && !!state.pgn ? buildDiagram(state.pgn, build) : [new Promise((res) => res('foo'))];
                 return Promise.all(promises)
-                    .then(() => history.push(`decks/${deckId}/edit`))
+                    .then(() => goto(`decks/${deckId}/edit`))
                     .catch((err) => console.log(err));
             });
 
     return (
-        <Grid container className={classes.root}>
-            <Grid item>
-                <TextField
-                    value={state.name}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField('name')(e.currentTarget.value)}
-                    required
-                    label="Name"
-                />
-                <FormControlLabel
-                    control={
-                        <Checkbox
-                            checked={state.private}
-                            onChange={() => updateField('private')(!state.private)}
-                            color="primary"
-                        />
-                    }
-                    label="Private?"
-                />
-                <FormControlLabel
-                    control={
-                        <Checkbox
-                            checked={state.chess}
-                            onChange={() => updateField('chess')(!state.chess)}
-                            color="primary"
-                        />
-                    }
-                    label="Chess?"
-                />
-                {state.chess && (
+        <Grid container wrap="wrap">
+            <Grid item xs={12} container>
+                <Grid item xs={6}>
                     <TextField
-                        value={state.pgn}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField('pgn')(e.currentTarget.value)}
-                        required={state.chess}
-                        label="PGN"
+                        classes={{
+                            root: classes.wideTextField,
+                        }}
+                        value={state.name}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                            updateField('name')(e.currentTarget.value)
+                        }
+                        required
+                        label="Name"
                     />
-                )}
+                </Grid>
+                <Grid item>
+                    <FormControlLabel
+                        control={
+                            <Checkbox
+                                checked={state.private}
+                                onChange={() => updateField('private')(!state.private)}
+                                color="primary"
+                            />
+                        }
+                        label="Private?"
+                    />
+                </Grid>
+                <Grid item>
+                    <FormControlLabel
+                        control={
+                            <Checkbox
+                                checked={state.chess}
+                                onChange={() => updateField('chess')(!state.chess)}
+                                color="primary"
+                            />
+                        }
+                        label="Chess?"
+                    />
+                </Grid>
+            </Grid>
+            <Grid item container xs={10}>
+                <Grid item xs={12}>
+                    {state.chess && (
+                        <TextField
+                            classes={{
+                                root: classes.wideTextField,
+                            }}
+                            value={state.pgn}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                                updateField('pgn')(e.currentTarget.value)
+                            }
+                            required={state.chess}
+                            label="PGN"
+                        />
+                    )}
+                </Grid>
             </Grid>
             <Grid item>
                 <Button
@@ -147,10 +167,10 @@ const buildDiagram = (
             17... Qe7 18. Rxe7`
             );
         */
-       //has to be like this, with the setup just like this and a blank line
-       //and everything justified to the left hand side (no leading spaces)
-       //best thing is likely to give user optional positional FEN and compile before upload
-       //validate with chess.js before every call
+        //has to be like this, with the setup just like this and a blank line
+        //and everything justified to the left hand side (no leading spaces)
+        //best thing is likely to give user optional positional FEN and compile before upload
+        //validate with chess.js before every call
         .replace(/\[.+\]/, '')
         .split(/\d+\./)
         .map((mv) => mv.trim())

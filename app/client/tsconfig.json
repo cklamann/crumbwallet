@@ -17,7 +17,8 @@
         "moduleResolution": "node",
         "baseUrl": ".",
         "paths": {
-            "Models/*": ["./../server/models/*"]
+            "Models/*": ["./../server/models/*"],
+            "Hooks": ["./src/hooks/index"]
         }
     },
     "include": ["./src/**/*"]

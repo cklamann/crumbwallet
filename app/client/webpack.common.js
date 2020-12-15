@@ -11,6 +11,7 @@ module.exports = {
         extensions: ['.ts', '.tsx', '.js', '.mjs', '.json'],
         alias: {
             Models: path.resolve(__dirname, './models/'),
+            Hooks: path.resolve(__dirname, './src/hooks/'),
         },
     },
     output: {

@@ -26,7 +26,6 @@ const useMenuStyles = makeStyles((theme) =>
             alignItems: 'center',
             paddingTop: '0px',
             paddingBottom: '0px',
-            maxHeight: '250px',
             overflow: 'auto',
         },
     })
@@ -38,7 +37,7 @@ const MenuItem: React.FC<MenuItem> = ({ children, onClick, title }) => {
     return (
         <Accordion onClick={(onClick || noop).bind(null)} classes={{ root: classes.root }}>
             <AccordionSummary classes={{ content: classes.content }} style={{ minHeight: '0px' }}>
-                <Typography>{title}</Typography>
+                {React.isValidElement(title) ? title : <Typography>{title}</Typography>}
             </AccordionSummary>
             {showChildren && <AccordionDetails className={classes.details}>{children}</AccordionDetails>}
         </Accordion>

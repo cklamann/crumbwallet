@@ -1,17 +1,17 @@
 import React, { useState } from 'react';
-import { useHistory } from 'react-router-dom';
 import Paper from '@material-ui/core/Paper';
 import IconButton from '@material-ui/core/IconButton';
 import Edit from '@material-ui/icons/Edit';
+import Add from '@material-ui/icons/Add';
 import MenuItem from '../../MenuItem';
 import ModelList from '../../ModelList';
 import { Deck } from 'Models/Decks';
-import { Typography } from '@material-ui/core';
+import { Typography, Grid } from '@material-ui/core';
 import Close from '@material-ui/icons/Close';
 import { makeStyles, createStyles } from '@material-ui/core/styles';
 import Modal from '../../Modals/Modal';
-import NewDeckForm from './NewDeckForm';
 import { useDeleteDeckMutation, useFetchDecksQuery } from '../../../api/ApolloClient';
+import { useGoTo } from 'Hooks';
 
 interface HomePage {}
 
@@ -24,26 +24,21 @@ const useHomePageStyles = makeStyles((theme) =>
 );
 
 const HomePage: React.FC<HomePage> = ({}) => {
-    const history = useHistory(),
-        { data, refetch } = useFetchDecksQuery(),
-        classes = useHomePageStyles();
+    const { data, refetch } = useFetchDecksQuery(),
+        classes = useHomePageStyles(),
+        goto = useGoTo();
 
     return (
         <Paper className={classes.root}>
             {data && (
-                <>
-                    <MenuItem title="Browse Decks">
-                        <ModelList
-                            displayNameField="name"
-                            items={data.decks.sort((a, b) => (a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 1))}
-                            onItemClick={(deck: Deck) => history.push(`/decks/${deck.id}/cards`)}
-                            innerLinkComponent={withRefresh(refetch)(DeckRow)}
-                        />
-                    </MenuItem>
-                    <MenuItem title="Make a Deck">
-                        <NewDeckForm />
-                    </MenuItem>
-                </>
+                <MenuItem title={<TitleRow gotoCreateDeckPage={goto.bind(null, '/decks/create')} />}>
+                    <ModelList
+                        displayNameField="name"
+                        items={data.decks.sort((a, b) => (a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 1))}
+                        onItemClick={(deck: Deck) => goto(`/decks/${deck.id}/cards`)}
+                        innerLinkComponent={withRefresh(refetch)(DeckRow)}
+                    />
+                </MenuItem>
             )}
         </Paper>
     );
@@ -70,6 +65,23 @@ const useDeckRowStyles = makeStyles((theme) =>
     })
 );
 
+interface TitleRow {
+    gotoCreateDeckPage: () => void;
+}
+
+const TitleRow: React.FC<TitleRow> = ({ gotoCreateDeckPage }) => (
+    <Grid container alignItems="center" justify="space-between">
+        <Grid item>
+            <Typography>Browse Decks</Typography>
+        </Grid>
+        <Grid item>
+            <IconButton onClick={gotoCreateDeckPage}>
+                <Add />
+            </IconButton>
+        </Grid>
+    </Grid>
+);
+
 interface DeckRow {
     displayName: string;
     refresh?: () => void;
@@ -77,7 +89,7 @@ interface DeckRow {
 }
 
 const DeckRow: React.FC<DeckRow> = ({ displayName, refresh, id }) => {
-    const history = useHistory(),
+    const goto = useGoTo(),
         [deleteDeck] = useDeleteDeckMutation(),
         [deleteClicked, setDeleteClicked] = useState(false),
         classes = useDeckRowStyles();
@@ -98,7 +110,7 @@ const DeckRow: React.FC<DeckRow> = ({ displayName, refresh, id }) => {
                 className={classes.icon}
                 onClick={(e) => {
                     e.stopPropagation();
-                    history.push(`/decks/${id}/edit`);
+                    goto(`/decks/${id}/edit`);
                 }}
             >
                 <Edit />

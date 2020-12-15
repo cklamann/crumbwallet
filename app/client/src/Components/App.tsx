@@ -6,10 +6,11 @@ Auth.configure(awsconfig);
 import 'regenerator-runtime/runtime.js';
 import { uploadToS3 } from './../Util';
 import EditDeckPage from './Pages/EditDeckPage';
+import NewDeckPage from './Pages/NewDeckPage/NewDeckPage';
 import EditCardPage from './Pages/EditCardPage';
 import DeckPage from './Pages/DeckPage';
 import HomePage from './Pages/HomePage/HomePage';
-import { BrowserRouter as Router, Switch, Route, Link, useHistory } from 'react-router-dom';
+import { BrowserRouter as Router, Switch, Route, Link, useHistory, Redirect } from 'react-router-dom';
 import Container from '@material-ui/core/Container';
 import { theme } from './Style/Theme';
 import { ThemeProvider, makeStyles, createStyles } from '@material-ui/core/styles';
@@ -105,6 +106,12 @@ const App: React.FC<{}> = () => {
                                 <Route exact path="/decks/:deckId/cards/:cardId?">
                                     <DeckPage />
                                 </Route>
+                                <Route exact path="/decks/:deckId/cards/:cardId?">
+                                    <DeckPage />
+                                </Route>
+                                <Route exact path="/decks/create">
+                                    <NewDeckPage />
+                                </Route>
                                 <Route exact path="/decks/:deckId/cards/:cardId/edit">
                                     <EditCardPage
                                         uploadToS3={(file: File, cardId: string) =>
@@ -112,8 +119,11 @@ const App: React.FC<{}> = () => {
                                         }
                                     />
                                 </Route>
-                                <Route path="*">
+                                <Route exact path="/">
                                     <HomePage />
+                                </Route>
+                                <Route path="*">
+                                    <Redirect to="/" />
                                 </Route>
                             </Switch>
                             <Modal
