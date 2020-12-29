@@ -1,5 +1,6 @@
 import { ApolloError } from 'apollo-client';
-import { makeAction } from './util';
+import { assignPayload, makeAction } from './util';
+import { GraphQLError } from 'graphql';
 
 export interface LoadingState {
     loadingRequests: string[];
@@ -11,27 +12,32 @@ const defaultLoadingState: LoadingState = {
     loadingRequests: [],
 };
 
-export const clearError = () => makeAction('CLEAR_ERROR');
+const clearErrorAction = makeAction('global/clear-loading-error'),
+    setLoadingAction = makeAction('global/set-loading'),
+    setLoadedAction = makeAction('global/set-loaded'),
+    setLoadingErrorAction = makeAction('global/set-loading-error');
+
+export const makeClearLoadingAction = () => clearErrorAction,
+    makeSetLoadingAction = (queryId: number) => assignPayload(setLoadingAction, queryId),
+    makeSetLoadedAction = (queryId: number) => assignPayload(setLoadedAction, queryId),
+    makeSetLoadingErrorAction = (error: Readonly<GraphQLError[]> | ApolloError) =>
+        assignPayload(setLoadingErrorAction, error);
 
 const reducer = (state: LoadingState = defaultLoadingState, action: { type: string; payload: any }) => {
     const { type, payload } = action;
-    if (type === 'LOADING') {
-        return { ...state, loadingRequests: state.loadingRequests.concat([payload]) };
-    }
 
-    if (type === 'LOADED') {
-        return { ...state, loadingRequests: state.loadingRequests.filter((id: string) => id != payload) };
+    switch (type) {
+        case setLoadingAction.type:
+            return { ...state, loadingRequests: state.loadingRequests.concat([payload]) };
+        case setLoadedAction.type:
+            return { ...state, loadingRequests: state.loadingRequests.filter((id: string) => id !== payload) };
+        case setLoadingErrorAction.type:
+            return { ...state, error: payload };
+        case clearErrorAction.type:
+            return { ...state, error: undefined };
+        default:
+            return state;
     }
-
-    if (type === 'ERROR') {
-        return { ...state, error: payload };
-    }
-
-    if (type === 'CLEAR_ERROR') {
-        return { ...state, error: undefined };
-    }
-
-    return state;
 };
 
 export default reducer;
