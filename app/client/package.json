@@ -1,12 +1,11 @@
 {
     "scripts": {
         "dev": "npm run development",
-        "development": "mode=development node_modules/.bin/webpack --progress --hide-modules --config webpack.dev.js",
-        "production": "mode=development node_modules/.bin/webpack --progress --hide-modules --config webpack.prod.js",
-        "lambda": "mode=development node_modules/.bin/webpack --progress --hide-modules --config webpack.lambda.js",
+        "development": "mode=development node_modules/.bin/webpack --progress --config webpack.dev.js",
+        "production": "mode=development node_modules/.bin/webpack --progress --config webpack.prod.js",
+        "lambda": "mode=development node_modules/.bin/webpack --progress --config webpack.lambda.js",
         "pushLambda": "node scripts/updateLambda.js",
         "watch": "npm run development -- --watch",
-        "watch-poll": "npm run watch -- --watch-poll",
         "test": "jest --detectOpenHandles"
     },
     "dependencies": {
@@ -72,7 +71,7 @@
         "ts-loader": "^8.0.5",
         "typescript": "^3.9.7",
         "webpack": "^4.44.2",
-        "webpack-cli": "^3.3.12",
+        "webpack-cli": "^4.3.0",
         "webpack-merge": "^4.2.2"
     }
 }

@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import Paper from '@material-ui/core/Paper';
 import Grid from '@material-ui/core/Grid';
-import TextField from '@material-ui/core/TextField';
 import Typography from '@material-ui/core/Typography';
 import Button from '@material-ui/core/Button';
 import { makeStyles, createStyles } from '@material-ui/core/styles';
@@ -14,19 +13,16 @@ import { Card } from 'Models/Cards';
 import { useGoTo } from './../../hooks';
 import { useAddCardMutation, useFetchDeckQuery, useUpdateDeckMutation } from '../../api/ApolloClient';
 import MenuItem from './../MenuItem';
-import { wideTextBoxRootRule } from '../Style/rules/TextField';
+import { FullWidthTextField } from 'Shared';
 
 interface EditDeckPage {}
-
-const useEditDeckPageStyles = makeStyles((theme) => createStyles(wideTextBoxRootRule));
 
 const EditDeckPage: React.FC<EditDeckPage> = ({}) => {
     const { deckId } = useParams(),
         [newName, setNewName] = useState(''),
         { loading: deckLoading, data, refetch: refetchDeck } = useFetchDeckQuery(deckId),
         [createCard] = useAddCardMutation(),
-        [updateDeck] = useUpdateDeckMutation(),
-        classes = useEditDeckPageStyles();
+        [updateDeck] = useUpdateDeckMutation();
 
     useEffect(() => {
         if (data) {
@@ -42,10 +38,7 @@ const EditDeckPage: React.FC<EditDeckPage> = ({}) => {
                 <>
                     <MenuItem title={`Deck Name: ${data.deck.name}`}>
                         <Grid item xs={12} md={6}>
-                            <TextField
-                                classes={{
-                                    root: classes.root,
-                                }}
+                            <FullWidthTextField
                                 value={newName}
                                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewName(e.currentTarget.value)}
                                 required

@@ -10,8 +10,9 @@ module.exports = {
     resolve: {
         extensions: ['.ts', '.tsx', '.js', '.mjs', '.json'],
         alias: {
-            Models: path.resolve(__dirname, './models/'),
             Hooks: path.resolve(__dirname, './src/hooks/'),
+            Models: path.resolve(__dirname, './models/'),
+            Shared: path.resolve(__dirname, './src/Components/Shared/'),
         },
     },
     output: {
