@@ -1,12 +1,12 @@
 const path = require('path'),
     fs = require('fs');
 
-const lambdaDir = path.join(__dirname, 'src/lambdas/');
+const lambdaDir = path.join(__dirname, 'src/lambdas');
 
 module.exports = {
     entry: fs
         .readdirSync(lambdaDir)
-        .map((dir) => ({ [dir]: `${lambdaDir}${dir}/index.ts` }))
+        .map((lambdaName) => ({ [lambdaName.replace(/.ts$/, '')]: `${lambdaDir}/${lambdaName}` }))
         .reduce((a, c) => ({ ...a, ...c })),
     resolve: {
         extensions: ['.ts', '.js', '.mjs', '.json'],

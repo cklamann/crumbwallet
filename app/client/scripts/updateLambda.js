@@ -4,7 +4,7 @@ const AWS = require('aws-sdk'),
     fs = require('fs'),
     path = require('path'),
     { execSync } = require('child_process'),
-    Lambda = new AWS.Lambda();
+    Lambda = new AWS.Lambda({ region: 'us-east-2' });
 
 const main = () => {
     const args = process.argv.slice(2);
@@ -14,10 +14,10 @@ const main = () => {
     }
 
     const lambdaName = args[0],
-        targetPath = path.resolve(...[__dirname, '..', 'src/lambdas', lambdaName]);
+        targetPath = path.resolve(...[__dirname, '..', 'src/lambdas', `${lambdaName}.ts`]);
 
     if (!fs.existsSync(targetPath)) {
-        throw `path  ${targetPath} does not exist!`;
+        throw `path ${targetPath} does not exist!`;
     }
 
     console.log(`Updating lambda ${lambdaName} ...`);
@@ -27,8 +27,13 @@ const main = () => {
      so the easy workaround is to build everything but only push what we want to publish
      this is irritating but the files are small so for now the effect is a slight lag
     */
-    execSync('./node_modules/.bin/webpack --config ./webpack.lambda.js');
+
+    execSync('./node_modules/.bin/webpack --progress --config ./webpack.lambda.js');
+
     Lambda.listFunctions({}, (err, data) => {
+        if (err) {
+            throw err;
+        }
         const lambda = data['Functions'].find((f) => f['FunctionName'] === lambdaName);
 
         if (!lambda) {

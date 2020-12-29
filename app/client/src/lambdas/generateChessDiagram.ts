@@ -3,13 +3,14 @@ import Canvas from 'canvas';
 const Frame = require('canvas-to-buffer');
 import { Square } from 'chess.js';
 const Chess = require('chess.js');
-import { uploadToS3, getFromS3 } from './../../Util';
+import { uploadToS3, getFromS3 } from './../Util';
 
-export default async (params: { pgn: string; savePath: string }, context: {}) => {
-    const { pgn, savePath } = params,
+export const handler = async (params: { fen: string; savePath: string }, context: {}) => {
+    const { fen, savePath } = params,
         instance = Chess(),
-        size = 400;
-    instance.load_pgn(pgn);
+        size = 400,
+        margin = 2;
+    instance.load(fen);
     const canvas = Canvas.createCanvas(size, size),
         ctx = canvas.getContext('2d');
     ctx.beginPath();
@@ -35,8 +36,8 @@ export default async (params: { pgn: string; savePath: string }, context: {}) =>
                 pieceImg = (await getFromS3(`chess-pieces/${piecekey}`)) as Buffer,
                 img = await Canvas.loadImage(pieceImg);
 
-            const x = (size / 8) * i + size / (size / 2),
-                y = (size / 8) * (8 - file) + size / (size / 2),
+            const x = (size / 8) * i + margin,
+                y = (size / 8) * (8 - file) + margin,
                 w = size / 8 - size / (size / 4);
 
             ctx.drawImage(img, x, y, w, w);
