@@ -152,6 +152,7 @@ const buildDiagram = (
     create: (fen: string, side: 'w' | 'b', turn: number, nextMove: string) => Promise<any>,
     fen?: string
 ) => {
+    
     validatePgn(pgn, !!fen);
 
     const moves = pgn

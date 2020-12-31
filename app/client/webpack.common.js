@@ -54,8 +54,6 @@ module.exports = {
         new ForkTsCheckerWebpackPlugin(),
 
         new webpack.DefinePlugin(
-            //probably want to filter out all but those that begin with APP
-            //also, this gives us db_user, etc but not TEST
             Object.entries(process.env)
                 .map(([k, v]) => ({ [k]: JSON.stringify(v) }))
                 .filter((obj) => Object.keys(obj)[0].startsWith('APP_'))

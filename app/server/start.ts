@@ -1,7 +1,7 @@
 require('dotenv').config();
 import app from './server';
 
-const PORT = process.env.APP_PORT || 3009,
+const PORT = process.env.APP_PORT,
 	HOST = process.env.APP_HOST || "0.0.0.0";
 
 app.listen(+PORT, HOST);

@@ -5,9 +5,7 @@ import * as bodyParser from 'body-parser';
 import * as cookieParser from 'cookie-parser';
 
 // Constants
-const CLIENT_BUILD_PATH = path.resolve('./../client/dist'),
-    DB_USER = process.env.DB_USER,
-    DB_PASSWORD = process.env.DB_PASSWORD;
+const CLIENT_BUILD_PATH = path.resolve('./../client/dist');
 
 // App
 const app = express();
