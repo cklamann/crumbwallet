@@ -66,7 +66,7 @@ const NewDeckForm: React.FC<{}> = ({}) => {
             try {
                 validateChessDeck(pgn, fen);
             } catch (e) {
-                setChessErrors(e);
+                return setChessErrors(e);
             }
             setPgnError(null);
             setFenError(null);
