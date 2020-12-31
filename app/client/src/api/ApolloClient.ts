@@ -13,6 +13,7 @@ import awsconfig from './../../aws-exports';
 import { Deck } from 'Models/Decks';
 import { Card } from 'Models/Cards';
 import { get, uniqueId } from 'lodash';
+import { makeSetLoadedAction, makeSetLoadingErrorAction, makeSetLoadingAction } from './../store/loadingReducer';
 
 const httpLink = createHttpLink({
     uri: awsconfig.aws_appsync_graphqlEndpoint,
@@ -29,25 +30,33 @@ const awsLink = createAppSyncLink({
     complexObjectsCredentials: () => Auth.currentCredentials(),
 });
 
-const errorLink = onError(({ graphQLErrors, networkError }) => {
-    if (graphQLErrors)
+const errorLink = onError(({ graphQLErrors, networkError, operation }) => {
+    const { dispatch, uid } = operation.getContext();
+    dispatch(makeSetLoadedAction(uid));
+    if (graphQLErrors) {
         graphQLErrors.forEach(({ message, locations, path }) =>
             console.error(`[GraphQL error]: Message: ${message}, Location: ${locations}, Path: ${path}`)
         );
-    if (networkError) console.error(`[Network error]: ${networkError}`);
+        dispatch(makeSetLoadingErrorAction(uid));
+    }
+
+    if (networkError) {
+        console.error(`[Network error]: ${networkError}`);
+        dispatch(makeSetLoadingErrorAction(uid));
+    }
 });
 
 const localLink = new ApolloLink((operation, forward) => {
     const { dispatch, uid } = operation.getContext();
 
     //could be a sync state update
-    setTimeout(() => dispatch({ type: 'LOADING', payload: uid }));
+    setTimeout(() => dispatch(makeSetLoadingAction(uid)));
 
     return forward(operation).map((response) => {
-        dispatch({ type: 'LOADED', payload: uid });
+        dispatch(makeSetLoadedAction(uid));
 
         if (!!get(response, 'errors.length', 0)) {
-            dispatch({ type: 'ERROR', payload: response.errors });
+            dispatch(makeSetLoadingErrorAction(uid));
         }
 
         return response;
@@ -147,13 +156,13 @@ const fetchCardQuery = gql`
 `;
 
 export const useCreateChessDiagramPngUrlMutation = () =>
-    useApolloMutation<{ createChessDiagram: { key: string } }, { pgn: string; savePath: string }>(
+    useApolloMutation<{ createChessDiagram: { key: string } }, { fen: string; savePath: string }>(
         createChessDiagramPng
     );
 
 const createChessDiagramPng = gql`
-    mutation createChessDiagram($pgn: String!, $savePath: String!) {
-        createChessDiagram(input: { pgn: $pgn, savePath: $savePath }) {
+    mutation createChessDiagram($fen: String!, $savePath: String!) {
+        createChessDiagram(input: { fen: $fen, savePath: $savePath }) {
             key
         }
     }

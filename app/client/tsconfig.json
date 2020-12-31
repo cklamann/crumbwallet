@@ -18,7 +18,8 @@
         "baseUrl": ".",
         "paths": {
             "Models/*": ["./../server/models/*"],
-            "Hooks": ["./src/hooks/index"]
+            "Hooks": ["./src/hooks/index"],
+            "Shared": ["./src/Components/Shared/index"]
         }
     },
     "include": ["./src/**/*"]

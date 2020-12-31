@@ -36,9 +36,6 @@ interface CardPage {
     requestPreviousCard: () => void;
 }
 
-//todo: this page should rerender at every new card, rather than having this requestPrevious logic
-//that means that parent simply passes in card and handles all the router and transition logic
-
 const useCardPageStyles = makeStyles((theme) =>
     createStyles({
         root: {

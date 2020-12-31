@@ -1,114 +1,136 @@
-﻿schema {
-  query: Query
-  mutation: RootMutation
+﻿type Card {
+	answer: String
+	choices: [String]
+	created: String
+	deckId: String
+	details: String
+	handle: String!
+	id: String!
+	imageKey: String
+	prompt: String
+	tries: [try]
+	type: NewCardType
+	updated: String
 }
 
-type Card {
-  answer: String!
-  choices: [String]
-  created: String
-  details: String
-  handle: String!
-  id: String!
-  imageKey: String
-  prompt: String!
-  tries: [try]
-  updated: String
-  # optional while we're testing at least
-  userId: String
+input ChessDiagramInput {
+	fen: String!
+	savePath: String!
+}
+
+type ChessDiagramUrlResponse {
+	key: String
 }
 
 type Deck {
-  cards: [Card]
-  categories: [String]
-  created: String
-  id: String!
-  name: String!
-  updated: String
-  userId: String
+	cards: [Card]
+	categories: [String]
+	created: String
+	id: String!
+	name: String!
+	type: String
+	updated: String
+	userId: String
 }
 
-type Query {
-  card(id: String!): Card
-  deck(id: String!, userId: String): Deck
-  decks(userId: String): [Deck]
-}
-
-type RootMutation {
-  addCard(input: newCardInput!): id
-  addTry(input: newTryInput!): tryAddedStatus
-  createDeck(input: NewDeckInput!): Deck
-  deleteCard(deckId: String!, id: String!): cardDeletedStatus
-  deleteDeck(id: String!): deleteDeckStatus
-  updateCard(input: updateCardInput!): Card
-  updateDeck(input: UpdateDeckInput!): Deck
-  updateTry(input: updateTryInput!): Deck
-}
-
-type cardDeletedStatus {
-  deleted: Boolean
-}
-
-type deleteDeckStatus {
-  deleted: Boolean
-}
-
-type id {
-  id: String
-}
-
-type try {
-  correct: Boolean!
-  created: String
-  id: String!
-  updated: String
-  userId: String
-}
-
-type tryAddedStatus {
-  added: Boolean
+enum NewCardType {
+	quotation
+	standard
 }
 
 input NewDeckInput {
-  categories: [String]
-  name: String!
-  userId: String
+	categories: [String]
+	name: String!
+	private: Boolean!
+	type: String
+	userId: String
+}
+
+type Query {
+	card(id: String!): Card
+	deck(id: String!, userId: String): Deck
+	decks(userId: String): [Deck]
+}
+
+type RootMutation {
+	addCard(input: newCardInput!): id
+	addTry(input: newTryInput!): tryAddedStatus
+	createChessDiagram(input: ChessDiagramInput): ChessDiagramUrlResponse
+	createDeck(input: NewDeckInput!): Deck
+	deleteCard(deckId: String!, id: String!): cardDeletedStatus
+	deleteDeck(id: String!): deleteDeckStatus
+	updateCard(input: updateCardInput!): Card
+	updateDeck(input: UpdateDeckInput!): Deck
+	updateTry(input: updateTryInput!): Deck
 }
 
 input UpdateDeckInput {
-  categories: [String]
-  details: String
-  id: String!
-  name: String
+	categories: [String]
+	details: String
+	id: String!
+	name: String
+	private: Boolean
+}
+
+type cardDeletedStatus {
+	deleted: Boolean
+}
+
+type deleteDeckStatus {
+	deleted: Boolean
+}
+
+type id {
+	id: String
 }
 
 input newCardInput {
-  answer: String!
-  choices: [String]
-  deckId: String!
-  details: String
-  handle: String!
-  prompt: String!
+	answer: String!
+	choices: [String]
+	deckId: String!
+	details: String
+	handle: String!
+	imageKey: String
+	prompt: String!
+	type: NewCardType
 }
 
 input newTryInput {
-  cardId: String!
-  correct: Boolean!
+	cardId: String!
+	correct: Boolean!
+}
+
+schema {
+	query: Query
+	mutation: RootMutation
+}
+
+type try {
+	correct: Boolean!
+	created: String
+	id: String!
+	updated: String
+	userId: String
+}
+
+type tryAddedStatus {
+	added: Boolean
 }
 
 input updateCardInput {
-  answer: String
-  choices: [String]
-  deckId: String!
-  details: String
-  handle: String
-  id: String!
-  imageKey: String
-  prompt: String
+	answer: String
+	choices: [String]
+	deckId: String!
+	details: String
+	handle: String
+	id: String!
+	type: NewCardType
+	imageKey: String
+	prompt: String
 }
 
 input updateTryInput {
-  cardId: String!
-  correct: Boolean!
-  id: String!
+	cardId: String!
+	correct: Boolean!
+	id: String!
 }

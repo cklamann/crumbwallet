@@ -20,7 +20,7 @@ services:
       AWS_KEY: ${AWS_KEY}
     working_dir: /usr/app
     ports:
-      - "3011:${APP_PORT}"
+      - "${APP_PORT}:${APP_PORT}"
     volumes:
       - ./app:/usr/app
     entrypoint: ./on-start.sh

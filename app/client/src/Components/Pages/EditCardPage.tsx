@@ -65,15 +65,15 @@ const EditCardPage: React.FC<EditCardPage> = ({ uploadToS3 }) => {
         [createCard] = useAddCardMutation(),
         updateCard = (args: Partial<ReducerState> = {}) => {
             const card = { ...state, ...args };
-            if (validateCard(card, setError)) {
-                _updateCard({
-                    variables: {
-                        id: cardId,
-                        deckId,
-                        ...mapValues(card, (arg): any => (arg === '' ? null : arg)),
-                    },
-                }).then(() => refetchCard());
-            }
+            _updateCard({
+                variables: {
+                    id: cardId,
+                    deckId,
+                    ...mapValues(card, (arg): any => (arg === '' ? null : arg)),
+                },
+            })
+                .then(() => refetchCard())
+                .catch((e) => console.log(e));
         },
         updateField = <T extends keyof ReducerState>(field: T) => (value: ReducerState[T]) =>
             dispatch({ type: 'update', payload: { [field]: value } }),

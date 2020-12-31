@@ -10,7 +10,7 @@ import NewDeckPage from './Pages/NewDeckPage/NewDeckPage';
 import EditCardPage from './Pages/EditCardPage';
 import DeckPage from './Pages/DeckPage';
 import HomePage from './Pages/HomePage/HomePage';
-import { BrowserRouter as Router, Switch, Route, Link, useHistory, Redirect } from 'react-router-dom';
+import { BrowserRouter as Router, Switch, Route, Link, Redirect } from 'react-router-dom';
 import Container from '@material-ui/core/Container';
 import { theme } from './Style/Theme';
 import { ThemeProvider, makeStyles, createStyles } from '@material-ui/core/styles';
@@ -23,7 +23,7 @@ import HomeIcon from '@material-ui/icons/Home';
 import ExitIcon from '@material-ui/icons/Input';
 import CSSBaseline from '@material-ui/core/CssBaseline';
 import { withAuthenticator } from 'aws-amplify-react';
-import { clearError, loadingStateSelector } from './../store/loadingReducer';
+import { makeClearLoadingAction, loadingStateSelector } from './../store/loadingReducer';
 import Modal from './Modals/Modal';
 import { get } from 'lodash';
 
@@ -131,7 +131,7 @@ const App: React.FC<{}> = () => {
                                 content={get(loadingState, 'error[0].message')}
                                 title="Error!"
                                 onClose={() => {
-                                    dispatch(clearError());
+                                    dispatch(makeClearLoadingAction());
                                     window.location.assign('/');
                                 }}
                             />

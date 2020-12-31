@@ -1,27 +1,22 @@
-import React, { useContext, useReducer } from 'react';
+import React, { useContext, useReducer, useState } from 'react';
 import Button from '@material-ui/core/Button';
 import Checkbox from '@material-ui/core/Checkbox';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
-import TextField from '@material-ui/core/TextField';
 import Grid from '@material-ui/core/Grid';
-import { makeStyles, createStyles } from '@material-ui/core/styles';
 import { useAddCardMutation, useAddDeckMutation, useCreateChessDiagramPngUrlMutation } from '../../../api/ApolloClient';
 import { UserContext } from '../../App';
 import { useGoTo } from 'Hooks';
-import { wideTextBoxRootRule } from './../../Style/rules/TextField';
-
-const useNewDeckFormStyles = makeStyles((theme) =>
-    createStyles({
-        root: {},
-        wideTextField: wideTextBoxRootRule.root,
-    })
-);
+import { FullWidthTextField } from 'Shared';
+import * as Chess from 'chess.js';
+import { Typography } from '@material-ui/core';
+import { SelectionState } from 'draft-js';
 
 interface ReducerState {
     categories: string[];
     chess: boolean;
     name: string;
     pgn: string;
+    fen: string;
     private: boolean;
 }
 
@@ -30,6 +25,7 @@ const INITIAL_STATE: ReducerState = {
     chess: false,
     name: '',
     pgn: '',
+    fen: '',
     private: false,
 };
 
@@ -38,52 +34,89 @@ const NewDeckForm: React.FC<{}> = ({}) => {
         [addCard] = useAddCardMutation(),
         [generateImage] = useCreateChessDiagramPngUrlMutation(),
         [state, dispatch] = useReducer(reducer, INITIAL_STATE),
+        [fenError, setFenError] = useState<string>(),
+        [pgnError, setPgnError] = useState<string>(),
         userId = useContext(UserContext),
-        classes = useNewDeckFormStyles(),
         goto = useGoTo(),
+        getSubmitDisabled = () => {
+            const { chess, name, pgn } = state;
+            if (!!name) {
+                if (!chess) return false;
+                if (pgn) return false;
+            }
+            return true;
+        },
         updateField = <T extends keyof ReducerState>(field: T) => (value: ReducerState[T]) =>
-            dispatch({ type: 'update', payload: { [field]: value } });
+            dispatch({ type: 'update', payload: { [field]: value } }),
+        composeBuildDiagramFn = (deckId: string) => (fen: string, side: 'w' | 'b', turn: number, nextMove: string) =>
+            generateImage({ variables: { fen, savePath: `${turn}${side}${deckId}` } }).then((res) =>
+                addCard({
+                    variables: {
+                        deckId,
+                        handle: `${turn}${side}`,
+                        imageKey: res.data.createChessDiagram.key,
+                        answer: nextMove,
+                        choices: [nextMove],
+                        prompt: `${side === 'b' ? 'Black' : 'White'} to move`,
+                    },
+                })
+            ),
+        createChessDeck = () => {
+            const { fen, pgn } = state;
+            try {
+                validateChessDeck(pgn, fen);
+            } catch (e) {
+                setChessErrors(e);
+            }
+            setPgnError(null);
+            setFenError(null);
 
-    const createDeck = () =>
-        addDeck({
-            variables: { name: state.name, userId, private: state.private, type: state.chess ? 'chess' : null },
-        })
-            .then((res) => res.data.createDeck.id)
-            .then((deckId) => {
-                const build = (pgn: string, side: 'w' | 'b', turn: number, nextMove: string) =>
-                    generateImage({ variables: { pgn, savePath: `${turn}${side}${deckId}` } }).then((res) =>
-                        addCard({
-                            variables: {
-                                deckId,
-                                handle: `${turn}${side}`,
-                                imageKey: res.data.createChessDiagram.key,
-                                answer: nextMove,
-                                choices: [nextMove],
-                                prompt: `${side === 'w' ? 'Black' : 'White'} to move`,
-                            },
-                        })
-                    );
-                const promises =
-                    state.chess && !!state.pgn ? buildDiagram(state.pgn, build) : [new Promise((res) => res('foo'))];
-                return Promise.all(promises)
-                    .then(() => goto(`decks/${deckId}/edit`))
-                    .catch((err) => console.log(err));
-            });
+            addDeck({
+                variables: { name: state.name, userId, private: state.private, type: 'chess' },
+            })
+                .then(
+                    ({
+                        data: {
+                            createDeck: { id },
+                        },
+                    }) => {
+                        return Promise.all(buildDiagram(state.pgn, composeBuildDiagramFn(id), state.fen))
+                            .then(() => id)
+                            .catch((e) => console.log(`caught: ${e}`));
+                    }
+                )
+                .then((deckId) => goto(`/decks/${deckId}/edit`))
+                .catch((err) => console.error(err));
+        },
+        createDeck = () =>
+            addDeck({
+                variables: { name: state.name, userId, private: state.private, type: null },
+            })
+                .then(({ data: { createDeck: { id } } }) => goto(`/decks/${id}/edit`))
+                .catch((err) => console.error(err)),
+        setChessErrors = (e: ChessError) => {
+            switch (e.type) {
+                case INVALID_PGN:
+                    return setPgnError(e.message);
+                case INVALID_FEN:
+                    return setFenError(e.message);
+                default:
+                    console.error(e);
+                    return;
+            }
+        };
 
     return (
-        <Grid container wrap="wrap">
-            <Grid item xs={12} md={6} alignItems="center">
-                <TextField
-                    classes={{
-                        root: classes.wideTextField,
-                    }}
+        <Grid container wrap="wrap" alignItems="center">
+            <Grid item xs={12} md={6}>
+                <FullWidthTextField
                     value={state.name}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField('name')(e.currentTarget.value)}
                     required
                     label="Name"
                 />
             </Grid>
-            <Grid item xs={6} md={2} alignItems="center">
+            <Grid item xs={6} md={2}>
                 <FormControlLabel
                     control={
                         <Checkbox
@@ -95,7 +128,7 @@ const NewDeckForm: React.FC<{}> = ({}) => {
                     label="Private?"
                 />
             </Grid>
-            <Grid item xs={6} md={2} alignItems="center">
+            <Grid item xs={6} md={2}>
                 <FormControlLabel
                     control={
                         <Checkbox
@@ -108,22 +141,36 @@ const NewDeckForm: React.FC<{}> = ({}) => {
                 />
             </Grid>
             {state.chess && (
-                <Grid item xs={10} alignItems="center">
-                    <TextField
-                        classes={{
-                            root: classes.wideTextField,
-                        }}
-                        value={state.pgn}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField('pgn')(e.currentTarget.value)}
-                        required={state.chess}
-                        label="PGN"
-                    />
-                </Grid>
+                <>
+                    <Grid item xs={10}>
+                        <FullWidthTextField
+                            value={state.fen}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                                updateField('fen')(e.currentTarget.value)
+                            }
+                            error={!!fenError}
+                            label="FEN"
+                        />
+                        {fenError && <Typography color="error">{fenError}</Typography>}
+                    </Grid>
+                    <Grid item xs={10}>
+                        <FullWidthTextField
+                            value={state.pgn}
+                            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                                updateField('pgn')(e.currentTarget.value)
+                            }
+                            error={!!pgnError}
+                            required={state.chess}
+                            label="PGN"
+                        />
+                        {pgnError && <Typography color="error">{pgnError}</Typography>}
+                    </Grid>
+                </>
             )}
-            <Grid item xs={2} alignItems="center">
+            <Grid item xs={2}>
                 <Button
-                    disabled={!state.name || (state.chess && !state.pgn)}
-                    onClick={() => createDeck()}
+                    disabled={getSubmitDisabled()}
+                    onClick={() => (state.chess ? createChessDeck() : createDeck())}
                     variant="contained"
                 >
                     Go
@@ -144,56 +191,86 @@ const reducer = (state: ReducerState, action: { type: string; payload: Partial<R
 
 export default NewDeckForm;
 
-const buildDiagram = (
-    pgn: string,
-    create: (pgn: string, side: 'w' | 'b', turn: number, nextMove: string) => Promise<any>
-) => {
-    const moves = pgn
-        //remove headers
-        //todo: save FEN
-        //here's the example:
-        /* 
-            const foo = chess.load_pgn(`[SetUp "1"]
-            [FEN "r1bk2r1/pppp1pBp/8/b2P4/2B4q/6Q1/P4PP1/R3R1K1 b - - 4 17"]
+const validateChessDeck = (pgn: string, fen?: string) => {
+    //@ts-ignore
+    const instance = Chess();
+    if (fen) {
+        const validatedFen = instance.validate_fen(fen);
+        if (!validatedFen.valid) {
+            throw invalidFen(validatedFen.error);
+        }
+    }
+    const moves = getMovesFromPgn(pgn);
 
-            17... Qe7 18. Rxe7`
-            );
-        */
-        //has to be like this, with the setup just like this and a blank line
-        //and everything justified to the left hand side (no leading spaces)
-        //best thing is likely to give user optional positional FEN and compile before upload
-        //validate with chess.js before every call
+    moves.forEach((m, i) => {
+        if (instance.move(m) === null) {
+            throw invalidPgn(`${m} is not allowed!`);
+        }
+    });
+
+    return true;
+};
+
+const getMovesFromPgn = (pgn: string) => {
+    const moves = pgn
         .replace(/\[.+\]/, '')
-        .split(/\d+\./)
+        .replace(/\{\.+\}/g, '')
+        .replace(/\.\.\./, '')
+        .replace(/\d+\./g, ' ')
+        .split(' ')
         .map((mv) => mv.trim())
         .filter((mv) => /^\w/.test(mv));
 
-    if (!moves.length) throw 'No moves detected in pgn!';
+    if (!moves.length) throw invalidPgn('No moves in pgn!');
 
+    return moves;
+};
+
+const buildDiagram = (
+    pgn: string,
+    create: (fen: string, side: 'w' | 'b', turn: number, nextMove: string) => Promise<any>,
+    fen?: string
+) => {
+    const moves = getMovesFromPgn(pgn);
     //remove score if exists
     moves[moves.length - 1].replace(/ \d.+/, '');
 
-    let game = '';
-    const promises: Promise<any>[] = [];
-    for (let i = 0; i < moves.length; i++) {
-        const turn = moves[i];
-        //not working --> can steal regex or load_pgn from chess.js?
-        //yeah pgn() method will get us back a pgn from a pgn... but what's the point?
-        turn.replace(/\{\.+\}/, '');
-        const [w, b] = turn.split(' ');
+    //@ts-ignore
+    const chess = Chess();
 
-        if (!b) continue;
-
-        game = `${game} ${i + 1}. ${w}`;
-
-        promises.push(create(game, 'w', i + 1, b));
-
-        const nextMove = moves[i + 1];
-
-        if (nextMove) {
-            game = `${game} ${b}`;
-            promises.push(create(game, 'b', i + 1, nextMove.split(' ')[0]));
-        }
+    if (fen) {
+        chess.load(fen);
     }
-    return promises;
+
+    const fens = [];
+
+    fens.push(chess.fen());
+
+    moves.forEach((m, i) => {
+        if (chess.move(m) === null) {
+            throw invalidPgn(`${m} is not allowed!`);
+        }
+        if (i !== moves.length - 1) {
+            fens.push(chess.fen());
+        }
+    });
+    return fens.map((f, i) => create(f, f.split(' ')[1], +f.split(' ')[5], moves[i]));
 };
+
+const INVALID_PGN = 'INVALID_PGN',
+    INVALID_FEN = 'INVALID_FEN';
+
+interface ChessError {
+    message: string;
+    type: string;
+}
+
+const invalidPgn = (message: string) => ({
+    message,
+    type: INVALID_PGN,
+});
+
+const invalidFen = (message: string) => ({
+    message,
+    type: INVALID_FEN,
+});
