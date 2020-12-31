@@ -1,15 +1,14 @@
-# flashcard
+# Crumbwallet
 
-#### Hobby app for playing with new technology and patterns. Helps me remember the things I need to remember.
+#### Hobby app for playing with new technology and patterns. Helps me remember the things I forget.
 
 Details: 
-- Serverless SPA
 - GraphQL/Apollo/AWS AppSync API
-- AWS DynamoDB for data storage
-- AWS S3 for image storage
-- AWS Lambda for chess card generation
-- Node development server
-- Docker for dev environment
+- AWS DynamoDB
+- AWS S3
+- AWS Lambda
+- Node dev server
+- Docker dev environment
 - Typescript/React/Redux/AWS Amplify front end
-- MaterialUI for UI components
-- AWS Cognito for user management
+- MaterialUI components/styling
+- AWS Cognito
