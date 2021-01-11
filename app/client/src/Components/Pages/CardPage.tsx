@@ -12,10 +12,7 @@ import CardHeader from '@material-ui/core/CardHeader';
 import CardMedia from '@material-ui/core/CardMedia';
 import CardContent from '@material-ui/core/CardContent';
 import CardActions from '@material-ui/core/CardActions';
-import Dialog from '@material-ui/core/Dialog';
-import DialogContent from '@material-ui/core/DialogContent';
 import DialogContentText from '@material-ui/core/DialogContentText';
-import DialogTitle from '@material-ui/core/DialogTitle';
 import Typography from '@material-ui/core/Typography';
 import IconButton from '@material-ui/core/IconButton';
 import ArrowLeft from '@material-ui/icons/ArrowLeft';
@@ -53,6 +50,9 @@ const useCardPageStyles = makeStyles((theme) =>
             justifyContent: 'center',
             alignItems: 'center',
             overflow: 'hidden',
+        },
+        AnswerCardHeader: {
+            paddingBottom: '0px',
         },
         CardActions: {
             width: '100%',
@@ -93,6 +93,7 @@ const CardPage: React.FC<CardPage> = ({ card, cardIndex, deckId, deckName, reque
         },
         addTry = (correct: boolean) => _addTry({ variables: { cardId: card.id, correct } }),
         goToNextCard = () => {
+            //todo: set try here
             resetCard();
             setTransitionDirection('next');
             setTransitionInProgress(true);
@@ -172,9 +173,7 @@ const CardPage: React.FC<CardPage> = ({ card, cardIndex, deckId, deckName, reque
                                 classes={{ content: classes.headerContent }}
                                 title={`${deckName} #${cardIndex + 1}`}
                                 subheader={
-                                    <IconButton
-                                        onClick={() => history.push(`/decks/${deckId}/cards/${card.id}/edit`)}
-                                    >
+                                    <IconButton onClick={() => history.push(`/decks/${deckId}/cards/${card.id}/edit`)}>
                                         <Edit />
                                     </IconButton>
                                 }
@@ -205,34 +204,35 @@ const CardPage: React.FC<CardPage> = ({ card, cardIndex, deckId, deckName, reque
                                             <ArrowRight />
                                         </IconButton>
                                     </Grid>
+                                    <Grid container item xs={12}>
+                                        {answerModalOpen && answeredCorrectly !== undefined && (
+                                            <CardComponent style={{ width: '100%' }}>
+                                                <CardHeader
+                                                    className={classes.AnswerCardHeader}
+                                                    title={
+                                                        answeredCorrectly === false ? (
+                                                            <Typography color="error">
+                                                                The correct answer was {card.answer}
+                                                            </Typography>
+                                                        ) : (
+                                                            <Typography>
+                                                                {card.answer
+                                                                    ? `${card.answer} is correct`
+                                                                    : `Nice work!`}
+                                                            </Typography>
+                                                        )
+                                                    }
+                                                />
+                                                {card.details && (
+                                                    <CardContent>
+                                                        <span dangerouslySetInnerHTML={{ __html: card.details }} />
+                                                    </CardContent>
+                                                )}
+                                            </CardComponent>
+                                        )}
+                                    </Grid>
                                 </Grid>
                             </CardActions>
-                            {answerModalOpen && answeredCorrectly !== undefined && (
-                                <Dialog
-                                    open={true}
-                                    onClose={() => {
-                                        addTry(answeredCorrectly);
-                                        resetCard();
-                                    }}
-                                >
-                                    <DialogTitle>
-                                        {answeredCorrectly === false ? (
-                                            <Typography color="error">The correct answer was {card.answer}</Typography>
-                                        ) : (
-                                            <Typography>
-                                                {card.answer ? `${card.answer} is correct` : `Nice work!`}
-                                            </Typography>
-                                        )}
-                                    </DialogTitle>
-                                    {card.details && (
-                                        <DialogContent>
-                                            <DialogContentText>
-                                                <span dangerouslySetInnerHTML={{ __html: card.details }} />
-                                            </DialogContentText>
-                                        </DialogContent>
-                                    )}
-                                </Dialog>
-                            )}
                         </>
                     )}
                 </CardComponent>

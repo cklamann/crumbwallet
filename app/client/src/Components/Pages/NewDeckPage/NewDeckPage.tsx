@@ -9,7 +9,6 @@ import { useGoTo } from 'Hooks';
 import { FullWidthTextField } from 'Shared';
 import * as Chess from 'chess.js';
 import { Typography } from '@material-ui/core';
-import { SelectionState } from 'draft-js';
 
 interface ReducerState {
     categories: string[];
