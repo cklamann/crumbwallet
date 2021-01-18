@@ -24,7 +24,7 @@ type ChessDiagramUrlResponse {
 
 type Deck {
 	cards: [Card]
-	categories: [String]
+	category: String
 	created: String
 	id: String!
 	name: String!
@@ -39,7 +39,7 @@ enum NewCardType {
 }
 
 input NewDeckInput {
-	categories: [String]
+	category: String
 	name: String!
 	private: Boolean!
 	type: String
@@ -65,7 +65,7 @@ type RootMutation {
 }
 
 input UpdateDeckInput {
-	categories: [String]
+	category: String
 	details: String
 	id: String!
 	name: String

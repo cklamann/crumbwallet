@@ -61,7 +61,10 @@ const addMember = (deck: Deck, categories: string[], categoryChildren: CategoryT
         found.categoryChildren = addMember(deck, nextCats, found.categoryChildren);
     }
 
-    found.categoryMembers.push(deck);
+    if (!nextCats.length) {
+        found.categoryMembers.push(deck);
+    }
+
     return categoryChildren;
 };
 
