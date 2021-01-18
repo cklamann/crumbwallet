@@ -2,7 +2,7 @@ node_modules
 npm-debug.log
 server/.env
 public/
-.notes
+.todo
 .env
 dist
 amplify-backup

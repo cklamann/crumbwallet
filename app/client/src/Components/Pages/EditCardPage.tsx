@@ -1,6 +1,6 @@
-import React, { useReducer, useContext, useEffect, useState } from 'react';
+import React, { useReducer, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { useHistory, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { Card } from 'Models/Cards';
 import {
     useAddCardMutation,
@@ -29,6 +29,7 @@ import MenuItem from '@material-ui/core/MenuItem';
 import InputLabel from '@material-ui/core/InputLabel';
 import { capitalize, get, mapValues, pick } from 'lodash';
 import { makeStyles, createStyles, useTheme } from '@material-ui/core/styles';
+import { useGoTo } from 'Hooks';
 
 interface EditCardPage {
     uploadToS3: (file: File, carId: string) => Promise<string>;
@@ -63,6 +64,7 @@ const EditCardPage: React.FC<EditCardPage> = ({ uploadToS3 }) => {
         [_updateCard] = useUpdateCardMutation(),
         [deleteCard] = useDeleteCardMutation(),
         [createCard] = useAddCardMutation(),
+        goto = useGoTo(),
         updateCard = (args: Partial<ReducerState> = {}) => {
             const card = { ...state, ...args };
             _updateCard({
@@ -77,7 +79,6 @@ const EditCardPage: React.FC<EditCardPage> = ({ uploadToS3 }) => {
         },
         updateField = <T extends keyof ReducerState>(field: T) => (value: ReducerState[T]) =>
             dispatch({ type: 'update', payload: { [field]: value } }),
-        history = useHistory(),
         classes = usePageStyles(),
         somethingIsLoading = !!useSelector(loadingStateSelector).loadingRequests.length;
 
@@ -126,7 +127,7 @@ const EditCardPage: React.FC<EditCardPage> = ({ uploadToS3 }) => {
                                     className={classes.CloseIcon}
                                     onClick={() =>
                                         deleteCard({ variables: { id: cardId, deckId } }).then(() =>
-                                            history.push(`/decks/${deckId}/edit`)
+                                            goto(`/decks/${deckId}/edit`)
                                         )
                                     }
                                 >
@@ -254,14 +255,14 @@ const EditCardPage: React.FC<EditCardPage> = ({ uploadToS3 }) => {
                                             handle: 'newHandle',
                                             prompt: 'new prompt',
                                         },
-                                    }).then((res) => history.push(`/decks/${deckId}/cards/${res.data.addCard.id}/edit`))
+                                    }).then((res) => goto(`/decks/${deckId}/cards/${res.data.addCard.id}/edit`))
                                 }
                             >
                                 <LibraryAdd />
                             </IconButton>
                         </Grid>
                         <Grid item>
-                            <IconButton onClick={() => history.push(`/decks/${deckId}/cards/${cardId}`)}>
+                            <IconButton onClick={() => goto(`/decks/${deckId}/cards/${cardId}`)}>
                                 <LibraryBooks />
                             </IconButton>
                         </Grid>

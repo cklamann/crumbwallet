@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useHistory } from 'react-router-dom';
 import { useAddTryMutation } from './../../api/ApolloClient';
 import Image from './../Image';
 import { Card } from 'Models/Cards';
@@ -23,6 +22,7 @@ import Grid from '@material-ui/core/Grid';
 import Slide from '@material-ui/core/Slide';
 import { makeStyles, createStyles } from '@material-ui/core/styles';
 import { get, random, shuffle } from 'lodash';
+import { useGoTo } from 'Hooks';
 
 interface CardPage {
     card: Card;
@@ -76,8 +76,7 @@ const useCardPageStyles = makeStyles((theme) =>
 );
 
 const CardPage: React.FC<CardPage> = ({ card, cardIndex, deckId, deckName, requestNextCard, requestPreviousCard }) => {
-    const history = useHistory(),
-        [_addTry] = useAddTryMutation(),
+    const [_addTry] = useAddTryMutation(),
         [answer, setAnswer] = useState<string>(''),
         [answeredCorrectly, setAnsweredCorrectly] = useState<boolean>(undefined),
         [answerModalOpen, setAnswerModalOpen] = useState<boolean>(),
@@ -86,6 +85,7 @@ const CardPage: React.FC<CardPage> = ({ card, cardIndex, deckId, deckName, reque
         [transitionInProgress, setTransitionInProgress] = useState(false),
         [transitionDirection, setTransitionDirection] = useState<string>('next'),
         classes = useCardPageStyles(),
+        goto = useGoTo(),
         finalizeAnswer = (answer: string) => {
             setAnswer(answer);
             setAnsweredCorrectly(answer == card.answer ? true : false);
@@ -173,7 +173,7 @@ const CardPage: React.FC<CardPage> = ({ card, cardIndex, deckId, deckName, reque
                                 classes={{ content: classes.headerContent }}
                                 title={`${deckName} #${cardIndex + 1}`}
                                 subheader={
-                                    <IconButton onClick={() => history.push(`/decks/${deckId}/cards/${card.id}/edit`)}>
+                                    <IconButton onClick={() => goto(`/decks/${deckId}/cards/${card.id}/edit`)}>
                                         <Edit />
                                     </IconButton>
                                 }
