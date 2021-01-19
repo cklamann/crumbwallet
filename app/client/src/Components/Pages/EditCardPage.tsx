@@ -1,4 +1,4 @@
-import React, { useReducer, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
 import { Card } from 'Models/Cards';
@@ -29,7 +29,7 @@ import MenuItem from '@material-ui/core/MenuItem';
 import InputLabel from '@material-ui/core/InputLabel';
 import { capitalize, get, mapValues, pick } from 'lodash';
 import { makeStyles, createStyles, useTheme } from '@material-ui/core/styles';
-import { useGoTo } from 'Hooks';
+import { useGoTo, useFormReducer } from 'Hooks';
 
 interface EditCardPage {
     uploadToS3: (file: File, carId: string) => Promise<string>;
@@ -60,13 +60,13 @@ const EditCardPage: React.FC<EditCardPage> = ({ uploadToS3 }) => {
         { loading, refetch: refetchCard, data, error: fetchError } = useFetchCardQuery(cardId),
         theme = useTheme(),
         [error, setError] = useState<string>(),
-        [state, dispatch] = useReducer(reducer, INITIAL_STATE),
+        [formState, updateField] = useFormReducer(INITIAL_STATE),
         [_updateCard] = useUpdateCardMutation(),
         [deleteCard] = useDeleteCardMutation(),
         [createCard] = useAddCardMutation(),
         goto = useGoTo(),
         updateCard = (args: Partial<ReducerState> = {}) => {
-            const card = { ...state, ...args };
+            const card = { ...formState, ...args };
             _updateCard({
                 variables: {
                     id: cardId,
@@ -77,36 +77,26 @@ const EditCardPage: React.FC<EditCardPage> = ({ uploadToS3 }) => {
                 .then(() => refetchCard())
                 .catch((e) => console.log(e));
         },
-        updateField = <T extends keyof ReducerState>(field: T) => (value: ReducerState[T]) =>
-            dispatch({ type: 'update', payload: { [field]: value } }),
         classes = usePageStyles(),
         somethingIsLoading = !!useSelector(loadingStateSelector).loadingRequests.length;
 
     useEffect(() => {
         if (get(data, 'card')) {
-            dispatch({
-                type: 'update',
-                payload: pick(
-                    mapValues(data.card, (v) => (v === null ? '' : v)),
-                    'answer',
-                    'prompt',
-                    'imageKey',
-                    'handle',
-                    'choices',
-                    'details',
-                    'type'
-                ),
+            Object.entries(data.card).map(([k, v]: [keyof ReducerState, ReducerState[keyof ReducerState]]) => {
+                if (formState[k] != v) {
+                    updateField(k)(v);
+                }
             });
         }
-    }, [get(data, 'card')]);
+    }, [data]);
 
     useEffect(() => {
-        if (get(state, 'choices.length') && state.answer && !state.choices.includes(state.answer)) {
+        if (get(formState, 'choices.length') && formState.answer && !formState.choices.includes(formState.answer)) {
             //check if there are choices but answer isn't a choice and remove answer
-            updateField('answer')(state.choices[0]);
+            updateField('answer')(formState.choices[0]);
         }
-        validateCard(state, setError);
-    }, [state]);
+        validateCard(formState, setError);
+    }, [formState]);
 
     return (
         <Paper>
@@ -115,11 +105,11 @@ const EditCardPage: React.FC<EditCardPage> = ({ uploadToS3 }) => {
                     <Grid container spacing={2}>
                         <Grid item container xs={12} wrap="nowrap" md={6}>
                             <TextInput
-                                error={!state.handle}
+                                error={!formState.handle}
                                 required
                                 name="handle"
                                 updateFn={updateField}
-                                val={state.handle}
+                                val={formState.handle}
                             />
                             <Grid item>
                                 <IconButton
@@ -136,7 +126,7 @@ const EditCardPage: React.FC<EditCardPage> = ({ uploadToS3 }) => {
                             </Grid>
                         </Grid>
                         <Grid item container xs={12} md={6}>
-                            <TextInput textarea name="prompt" updateFn={updateField} val={state.prompt} />
+                            <TextInput textarea name="prompt" updateFn={updateField} val={formState.prompt} />
                         </Grid>
                         <Grid item container direction="column" justify="center" alignItems="center" xs={12} md={6}>
                             {data.card.imageKey ? (
@@ -178,9 +168,9 @@ const EditCardPage: React.FC<EditCardPage> = ({ uploadToS3 }) => {
                             )}
                         </Grid>
                         <Grid item container xs={12} md={6}>
-                            {state.type != 'quotation' && (
+                            {formState.type != 'quotation' && (
                                 <ChoiceInput
-                                    choices={state.choices || []}
+                                    choices={formState.choices || []}
                                     updateChoices={(choices) => updateField('choices')(choices)}
                                 />
                             )}
@@ -192,14 +182,14 @@ const EditCardPage: React.FC<EditCardPage> = ({ uploadToS3 }) => {
                                 onChange={updateField('details')}
                             />
                             <Grid item container xs={12} md={6}>
-                                {state.type != 'quotation' && (
-                                    <FormControl error={!state.answer} fullWidth>
+                                {formState.type != 'quotation' && (
+                                    <FormControl error={!formState.answer} fullWidth>
                                         <InputLabel>Answer</InputLabel>
                                         <Select
-                                            value={state.answer}
+                                            value={formState.answer}
                                             onChange={(e) => updateField('answer')(e.target.value as string)}
                                         >
-                                            {(state.choices || [state.answer]).map((choice) => (
+                                            {(formState.choices || [formState.answer]).map((choice) => (
                                                 <MenuItem key={choice} value={choice}>
                                                     {choice}
                                                 </MenuItem>
@@ -213,7 +203,7 @@ const EditCardPage: React.FC<EditCardPage> = ({ uploadToS3 }) => {
                             <FormControl fullWidth>
                                 <InputLabel>Type</InputLabel>
                                 <Select
-                                    value={state.type}
+                                    value={formState.type}
                                     onChange={(e) => updateField('type')(e.target.value as 'quotation')}
                                 >
                                     {[
@@ -271,15 +261,6 @@ const EditCardPage: React.FC<EditCardPage> = ({ uploadToS3 }) => {
             )}
         </Paper>
     );
-};
-
-const reducer = (state: ReducerState, action: { type: string; payload: Partial<ReducerState> }) => {
-    switch (action.type) {
-        case 'update':
-            return { ...state, ...action.payload };
-        default:
-            return state;
-    }
 };
 
 export default EditCardPage;

@@ -1,3 +1,4 @@
 import useGoTo from './goto';
+import useFormReducer from './formReducer';
 
-export { useGoTo };
+export { useFormReducer, useGoTo };

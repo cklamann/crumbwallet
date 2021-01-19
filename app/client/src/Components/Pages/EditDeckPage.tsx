@@ -45,6 +45,14 @@ const EditDeckPage: React.FC<EditDeckPage> = ({}) => {
                                 label="name"
                             />
                         </Grid>
+                        <Grid item xs={12} md={6}>
+                            <FullWidthTextField
+                                value={newName}
+                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewName(e.currentTarget.value)}
+                                required
+                                label="name"
+                            />
+                        </Grid>
                         <Grid item>
                             <Button
                                 onClick={async () => {
@@ -119,7 +127,7 @@ const CardList: React.FC<CardList> = ({ cards, onSelect }) => {
     return (
         <List>
             {cards.map((c) => (
-                <ListItem className={classes.root} key={c.id}>
+                <ListItem classes={classes} key={c.id}>
                     <Link onClick={() => onSelect(c.id)}>{c.handle || c.id}</Link>
                 </ListItem>
             ))}
