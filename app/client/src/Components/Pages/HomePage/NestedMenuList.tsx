@@ -1,19 +1,24 @@
-import React from 'react';
+import React, { useState } from 'react';
 import NestedMenuItem from './NestedMenuItem';
 import { Deck } from 'Models/Decks';
 import { Grid } from '@material-ui/core';
 
 const NestedItemList: React.FC<{ decks: Deck[] }> = ({ decks }) => {
-    const items = buildTree(decks);
+    const items = buildTree(decks),
+        [openId, setOpenId] = useState<string>();
+
     return (
         <Grid>
-            {items.categoryChildren.map((c) => (
+            {items.categoryChildren.map((c, i) => (
                 <NestedMenuItem
+                    key={i}
                     categoryName={c.categoryName}
                     decks={c.categoryMembers}
                     childItems={c.categoryChildren}
                     depth={0}
-                    open={false}
+                    openId={openId}
+                    toggleOpen={(id: string) => (id === openId ? setOpenId(null) : setOpenId(id))}
+                    id={String(i)}
                 />
             ))}
         </Grid>
@@ -89,3 +94,5 @@ const addCategory = (categories: string[], categoryChildren: CategoryTreeItem[])
 
     return categoryChildren;
 };
+
+export default NestedItemList;

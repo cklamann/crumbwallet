@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Paper from '@material-ui/core/Paper';
 import IconButton from '@material-ui/core/IconButton';
 import Edit from '@material-ui/icons/Edit';
@@ -12,6 +12,8 @@ import { makeStyles, createStyles } from '@material-ui/core/styles';
 import Modal from '../../Modals/Modal';
 import { useDeleteDeckMutation, useFetchDecksQuery } from '../../../api/ApolloClient';
 import { useGoTo } from 'Hooks';
+import NestedItemList from './NestedMenuList';
+import { get } from 'lodash';
 
 interface HomePage {}
 
@@ -24,22 +26,12 @@ const useHomePageStyles = makeStyles((theme) =>
 );
 
 const HomePage: React.FC<HomePage> = ({}) => {
-    const { data, refetch } = useFetchDecksQuery(),
-        classes = useHomePageStyles(),
-        goto = useGoTo();
+    const { data } = useFetchDecksQuery(),
+        classes = useHomePageStyles();
 
     return (
         <Paper className={classes.root}>
-            {data && (
-                <MenuItem title={<TitleRow gotoCreateDeckPage={goto.bind(null, '/decks/create')} />}>
-                    <ModelList
-                        displayNameField="name"
-                        items={data.decks.sort((a, b) => (a.name.toLowerCase() < b.name.toLowerCase() ? -1 : 1))}
-                        onItemClick={(deck: Deck) => goto(`/decks/${deck.id}/cards`)}
-                        innerLinkComponent={withRefresh(refetch)(DeckRow)}
-                    />
-                </MenuItem>
-            )}
+            {get(data, 'decks') && <NestedItemList decks={data.decks.sort((a, b) => (a.name > b.name ? 1 : -1))} />}
         </Paper>
     );
 };

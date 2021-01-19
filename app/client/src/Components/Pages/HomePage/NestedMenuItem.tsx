@@ -3,46 +3,76 @@ import { Accordion, AccordionSummary, AccordionActions, List, Box, ListItem } fr
 import { Deck } from 'Models/Decks';
 import MenuItem from './../../MenuItem';
 import { CategoryTreeItem } from './NestedMenuList';
+import { useGoTo } from 'Hooks';
+import { get } from 'lodash';
 
 interface NestedMenuItem {
     categoryName: string;
     childItems?: CategoryTreeItem[];
     decks?: Deck[];
     depth: number;
-    open: boolean;
+    id: string;
+    memberId?: string;
+    openId: string;
+    toggleOpen: (id: string) => void;
 }
 
-/* todo: each of these needs state to keep track of open child (only one at a time) */
-const NestedMenuItem: React.FC<NestedMenuItem> = ({ categoryName, childItems, decks, depth, open }) => (
-    <Accordion>
-        <AccordionSummary>{categoryName}</AccordionSummary>
-        <AccordionActions>
-            <Box>
-                <List>
-                    {decks.map((c) => (
-                        <ListItem>
-                            <MenuItem title={c.name} />
-                        </ListItem>
-                    ))}
-                </List>
-            </Box>
-            <Box ml={depth + 1}>
-                <List>
-                    {childItems.map((c) => (
-                        <ListItem>
-                            <NestedMenuItem
-                                categoryName={c.categoryName}
-                                childItems={c.categoryChildren}
-                                decks={c.categoryMembers}
-                                depth={depth + 1}
-                                open={false}
-                            />
-                        </ListItem>
-                    ))}
-                </List>
-            </Box>
-        </AccordionActions>
-    </Accordion>
-);
+const NestedMenuItem: React.FC<NestedMenuItem> = ({
+    categoryName,
+    childItems,
+    decks,
+    depth,
+    id,
+    openId,
+    toggleOpen,
+}) => {
+    const goto = useGoTo(),
+        handleClick = (e: React.MouseEvent) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (get(childItems, 'length') || get(decks, 'length', 0) > 1) {
+                return toggleOpen(id);
+            } else if (get(decks, 'length') === 1) {
+                return goto(`decks/${decks[0].id}/cards`);
+            }
+        };
+
+    return (
+        <Accordion>
+            <AccordionSummary onClick={handleClick}>{categoryName}</AccordionSummary>
+            {openId === id && (get(childItems, 'length') || get(decks, 'length') > 1) && (
+                <AccordionActions>
+                    <Box>
+                        <List>
+                            {(decks || []).map((c) => (
+                                <ListItem key={c.id}>
+                                    <MenuItem title={c.name} onClick={goto.bind(null, `decks/${c.id}/cards`)} />
+                                </ListItem>
+                            ))}
+                        </List>
+                    </Box>
+                    <Box ml={depth + 1}>
+                        <List>
+                            {(childItems || []).map((c, i) => (
+                                <ListItem>
+                                    <NestedMenuItem
+                                        key={i}
+                                        categoryName={c.categoryName}
+                                        childItems={c.categoryChildren}
+                                        decks={c.categoryMembers}
+                                        depth={depth + 1}
+                                        id={`${id}-${i}`}
+                                        openId={openId}
+                                        toggleOpen={toggleOpen}
+                                    />
+                                </ListItem>
+                            ))}
+                        </List>
+                    </Box>
+                </AccordionActions>
+            )}
+        </Accordion>
+    );
+};
 
 export default NestedMenuItem;

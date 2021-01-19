@@ -106,9 +106,6 @@ const App: React.FC<{}> = () => {
                                 <Route exact path="/decks/:deckId/cards/:cardId?">
                                     <DeckPage />
                                 </Route>
-                                <Route exact path="/decks/:deckId/cards/:cardId?">
-                                    <DeckPage />
-                                </Route>
                                 <Route exact path="/decks/create">
                                     <NewDeckPage />
                                 </Route>
