@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import Paper from '@material-ui/core/Paper';
 import Grid from '@material-ui/core/Grid';
@@ -6,29 +6,53 @@ import Typography from '@material-ui/core/Typography';
 import Button from '@material-ui/core/Button';
 import { makeStyles, createStyles } from '@material-ui/core/styles';
 import Add from '@material-ui/icons/Add';
+import Edit from '@material-ui/icons/Edit';
 import Link from '@material-ui/core/Link';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import { Card } from 'Models/Cards';
-import { useGoTo } from './../../hooks';
+import { useFormReducer, useGoTo } from './../../hooks';
 import { useAddCardMutation, useFetchDeckQuery, useUpdateDeckMutation } from '../../api/ApolloClient';
 import MenuItem from './../MenuItem';
-import { FullWidthTextField } from 'Shared';
+import { TextInput } from 'Shared';
+import { Deck } from 'Models/Decks';
+import { get, mapValues } from 'lodash';
+
+type ReducerState = Pick<Deck, 'name' | 'category'>;
+
+const INITIAL_STATE: ReducerState = {
+    name: '',
+    category: '',
+};
 
 interface EditDeckPage {}
 
 const EditDeckPage: React.FC<EditDeckPage> = ({}) => {
-    const { deckId } = useParams(),
-        [newName, setNewName] = useState(''),
-        { loading: deckLoading, data, refetch: refetchDeck } = useFetchDeckQuery(deckId),
+    const { deckId }: { deckId: string } = useParams(),
+        { data, refetch: refetchDeck } = useFetchDeckQuery(deckId),
+        [formState, updateField] = useFormReducer(INITIAL_STATE),
         [createCard] = useAddCardMutation(),
-        [updateDeck] = useUpdateDeckMutation();
+        [_updateDeck] = useUpdateDeckMutation(),
+        updateDeck = () => {
+            _updateDeck({
+                variables: {
+                    ...mapValues(formState, (field: any) => (field === '' ? null : field)),
+                    ...{ id: deckId },
+                },
+            })
+                .then(() => refetchDeck())
+                .catch((e) => console.log(e));
+        };
 
     useEffect(() => {
-        if (data) {
-            setNewName(data.deck.name);
+        if (get(data, 'deck')) {
+            Object.entries(data.deck).map(([k, v]: [keyof ReducerState, ReducerState[keyof ReducerState]]) => {
+                if (Object.keys(INITIAL_STATE).includes(k) && formState[k] != v) {
+                    updateField(k)(v);
+                }
+            });
         }
-    }, [data]);
+    }, [get(data, 'deck')]);
 
     const goto = useGoTo();
 
@@ -36,31 +60,22 @@ const EditDeckPage: React.FC<EditDeckPage> = ({}) => {
         <Paper style={{ width: '100%' }}>
             {data && (
                 <>
-                    <MenuItem title={`Deck Name: ${data.deck.name}`}>
+                    <MenuItem
+                        title={
+                            <Grid container justify="flex-start">
+                                <Typography>{data.deck.name}</Typography>
+                                <Edit />
+                            </Grid>
+                        }
+                    >
                         <Grid item xs={12} md={6}>
-                            <FullWidthTextField
-                                value={newName}
-                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewName(e.currentTarget.value)}
-                                required
-                                label="name"
-                            />
+                            <TextInput val={formState.name} name="name" updateFn={updateField} required />
                         </Grid>
                         <Grid item xs={12} md={6}>
-                            <FullWidthTextField
-                                value={newName}
-                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNewName(e.currentTarget.value)}
-                                required
-                                label="name"
-                            />
+                            <TextInput val={formState.category} name="category" updateFn={updateField} required />
                         </Grid>
                         <Grid item>
-                            <Button
-                                onClick={async () => {
-                                    await updateDeck({ variables: { name: newName, id: data.deck.id } });
-                                    await refetchDeck();
-                                }}
-                                variant="contained"
-                            >
+                            <Button onClick={updateDeck.bind(null, formState)} variant="contained">
                                 Update
                             </Button>
                         </Grid>

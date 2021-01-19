@@ -91,6 +91,7 @@ export const useApolloMutation = <T, V>(query: DocumentNode) => {
 const fetchDecksQuery = gql`
     query {
         decks {
+            category
             id
             name
             type
@@ -109,6 +110,7 @@ const fetchDeckQuery = gql`
     query fetchDeck($id: String!) {
         deck(id: $id) {
             id
+            category
             name
             type
             cards {
@@ -277,12 +279,12 @@ export const useAddCardMutation = () =>
 const addDeckMutation = gql`
     mutation createDeckNameUnimportant(
         $name: String!
-        $categories: [String]
+        $category: String
         $type: String
         $userId: String
         $private: Boolean!
     ) {
-        createDeck(input: { name: $name, categories: $categories, userId: $userId, private: $private, type: $type }) {
+        createDeck(input: { name: $name, category: $category, userId: $userId, private: $private, type: $type }) {
             id
         }
     }
@@ -291,12 +293,12 @@ const addDeckMutation = gql`
 export const useAddDeckMutation = () =>
     useApolloMutation<
         { createDeck: { id: string } },
-        { name: string; categories?: string[]; type?: string; userId?: string; private: boolean }
+        { name: string; category?: string[]; type?: string; userId?: string; private: boolean }
     >(addDeckMutation);
 
 const updateDeckMutation = gql`
-    mutation deck($id: String!, $name: String, $categories: [String], $details: String) {
-        updateDeck(input: { id: $id, name: $name, categories: $categories, details: $details }) {
+    mutation deck($id: String!, $name: String, $category: String, $details: String) {
+        updateDeck(input: { id: $id, name: $name, category: $category, details: $details }) {
             id
         }
     }
@@ -304,8 +306,8 @@ const updateDeckMutation = gql`
 
 export const useUpdateDeckMutation = () =>
     useApolloMutation<
-        { addCard: { id: string } },
-        { id: string; name?: string; categories?: string; details?: string }
+        { updateDeck: { id: string } },
+        { id: string; name?: string; category?: string; details?: string }
     >(updateDeckMutation);
 
 const addTryMutation = gql`

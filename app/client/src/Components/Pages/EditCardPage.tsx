@@ -23,13 +23,13 @@ import Typography from '@material-ui/core/Typography';
 import FormControl from '@material-ui/core/FormControl';
 import Button from '@material-ui/core/Button';
 import IconButton from '@material-ui/core/IconButton';
-import Input from '@material-ui/core/Input';
 import Select from '@material-ui/core/Select';
 import MenuItem from '@material-ui/core/MenuItem';
 import InputLabel from '@material-ui/core/InputLabel';
-import { capitalize, get, mapValues, pick } from 'lodash';
+import { get, mapValues, pick } from 'lodash';
 import { makeStyles, createStyles, useTheme } from '@material-ui/core/styles';
 import { useGoTo, useFormReducer } from 'Hooks';
+import { TextInput } from 'Shared';
 
 interface EditCardPage {
     uploadToS3: (file: File, carId: string) => Promise<string>;
@@ -66,12 +66,11 @@ const EditCardPage: React.FC<EditCardPage> = ({ uploadToS3 }) => {
         [createCard] = useAddCardMutation(),
         goto = useGoTo(),
         updateCard = (args: Partial<ReducerState> = {}) => {
-            const card = { ...formState, ...args };
             _updateCard({
                 variables: {
                     id: cardId,
                     deckId,
-                    ...mapValues(card, (arg): any => (arg === '' ? null : arg)),
+                    ...mapValues(formState, (arg): any => (arg === '' ? null : arg)),
                 },
             })
                 .then(() => refetchCard())
@@ -83,12 +82,12 @@ const EditCardPage: React.FC<EditCardPage> = ({ uploadToS3 }) => {
     useEffect(() => {
         if (get(data, 'card')) {
             Object.entries(data.card).map(([k, v]: [keyof ReducerState, ReducerState[keyof ReducerState]]) => {
-                if (formState[k] != v) {
+                if (Object.keys(INITIAL_STATE).includes(k) && formState[k] != v) {
                     updateField(k)(v);
                 }
             });
         }
-    }, [data]);
+    }, [get(data, 'card')]);
 
     useEffect(() => {
         if (get(formState, 'choices.length') && formState.answer && !formState.choices.includes(formState.answer)) {
@@ -264,37 +263,6 @@ const EditCardPage: React.FC<EditCardPage> = ({ uploadToS3 }) => {
 };
 
 export default EditCardPage;
-
-const useTextInputStyles = makeStyles((theme) =>
-    createStyles({
-        root: {},
-        FormControl: {
-            flexGrow: 1,
-        },
-    })
-);
-
-const TextInput: React.FC<{
-    error?: boolean;
-    name: string;
-    required?: boolean;
-    textarea?: boolean;
-    updateFn: (name: string) => (val: any) => void;
-    val: string;
-}> = ({ error, name, required, textarea, updateFn, val }) => {
-    const classes = useTextInputStyles();
-    return (
-        <FormControl error={error} required={required} className={classes.FormControl}>
-            <InputLabel>{capitalize(name)}</InputLabel>
-            <Input
-                onFocus={(e) => e.target.select()}
-                onChange={(e) => updateFn(name)(e.currentTarget.value)}
-                value={val}
-                multiline={!!textarea}
-            />
-        </FormControl>
-    );
-};
 
 const validateCard = (card: Partial<Card>, setError: (error: string) => void) => {
     let error: string;
