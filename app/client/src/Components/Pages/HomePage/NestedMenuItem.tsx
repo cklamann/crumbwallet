@@ -1,10 +1,23 @@
-import React from 'react';
-import { Accordion, AccordionSummary, AccordionActions, List, Box, ListItem } from '@material-ui/core';
+import React, { useState } from 'react';
+import {
+    Accordion,
+    AccordionSummary,
+    List,
+    Box,
+    ListItem,
+    makeStyles,
+    AccordionDetails,
+    withStyles,
+    createStyles,
+    Typography,
+    Grid,
+    IconButton,
+} from '@material-ui/core';
 import { Deck } from 'Models/Decks';
-import MenuItem from './../../MenuItem';
 import { CategoryTreeItem } from './NestedMenuList';
 import { useGoTo } from 'Hooks';
-import { get } from 'lodash';
+import { MenuLink } from 'Shared';
+import { Edit } from '@material-ui/icons';
 
 interface NestedMenuItem {
     categoryName: string;
@@ -17,6 +30,17 @@ interface NestedMenuItem {
     toggleOpen: (id: string) => void;
 }
 
+const useClasses = makeStyles((theme) =>
+    createStyles({
+        Details: {
+            padding: '0px',
+        },
+        ListItem: {
+            padding: '0px',
+        },
+    })
+);
+
 const NestedMenuItem: React.FC<NestedMenuItem> = ({
     categoryName,
     childItems,
@@ -27,52 +51,84 @@ const NestedMenuItem: React.FC<NestedMenuItem> = ({
     toggleOpen,
 }) => {
     const goto = useGoTo(),
-        handleClick = (e: React.MouseEvent) => {
-            e.preventDefault();
-            e.stopPropagation();
-            if (get(childItems, 'length') || get(decks, 'length', 0) > 1) {
-                return toggleOpen(id);
-            } else if (get(decks, 'length') === 1) {
-                return goto(`decks/${decks[0].id}/cards`);
-            }
-        };
+        classes = useClasses(),
+        [openChildId, setOpenChildId] = useState<string>(),
+        toggleChildOpen = (id: string) => (id === openChildId ? setOpenChildId(null) : setOpenChildId(id));
 
     return (
-        <Accordion>
-            <AccordionSummary onClick={handleClick}>{categoryName}</AccordionSummary>
-            {openId === id && (get(childItems, 'length') || get(decks, 'length') > 1) && (
-                <AccordionActions>
-                    <Box>
-                        <List>
-                            {(decks || []).map((c) => (
-                                <ListItem key={c.id}>
-                                    <MenuItem title={c.name} onClick={goto.bind(null, `decks/${c.id}/cards`)} />
-                                </ListItem>
-                            ))}
-                        </List>
-                    </Box>
-                    <Box ml={depth + 1}>
-                        <List>
-                            {(childItems || []).map((c, i) => (
-                                <ListItem>
-                                    <NestedMenuItem
-                                        key={i}
-                                        categoryName={c.categoryName}
-                                        childItems={c.categoryChildren}
-                                        decks={c.categoryMembers}
-                                        depth={depth + 1}
-                                        id={`${id}-${i}`}
-                                        openId={openId}
-                                        toggleOpen={toggleOpen}
-                                    />
-                                </ListItem>
-                            ))}
-                        </List>
-                    </Box>
-                </AccordionActions>
-            )}
+        <Accordion expanded={openId === id}>
+            <AccordionSummary onClick={(e) => toggleOpen(id)}>
+                <Typography>{categoryName}</Typography>
+            </AccordionSummary>
+            <AccordionDetails className={classes.Details} onClick={(e) => e.stopPropagation()}>
+                <Grid container>
+                    <Grid container item xs={12}>
+                        <Box pl={depth + 3} flexGrow={1}>
+                            <NoPaddingList disablePadding={true}>
+                                {(decks || [])
+                                    .sort((a, b) => (a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1))
+                                    .map((c) => (
+                                        <ListItem className={classes.ListItem} disableGutters={true} key={c.id}>
+                                            <Grid container justify="space-between" alignItems="center">
+                                                <Grid item xs={10}>
+                                                    <Typography>
+                                                        <MenuLink to={`decks/${c.id}/cards`}>{c.name}</MenuLink>
+                                                    </Typography>
+                                                </Grid>
+                                                <Grid item xs={2}>
+                                                    <IconButton
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            goto(`decks/${c.id}/edit`);
+                                                        }}
+                                                    >
+                                                        <Edit />
+                                                    </IconButton>
+                                                </Grid>
+                                            </Grid>
+                                        </ListItem>
+                                    ))}
+                            </NoPaddingList>
+                        </Box>
+                    </Grid>
+                    <Grid container item xs={12}>
+                        <Box ml={depth + 4}>
+                            <NoPaddingList disablePadding={true}>
+                                {(childItems || [])
+                                    .sort((a, b) =>
+                                        a.categoryName.toLowerCase() > b.categoryName.toLowerCase() ? 1 : -1
+                                    )
+                                    .map((c, i) => (
+                                        <ListItem
+                                            onClick={(e) => e.stopPropagation()}
+                                            className={classes.ListItem}
+                                            disableGutters={true}
+                                            key={i}
+                                        >
+                                            <NestedMenuItem
+                                                categoryName={c.categoryName}
+                                                childItems={c.categoryChildren}
+                                                decks={c.categoryMembers}
+                                                depth={depth + 1}
+                                                id={`${id}-${i}`}
+                                                openId={openChildId}
+                                                toggleOpen={toggleChildOpen}
+                                            />
+                                        </ListItem>
+                                    ))}
+                            </NoPaddingList>
+                        </Box>
+                    </Grid>
+                </Grid>
+            </AccordionDetails>
         </Accordion>
     );
 };
+
+const NoPaddingList = withStyles({
+    root: {
+        padding: 0,
+    },
+})(List);
 
 export default NestedMenuItem;

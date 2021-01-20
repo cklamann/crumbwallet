@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import Paper from '@material-ui/core/Paper';
 import Grid from '@material-ui/core/Grid';
@@ -29,18 +29,30 @@ interface EditDeckPage {}
 
 const EditDeckPage: React.FC<EditDeckPage> = ({}) => {
     const { deckId }: { deckId: string } = useParams(),
+        [error, setError] = useState<{ message: string; field: string }>(),
         { data, refetch: refetchDeck } = useFetchDeckQuery(deckId),
         [formState, updateField] = useFormReducer(INITIAL_STATE),
         [createCard] = useAddCardMutation(),
         [_updateDeck] = useUpdateDeckMutation(),
         updateDeck = () => {
-            _updateDeck({
+            if (!formState.name) {
+                return setError({ field: 'name', message: 'Name is required!' });
+            }
+
+            if (!formState.category) {
+                return setError({ field: 'category', message: 'Category is required!' });
+            }
+
+            return _updateDeck({
                 variables: {
                     ...mapValues(formState, (field: any) => (field === '' ? null : field)),
                     ...{ id: deckId },
                 },
             })
-                .then(() => refetchDeck())
+                .then(() => {
+                    setError(null);
+                    refetchDeck();
+                })
                 .catch((e) => console.log(e));
         };
 
@@ -62,22 +74,34 @@ const EditDeckPage: React.FC<EditDeckPage> = ({}) => {
                 <>
                     <MenuItem
                         title={
-                            <Grid container justify="flex-start">
-                                <Typography>{data.deck.name}</Typography>
-                                <Edit />
+                            <Grid container justify="space-between">
+                                <Grid item xs={10}>
+                                    <Typography>{data.deck.name}</Typography>
+                                </Grid>
+                                <Grid item xs={2}>
+                                    <Edit />
+                                </Grid>
                             </Grid>
                         }
                     >
-                        <Grid item xs={12} md={6}>
-                            <TextInput val={formState.name} name="name" updateFn={updateField} required />
-                        </Grid>
-                        <Grid item xs={12} md={6}>
-                            <TextInput val={formState.category} name="category" updateFn={updateField} required />
-                        </Grid>
-                        <Grid item>
-                            <Button onClick={updateDeck.bind(null, formState)} variant="contained">
-                                Update
-                            </Button>
+                        <Grid container spacing={2}>
+                            <Grid item xs={12} md={6}>
+                                <TextInput val={formState.name} name="name" updateFn={updateField} required />
+                                {get(error, 'field') == 'name' && (
+                                    <Typography color="error">{error.message}</Typography>
+                                )}
+                            </Grid>
+                            <Grid item xs={12} md={6}>
+                                <TextInput val={formState.category} name="category" updateFn={updateField} required />
+                                {get(error, 'field') == 'category' && (
+                                    <Typography color="error">{error.message}</Typography>
+                                )}
+                            </Grid>
+                            <Grid item>
+                                <Button onClick={updateDeck.bind(null, formState)} variant="contained">
+                                    Update
+                                </Button>
+                            </Grid>
                         </Grid>
                     </MenuItem>
                     <MenuItem title="Go to deck" onClick={goto.bind(null, `/decks/${deckId}/cards`)} />

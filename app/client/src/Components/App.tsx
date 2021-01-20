@@ -10,7 +10,7 @@ import NewDeckPage from './Pages/NewDeckPage/NewDeckPage';
 import EditCardPage from './Pages/EditCardPage';
 import DeckPage from './Pages/DeckPage';
 import HomePage from './Pages/HomePage/HomePage';
-import { BrowserRouter as Router, Switch, Route, Link, Redirect } from 'react-router-dom';
+import { BrowserRouter as Router, Switch, Route, Link, Redirect, useParams } from 'react-router-dom';
 import Container from '@material-ui/core/Container';
 import { theme } from './Style/Theme';
 import { ThemeProvider, makeStyles, createStyles } from '@material-ui/core/styles';

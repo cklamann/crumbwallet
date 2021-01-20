@@ -9,18 +9,20 @@ const NestedItemList: React.FC<{ decks: Deck[] }> = ({ decks }) => {
 
     return (
         <Grid>
-            {items.categoryChildren.map((c, i) => (
-                <NestedMenuItem
-                    key={i}
-                    categoryName={c.categoryName}
-                    decks={c.categoryMembers}
-                    childItems={c.categoryChildren}
-                    depth={0}
-                    openId={openId}
-                    toggleOpen={(id: string) => (id === openId ? setOpenId(null) : setOpenId(id))}
-                    id={String(i)}
-                />
-            ))}
+            {items.categoryChildren
+                .sort((a, b) => (a.categoryName.toLowerCase() > b.categoryName.toLowerCase() ? 1 : -1))
+                .map((c, i) => (
+                    <NestedMenuItem
+                        key={i}
+                        categoryName={c.categoryName}
+                        decks={c.categoryMembers}
+                        childItems={c.categoryChildren}
+                        depth={0}
+                        openId={openId}
+                        toggleOpen={(id: string) => (id === openId ? setOpenId(null) : setOpenId(id))}
+                        id={String(i)}
+                    />
+                ))}
         </Grid>
     );
 };
@@ -38,14 +40,9 @@ export const buildTree = (decks: Deck[]) => {
 
     decks.forEach((deck) => {
         if (!deck.category) {
-            tree.categoryChildren.push({
-                categoryName: deck.name,
-                categoryMembers: [deck],
-            });
-            return;
-        } else {
-            addNestedMember(deck, tree);
+            deck.category = '____';
         }
+        addNestedMember(deck, tree);
     });
 
     return tree;

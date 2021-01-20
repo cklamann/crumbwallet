@@ -47,6 +47,7 @@ module.exports = {
             },
         ],
     },
+    bail: true,
     plugins: [
         new HtmlWebpackPlugin({
             template: './src/index.ejs',
