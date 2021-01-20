@@ -22,6 +22,7 @@ import { Edit } from '@material-ui/icons';
 interface NestedMenuItem {
     categoryName: string;
     childItems?: CategoryTreeItem[];
+    childMenu?: boolean;
     decks?: Deck[];
     depth: number;
     id: string;
@@ -38,12 +39,16 @@ const useClasses = makeStyles((theme) =>
         ListItem: {
             padding: '0px',
         },
+        Accordion: {
+            boxShadow: (props: { childMenu: boolean }) => (props.childMenu ? 'none' : 'inherit'),
+        },
     })
 );
 
 const NestedMenuItem: React.FC<NestedMenuItem> = ({
     categoryName,
     childItems,
+    childMenu,
     decks,
     depth,
     id,
@@ -51,12 +56,12 @@ const NestedMenuItem: React.FC<NestedMenuItem> = ({
     toggleOpen,
 }) => {
     const goto = useGoTo(),
-        classes = useClasses(),
+        classes = useClasses({ childMenu }),
         [openChildId, setOpenChildId] = useState<string>(),
         toggleChildOpen = (id: string) => (id === openChildId ? setOpenChildId(null) : setOpenChildId(id));
 
     return (
-        <Accordion expanded={openId === id}>
+        <Accordion className={classes.Accordion} expanded={openId === id}>
             <AccordionSummary onClick={(e) => toggleOpen(id)}>
                 <Typography>{categoryName}</Typography>
             </AccordionSummary>
@@ -108,6 +113,7 @@ const NestedMenuItem: React.FC<NestedMenuItem> = ({
                                             <NestedMenuItem
                                                 categoryName={c.categoryName}
                                                 childItems={c.categoryChildren}
+                                                childMenu={true}
                                                 decks={c.categoryMembers}
                                                 depth={depth + 1}
                                                 id={`${id}-${i}`}
