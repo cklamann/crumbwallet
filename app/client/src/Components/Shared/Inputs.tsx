@@ -9,7 +9,9 @@ const useTextInputStyles = makeStyles((theme) =>
     createStyles({
         root: {},
         FormControl: {
-            flexGrow: 1,
+            [theme.breakpoints.down('md')]: {
+                width: '100%',
+            },
         },
     })
 );

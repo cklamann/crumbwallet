@@ -16,8 +16,8 @@ import {
 import { Deck } from 'Models/Decks';
 import { CategoryTreeItem } from './NestedMenuList';
 import { useGoTo } from 'Hooks';
-import { MenuLink } from 'Shared';
-import { Edit } from '@material-ui/icons';
+import { BaseRouterLink } from 'Shared';
+import { Edit, ExpandMore } from '@material-ui/icons';
 
 interface NestedMenuItem {
     categoryName: string;
@@ -31,16 +31,40 @@ interface NestedMenuItem {
     toggleOpen: (id: string) => void;
 }
 
-const useClasses = makeStyles((theme) =>
+const useClassNames = makeStyles((theme) =>
     createStyles({
         Details: {
             padding: '0px',
+            marginLeft: theme.spacing(1),
         },
         ListItem: {
             padding: '0px',
         },
-        Accordion: {
+        Icon: {
+            fontSize: 'inherit',
+        },
+    })
+);
+
+const useAccordionClasses = makeStyles((theme) =>
+    createStyles({
+        root: {
             boxShadow: (props: { childMenu: boolean }) => (props.childMenu ? 'none' : 'inherit'),
+            flexGrow: 1,
+        },
+        expanded: {},
+    })
+);
+
+const useAccordionSummaryClasses = makeStyles((theme) =>
+    createStyles({
+        root: {
+            padding: '0px',
+            marginLeft: theme.spacing(1),
+        },
+        expanded: {
+            padding: '0px',
+            marginLeft: theme.spacing(1),
         },
     })
 );
@@ -56,49 +80,60 @@ const NestedMenuItem: React.FC<NestedMenuItem> = ({
     toggleOpen,
 }) => {
     const goto = useGoTo(),
-        classes = useClasses({ childMenu }),
+        classNames = useClassNames({ childMenu }),
+        accordionClasses = useAccordionClasses(),
+        accordionSummaryClasses = useAccordionSummaryClasses(),
         [openChildId, setOpenChildId] = useState<string>(),
         toggleChildOpen = (id: string) => (id === openChildId ? setOpenChildId(null) : setOpenChildId(id));
 
     return (
-        <Accordion className={classes.Accordion} expanded={openId === id}>
-            <AccordionSummary onClick={(e) => toggleOpen(id)}>
+        <Accordion
+            classes={{ root: accordionClasses.root, expanded: accordionClasses.expanded }}
+            expanded={openId === id}
+        >
+            <AccordionSummary
+                classes={{ root: accordionSummaryClasses.root, expanded: accordionSummaryClasses.expanded }}
+                onClick={() => toggleOpen(id)}
+                expandIcon={<ExpandMore />}
+                IconButtonProps={{ edge: false }}
+            >
                 <Typography>{categoryName}</Typography>
             </AccordionSummary>
-            <AccordionDetails className={classes.Details} onClick={(e) => e.stopPropagation()}>
+            <AccordionDetails className={classNames.Details} onClick={(e) => e.stopPropagation()}>
                 <Grid container>
                     <Grid container item xs={12}>
-                        <Box pl={depth + 3} flexGrow={1}>
-                            <NoPaddingList disablePadding={true}>
+                        <Box flexGrow={1} ml={1.5}>
+                            <List disablePadding={true}>
                                 {(decks || [])
                                     .sort((a, b) => (a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1))
                                     .map((c) => (
-                                        <ListItem className={classes.ListItem} disableGutters={true} key={c.id}>
+                                        <ListItem className={classNames.ListItem} disableGutters={true} key={c.id}>
                                             <Grid container justify="space-between" alignItems="center">
                                                 <Grid item xs={10}>
-                                                    <Typography>
-                                                        <MenuLink to={`decks/${c.id}/cards`}>{c.name}</MenuLink>
-                                                    </Typography>
+                                                    <StyledMenuLink to={`decks/${c.id}/cards`} name={c.name} />
                                                 </Grid>
-                                                <Grid item xs={2}>
-                                                    <IconButton
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            goto(`decks/${c.id}/edit`);
-                                                        }}
-                                                    >
-                                                        <Edit />
-                                                    </IconButton>
+                                                <Grid container justify="flex-end" item xs={2}>
+                                                    <Box pr={1}>
+                                                        <IconButton
+                                                            size="small"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                goto(`decks/${c.id}/edit`);
+                                                            }}
+                                                        >
+                                                            <Edit className={classNames.Icon} />
+                                                        </IconButton>
+                                                    </Box>
                                                 </Grid>
                                             </Grid>
                                         </ListItem>
                                     ))}
-                            </NoPaddingList>
+                            </List>
                         </Box>
                     </Grid>
                     <Grid container item xs={12}>
-                        <Box ml={depth + 4}>
-                            <NoPaddingList disablePadding={true}>
+                        <Box flexGrow={1}>
+                            <List disablePadding={true}>
                                 {(childItems || [])
                                     .sort((a, b) =>
                                         a.categoryName.toLowerCase() > b.categoryName.toLowerCase() ? 1 : -1
@@ -106,7 +141,7 @@ const NestedMenuItem: React.FC<NestedMenuItem> = ({
                                     .map((c, i) => (
                                         <ListItem
                                             onClick={(e) => e.stopPropagation()}
-                                            className={classes.ListItem}
+                                            className={classNames.ListItem}
                                             disableGutters={true}
                                             key={i}
                                         >
@@ -122,7 +157,7 @@ const NestedMenuItem: React.FC<NestedMenuItem> = ({
                                             />
                                         </ListItem>
                                     ))}
-                            </NoPaddingList>
+                            </List>
                         </Box>
                     </Grid>
                 </Grid>
@@ -138,3 +173,13 @@ const NoPaddingList = withStyles({
 })(List);
 
 export default NestedMenuItem;
+
+const MenuLink: React.FC<{ name: string; to: string }> = ({ to, name }) => (
+    <Typography>
+        <BaseRouterLink to={to}>{name}</BaseRouterLink>
+    </Typography>
+);
+
+const StyledMenuLink = withStyles((theme) => ({
+    root: { color: theme.palette.secondary.light },
+}))(MenuLink);
