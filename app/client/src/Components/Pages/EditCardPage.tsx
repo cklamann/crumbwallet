@@ -65,7 +65,7 @@ const EditCardPage: React.FC<EditCardPage> = ({ uploadToS3 }) => {
         [deleteCard] = useDeleteCardMutation(),
         [createCard] = useAddCardMutation(),
         goto = useGoTo(),
-        updateCard = (args: Partial<ReducerState> = {}) => {
+        updateCard = () => {
             _updateCard({
                 variables: {
                     id: cardId,
@@ -128,15 +128,15 @@ const EditCardPage: React.FC<EditCardPage> = ({ uploadToS3 }) => {
                             <TextInput textarea name="prompt" updateFn={updateField} val={formState.prompt} />
                         </Grid>
                         <Grid item container direction="column" justify="center" alignItems="center" xs={12} md={6}>
-                            {data.card.imageKey ? (
+                            {formState.imageKey ? (
                                 <>
                                     <Grid item style={{ padding: '5px' }}>
-                                        <Image imgKey={data.card.imageKey} />
+                                        <Image imgKey={formState.imageKey} />
                                     </Grid>
                                     <Grid item>
                                         <label htmlFor="contained-button-file">
                                             <Button
-                                                onClick={() => updateCard({ imageKey: null })}
+                                                onClick={() => updateField('imageKey')(null)}
                                                 variant="contained"
                                                 color="primary"
                                                 component="span"
@@ -155,7 +155,7 @@ const EditCardPage: React.FC<EditCardPage> = ({ uploadToS3 }) => {
                                         type="file"
                                         onChange={async (e) => {
                                             const key = await uploadToS3(e.currentTarget.files[0], cardId);
-                                            updateCard({ imageKey: key });
+                                            updateField('imageKey')(key);
                                         }}
                                     />
                                     <label htmlFor="contained-button-file">
