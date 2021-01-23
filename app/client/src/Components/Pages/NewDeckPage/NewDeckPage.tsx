@@ -5,14 +5,14 @@ import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Grid from '@material-ui/core/Grid';
 import { useAddCardMutation, useAddDeckMutation, useCreateChessDiagramPngUrlMutation } from '../../../api/ApolloClient';
 import { UserContext } from '../../App';
-import { useGoTo } from 'Hooks';
+import { useFormReducer, useGoTo } from 'Hooks';
 import { FullWidthTextField } from 'Shared';
 import * as Chess from 'chess.js';
 import { Typography } from '@material-ui/core';
 
 interface ReducerState {
-    categories: string[];
-    chess: boolean;
+    category: string;
+    type: string;
     name: string;
     pgn: string;
     fen: string;
@@ -20,8 +20,8 @@ interface ReducerState {
 }
 
 const INITIAL_STATE: ReducerState = {
-    categories: undefined,
-    chess: false,
+    category: '',
+    type: '',
     name: '',
     pgn: '',
     fen: '',
@@ -29,24 +29,32 @@ const INITIAL_STATE: ReducerState = {
 };
 
 const NewDeckForm: React.FC<{}> = ({}) => {
-    const [addDeck] = useAddDeckMutation(),
+    const [_addDeck] = useAddDeckMutation(),
         [addCard] = useAddCardMutation(),
         [generateImage] = useCreateChessDiagramPngUrlMutation(),
-        [state, dispatch] = useReducer(reducer, INITIAL_STATE),
+        [formState, updateField] = useFormReducer(INITIAL_STATE),
         [fenError, setFenError] = useState<string>(),
         [pgnError, setPgnError] = useState<string>(),
         userId = useContext(UserContext),
         goto = useGoTo(),
         getSubmitDisabled = () => {
-            const { chess, name, pgn } = state;
+            const { type, name, pgn } = formState;
             if (!!name) {
-                if (!chess) return false;
+                if (type != 'chess') return false;
                 if (pgn) return false;
             }
             return true;
         },
-        updateField = <T extends keyof ReducerState>(field: T) => (value: ReducerState[T]) =>
-            dispatch({ type: 'update', payload: { [field]: value } }),
+        addDeck = () => {
+            const { pgn, fen, ...deck } = formState;
+            return _addDeck({ variables: { ...deck, userId } }).then(
+                ({
+                    data: {
+                        createDeck: { id },
+                    },
+                }) => id
+            );
+        },
         composeBuildDiagramFn = (deckId: string) => (fen: string, side: 'w' | 'b', turn: number, nextMove: string) =>
             generateImage({ variables: { fen, savePath: `${turn}${side}${deckId}` } }).then((res) =>
                 addCard({
@@ -61,7 +69,7 @@ const NewDeckForm: React.FC<{}> = ({}) => {
                 })
             ),
         createChessDeck = () => {
-            const { fen, pgn } = state;
+            const { fen, pgn } = formState;
             try {
                 validateChessDeck(pgn, fen);
             } catch (e) {
@@ -70,28 +78,18 @@ const NewDeckForm: React.FC<{}> = ({}) => {
             setPgnError(null);
             setFenError(null);
 
-            addDeck({
-                variables: { name: state.name, userId, private: state.private, type: 'chess' },
-            })
-                .then(
-                    ({
-                        data: {
-                            createDeck: { id },
-                        },
-                    }) => {
-                        return Promise.all(buildDiagram(state.pgn, composeBuildDiagramFn(id), state.fen))
-                            .then(() => id)
-                            .catch((e) => console.log(`caught: ${e}`));
-                    }
+            addDeck()
+                .then((id) =>
+                    Promise.all(buildDiagram(formState.pgn, composeBuildDiagramFn(id), formState.fen))
+                        .then(() => id)
+                        .catch((e) => console.log(`caught: ${e}`))
                 )
                 .then((deckId) => goto(`/decks/${deckId}/edit`))
                 .catch((err) => console.error(err));
         },
         createDeck = () =>
-            addDeck({
-                variables: { name: state.name, userId, private: state.private, type: null },
-            })
-                .then(({ data: { createDeck: { id } } }) => goto(`/decks/${id}/edit`))
+            addDeck()
+                .then((id) => goto(`/decks/${id}/edit`))
                 .catch((err) => console.error(err)),
         setChessErrors = (e: ChessError) => {
             switch (e.type) {
@@ -106,21 +104,31 @@ const NewDeckForm: React.FC<{}> = ({}) => {
         };
 
     return (
-        <Grid container wrap="wrap" alignItems="center">
+        <Grid container wrap="wrap" spacing={4} alignItems="center">
             <Grid item xs={12} md={6}>
                 <FullWidthTextField
-                    value={state.name}
+                    value={formState.name}
                     onChange={(e: React.ChangeEvent<HTMLInputElement>) => updateField('name')(e.currentTarget.value)}
                     required
                     label="Name"
+                />
+            </Grid>
+            <Grid item xs={12} md={6}>
+                <FullWidthTextField
+                    value={formState.category}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                        updateField('category')(e.currentTarget.value)
+                    }
+                    required
+                    label="Category"
                 />
             </Grid>
             <Grid item xs={6} md={2}>
                 <FormControlLabel
                     control={
                         <Checkbox
-                            checked={state.private}
-                            onChange={() => updateField('private')(!state.private)}
+                            checked={formState.private}
+                            onChange={() => updateField('private')(!formState.private)}
                             color="primary"
                         />
                     }
@@ -131,19 +139,19 @@ const NewDeckForm: React.FC<{}> = ({}) => {
                 <FormControlLabel
                     control={
                         <Checkbox
-                            checked={state.chess}
-                            onChange={() => updateField('chess')(!state.chess)}
+                            checked={formState.type === 'chess'}
+                            onChange={() => updateField('type')(formState.type === 'chess' ? null : 'chess')}
                             color="primary"
                         />
                     }
                     label="Chess?"
                 />
             </Grid>
-            {state.chess && (
+            {formState.type === 'chess' && (
                 <>
                     <Grid item xs={10}>
                         <FullWidthTextField
-                            value={state.fen}
+                            value={formState.fen}
                             onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                                 updateField('fen')(e.currentTarget.value)
                             }
@@ -154,22 +162,22 @@ const NewDeckForm: React.FC<{}> = ({}) => {
                     </Grid>
                     <Grid item xs={10}>
                         <FullWidthTextField
-                            value={state.pgn}
+                            value={formState.pgn}
                             onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                                 updateField('pgn')(e.currentTarget.value)
                             }
                             error={!!pgnError}
-                            required={state.chess}
+                            required={formState.type === 'chess'}
                             label="PGN"
                         />
                         {pgnError && <Typography color="error">{pgnError}</Typography>}
                     </Grid>
                 </>
             )}
-            <Grid item xs={2}>
+            <Grid container item xs={12}>
                 <Button
                     disabled={getSubmitDisabled()}
-                    onClick={() => (state.chess ? createChessDeck() : createDeck())}
+                    onClick={() => (formState.type === 'chess' ? createChessDeck() : createDeck())}
                     variant="contained"
                 >
                     Go
@@ -177,15 +185,6 @@ const NewDeckForm: React.FC<{}> = ({}) => {
             </Grid>
         </Grid>
     );
-};
-
-const reducer = (state: ReducerState, action: { type: string; payload: Partial<ReducerState> }) => {
-    switch (action.type) {
-        case 'update':
-            return { ...state, ...action.payload };
-        default:
-            return state;
-    }
 };
 
 export default NewDeckForm;
@@ -198,6 +197,7 @@ const validateChessDeck = (pgn: string, fen?: string) => {
         if (!validatedFen.valid) {
             throw invalidFen(validatedFen.error);
         }
+        instance.load(fen);
     }
     const moves = getMovesFromPgn(pgn);
 

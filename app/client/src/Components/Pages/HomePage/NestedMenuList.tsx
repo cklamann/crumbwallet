@@ -8,7 +8,7 @@ const NestedItemList: React.FC<{ decks: Deck[] }> = ({ decks }) => {
         [openId, setOpenId] = useState<string>();
 
     return (
-        <Grid>
+        <Grid container item xs={12} direction="column">
             {items.categoryChildren
                 .sort((a, b) => (a.categoryName.toLowerCase() > b.categoryName.toLowerCase() ? 1 : -1))
                 .map((c, i) => (

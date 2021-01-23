@@ -266,6 +266,7 @@ export const useAddCardMutation = () =>
         { addCard: { id: string } },
         {
             answer: string;
+            category?: string;
             choices?: string[];
             deckId: string;
             details?: string;
@@ -277,13 +278,7 @@ export const useAddCardMutation = () =>
     >(addCardMutation);
 
 const addDeckMutation = gql`
-    mutation createDeckNameUnimportant(
-        $name: String!
-        $category: String
-        $type: String
-        $userId: String
-        $private: Boolean!
-    ) {
+    mutation createDeck($name: String!, $category: String, $type: String, $userId: String, $private: Boolean!) {
         createDeck(input: { name: $name, category: $category, userId: $userId, private: $private, type: $type }) {
             id
         }
@@ -293,7 +288,7 @@ const addDeckMutation = gql`
 export const useAddDeckMutation = () =>
     useApolloMutation<
         { createDeck: { id: string } },
-        { name: string; category?: string[]; type?: string; userId?: string; private: boolean }
+        { name: string; category?: string; type?: string; userId?: string; private: boolean }
     >(addDeckMutation);
 
 const updateDeckMutation = gql`

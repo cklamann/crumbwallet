@@ -1,19 +1,26 @@
 import React from 'react';
-import Paper from '@material-ui/core/Paper';
 import { useFetchDecksQuery } from '../../../api/ApolloClient';
 import NestedItemList from './NestedMenuList';
 import { get } from 'lodash';
-import { Box } from '@material-ui/core';
+import { Grid } from '@material-ui/core';
+import MenuItem from './../../MenuItem';
+import { useGoTo } from 'Hooks';
 
 interface HomePage {}
 
 const HomePage: React.FC<HomePage> = ({}) => {
-    const { data } = useFetchDecksQuery();
+    const { data } = useFetchDecksQuery(),
+        goto = useGoTo();
 
     return (
-        <Box width="100%">
-            <Paper>{get(data, 'decks') && <NestedItemList decks={data.decks} />}</Paper>
-        </Box>
+        <Grid item container direction="column" xs={12}>
+            <Grid item>
+                <MenuItem title="Browse Decks">{get(data, 'decks') && <NestedItemList decks={data.decks} />}</MenuItem>
+            </Grid>
+            <Grid>
+                <MenuItem title="Make a Deck" onClick={goto.bind(null, `decks/create`)} />
+            </Grid>
+        </Grid>
     );
 };
 

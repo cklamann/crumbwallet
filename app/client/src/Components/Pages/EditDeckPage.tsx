@@ -5,20 +5,26 @@ import Grid from '@material-ui/core/Grid';
 import Typography from '@material-ui/core/Typography';
 import Button from '@material-ui/core/Button';
 import { makeStyles, createStyles } from '@material-ui/core/styles';
-import Add from '@material-ui/icons/Add';
 import Edit from '@material-ui/icons/Edit';
 import Link from '@material-ui/core/Link';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import { Card } from 'Models/Cards';
 import { useFormReducer, useGoTo } from './../../hooks';
-import { useAddCardMutation, useFetchDeckQuery, useUpdateDeckMutation } from '../../api/ApolloClient';
+import {
+    useAddCardMutation,
+    useDeleteDeckMutation,
+    useFetchDeckQuery,
+    useUpdateDeckMutation,
+} from '../../api/ApolloClient';
 import MenuItem from './../MenuItem';
 import { TextInput } from 'Shared';
 import { Deck } from 'Models/Decks';
 import { get, mapValues } from 'lodash';
+import Modal from './../Modals/Modal';
 
 type ReducerState = Pick<Deck, 'name' | 'category'>;
+//todo: bring in useFormReducer
 
 const INITIAL_STATE: ReducerState = {
     name: '',
@@ -30,9 +36,11 @@ interface EditDeckPage {}
 const EditDeckPage: React.FC<EditDeckPage> = ({}) => {
     const { deckId }: { deckId: string } = useParams(),
         [error, setError] = useState<{ message: string; field: string }>(),
+        [warningModalOpen, setWarningModalOpen] = useState(false),
         { data, refetch: refetchDeck } = useFetchDeckQuery(deckId),
         [formState, updateField] = useFormReducer(INITIAL_STATE),
         [createCard] = useAddCardMutation(),
+        [deleteDeck] = useDeleteDeckMutation(),
         [_updateDeck] = useUpdateDeckMutation(),
         updateDeck = () => {
             if (!formState.name) {
@@ -116,32 +124,40 @@ const EditDeckPage: React.FC<EditDeckPage> = ({}) => {
                         )}
                     </MenuItem>
                     <MenuItem
-                        title={
-                            <span
-                                style={{ display: 'flex' }}
-                                onClick={() =>
-                                    createCard({
-                                        variables: {
-                                            answer: '',
-                                            deckId,
-                                            details: '<p>New Details</p>',
-                                            handle: '',
-                                            imageKey: null,
-                                            prompt: 'New Prompt',
-                                            type: 'standard',
-                                        },
-                                    }).then((res) => goto(`/decks/${deckId}/cards/${res.data.addCard.id}/edit`))
-                                }
-                            >
-                                Create Card
-                                <Add />
-                            </span>
+                        title="Add Card"
+                        onClick={() =>
+                            createCard({
+                                variables: {
+                                    answer: '',
+                                    deckId,
+                                    details: '<p>New Details</p>',
+                                    handle: '',
+                                    imageKey: null,
+                                    prompt: 'New Prompt',
+                                    type: 'standard',
+                                },
+                            }).then((res) => goto(`/decks/${deckId}/cards/${res.data.addCard.id}/edit`))
                         }
-                    >
-                        <span />
-                    </MenuItem>
+                    ></MenuItem>
+                    <MenuItem
+                        title={<Typography color="error">Delete Deck</Typography>}
+                        onClick={() => setWarningModalOpen(true)}
+                    ></MenuItem>
                 </>
             )}
+            <Modal
+                content={`Delete ${get(data, 'deck.name')}?`}
+                isOpen={warningModalOpen}
+                onAccept={() =>
+                    deleteDeck({
+                        variables: {
+                            id: deckId,
+                        },
+                    }).then(() => goto('/'))
+                }
+                onClose={() => setWarningModalOpen(false)}
+                title="Are you sure?"
+            />
         </Paper>
     );
 };
