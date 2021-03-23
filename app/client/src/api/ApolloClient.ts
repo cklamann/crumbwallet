@@ -68,9 +68,9 @@ export const client = new ApolloClient({
     cache: new InMemoryCache(),
 });
 
-export const useApolloQuery = <T>(query: DocumentNode, choices: QueryHookOptions = {}) => {
+export const useApolloQuery = <T, V>(query: DocumentNode, choices: QueryHookOptions<T, V> = {}) => {
     const dispatch = useDispatch();
-    return useQuery<T>(query, {
+    return useQuery<T, V>(query, {
         client,
         context: { uid: uniqueId(), dispatch },
         fetchPolicy: 'no-cache',
@@ -104,7 +104,7 @@ const Type = new GraphQLEnumType({
     values: { quotation: { value: 'quotation' }, standard: { value: 'standard' } },
 });
 
-export const useFetchDecksQuery = () => useApolloQuery<{ decks: Deck[] }>(fetchDecksQuery);
+export const useFetchDecksQuery = () => useApolloQuery<{ decks: Deck[] }, never>(fetchDecksQuery);
 
 const fetchDeckQuery = gql`
     query fetchDeck($id: String!) {
@@ -128,7 +128,7 @@ const fetchDeckQuery = gql`
 `;
 
 export const useFetchDeckQuery = (id: string) =>
-    useApolloQuery<{ deck: Deck }>(fetchDeckQuery, {
+    useApolloQuery<{ deck: Deck }, { id: string }>(fetchDeckQuery, {
         variables: { id },
     });
 
@@ -171,7 +171,7 @@ const createChessDiagramPng = gql`
 `;
 
 export const useFetchCardQuery = (id: string) =>
-    useApolloQuery<{ card: Card }>(fetchCardQuery, {
+    useApolloQuery<{ card: Card }, { id: string }>(fetchCardQuery, {
         variables: { id },
     });
 
